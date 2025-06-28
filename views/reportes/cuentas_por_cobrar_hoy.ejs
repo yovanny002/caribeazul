@@ -1,0 +1,251 @@
+<%- include('../partials/header', { title: title }) %>
+
+<div class="container-fluid mt-4">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <h3 class="mb-0">
+        <i class="fas fa-calendar-day me-2"></i>Cuentas por Cobrar Hoy
+      </h3>
+      <div>
+        <span class="badge bg-light text-dark fs-6">
+          <i class="fas fa-file-invoice-dollar me-1"></i> Total: <%= cuentas.length %>
+        </span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <% if (messages.error_msg) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <%= messages.error_msg %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      <% } %>
+
+      <div class="table-responsive">
+        <table id="cuentasTable" class="table table-striped table-hover table-bordered" style="width:100%">
+          <thead class="table-dark">
+            <tr>
+              <th># Préstamo</th>
+              <th>Cliente</th>
+              <th>Cédula</th>
+              <th>Cuota</th>
+              <th>Monto</th>
+              <th>Fecha Vencimiento</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (cuentas.length > 0) { %>
+              <% cuentas.forEach(c => { %>
+                <tr>
+                  <td><%= c.prestamo_id || '-' %></td>
+                  <td><%= (c.nombre || '') + ' ' + (c.apellidos || '') %></td>
+                  <td><%= c.cedula || '-' %></td>
+                  <td><%= c.numero_cuota || '-' %></td>
+                  <td data-order="<%= c.monto || 0 %>">RD$ <%= c.monto ? parseFloat(c.monto).toFixed(2) : '0.00' %></td>
+                  <td data-order="<%= c.fecha_vencimiento ? moment(c.fecha_vencimiento).format('YYYYMMDD') : '' %>">
+                    <%= c.fecha_vencimiento ? moment(c.fecha_vencimiento).format('YYYY-MM-DD') : '-' %>
+                  </td>
+                  <td class="text-center">
+                    <div class="btn-group" role="group">
+                      <button class="btn btn-sm btn-outline-primary btn-registrar-pago" 
+                              data-prestamo="<%= c.prestamo_id %>"
+                              data-cuota="<%= c.numero_cuota %>"
+                              data-monto="<%= c.monto %>"
+                              title="Registrar Pago">
+                        <i class="fas fa-money-bill-wave"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-secondary btn-detalles" 
+                              data-prestamo="<%= c.prestamo_id %>"
+                              title="Ver Detalles">
+                        <i class="fas fa-eye"></i>
+                      </button>
+                      <button class="btn btn-sm btn-outline-info btn-recordatorio"
+                              data-cliente="<%= (c.nombre || '') + ' ' + (c.apellidos || '') %>"
+                              data-telefono="<%= c.telefono || '' %>"
+                              title="Enviar Recordatorio">
+                        <i class="fas fa-sms"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="7" class="text-center">No hay cuentas por cobrar hoy.</td>
+              </tr>
+            <% } %>
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="4" class="text-end">Total:</th>
+              <th>
+                RD$ <%= cuentas.reduce((sum, c) => sum + parseFloat(c.monto || 0), 0).toFixed(2) %>
+              </th>
+              <th colspan="2"></th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para registrar pago -->
+<div class="modal fade" id="modalPago" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">Registrar Pago</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formPago">
+          <input type="hidden" id="prestamoId">
+          <input type="hidden" id="cuotaNumero">
+          
+          <div class="mb-3">
+            <label class="form-label">Cliente</label>
+            <input type="text" class="form-control" id="clienteNombre" readonly>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Monto de la Cuota</label>
+            <div class="input-group">
+              <span class="input-group-text">RD$</span>
+              <input type="text" class="form-control" id="montoCuota" readonly>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Monto Recibido</label>
+            <div class="input-group">
+              <span class="input-group-text">RD$</span>
+              <input type="number" class="form-control" id="montoRecibido" step="0.01" min="0" required>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Fecha de Pago</label>
+            <input type="date" class="form-control" id="fechaPago" value="<%= moment().format('YYYY-MM-DD') %>" required>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Método de Pago</label>
+            <select class="form-select" id="metodoPago" required>
+              <option value="efectivo">Efectivo</option>
+              <option value="transferencia">Transferencia</option>
+              <option value="cheque">Cheque</option>
+              <option value="tarjeta">Tarjeta</option>
+            </select>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Notas</label>
+            <textarea class="form-control" id="notasPago" rows="2"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success" id="btnConfirmarPago">
+          <i class="fas fa-check me-1"></i> Registrar Pago
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    try {
+      const table = $('#cuentasTable').DataTable({
+        dom: '<"row"<"col-md-6"B><"col-md-6"f>>rt<"row"<"col-md-6"l><"col-md-6"p>>',
+        buttons: [
+          {
+            extend: 'excel',
+            text: '<i class="fas fa-file-excel me-1"></i> Excel',
+            className: 'btn btn-success',
+            title: 'Cuentas_por_Cobrar_Hoy_<%= moment().format("YYYY-MM-DD") %>',
+            exportOptions: {
+              columns: [0, 1, 2, 3, 4, 5]
+            }
+          },
+          {
+            extend: 'pdf',
+            text: '<i class="fas fa-file-pdf me-1"></i> PDF',
+            className: 'btn btn-danger',
+            title: 'Cuentas por Cobrar Hoy',
+            exportOptions: {
+              columns: [0, 1, 2, 3, 4, 5]
+            }
+          },
+          {
+            extend: 'print',
+            text: '<i class="fas fa-print me-1"></i> Imprimir',
+            className: 'btn btn-info',
+            title: '<h3 class="text-center">Cuentas por Cobrar Hoy</h3>',
+            exportOptions: {
+              columns: [0, 1, 2, 3, 4, 5]
+            }
+          }
+        ],
+        language: {
+          url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+        },
+        columnDefs: [
+          { orderable: false, targets: -1 },
+          { responsivePriority: 1, targets: 1 },
+          { responsivePriority: 2, targets: 4 }
+        ],
+        responsive: true
+      });
+    } catch (error) {
+      console.error('Error inicializando DataTable:', error);
+    }
+
+    // Botón Registrar Pago
+    $(document).on('click', '.btn-registrar-pago', function() {
+      const row = $(this).closest('tr');
+      $('#prestamoId').val($(this).data('prestamo'));
+      $('#cuotaNumero').val($(this).data('cuota'));
+      $('#clienteNombre').val(row.find('td:eq(1)').text());
+      $('#montoCuota').val($(this).data('monto'));
+      $('#montoRecibido').val($(this).data('monto'));
+      $('#modalPago').modal('show');
+    });
+
+    // Detalles
+    $(document).on('click', '.btn-detalles', function() {
+      alert('Mostrar detalles del préstamo: ' + $(this).data('prestamo'));
+    });
+
+    // Recordatorio
+    $(document).on('click', '.btn-recordatorio', function() {
+      const cliente = $(this).data('cliente');
+      const telefono = $(this).data('telefono') || 'No disponible';
+      alert(`Enviar recordatorio a: ${cliente}\nTeléfono: ${telefono}`);
+    });
+
+    // Confirmar Pago
+    $('#btnConfirmarPago').click(function() {
+      if ($('#formPago')[0].checkValidity()) {
+        const pagoData = {
+          prestamoId: $('#prestamoId').val(),
+          cuotaNumero: $('#cuotaNumero').val(),
+          montoRecibido: $('#montoRecibido').val(),
+          fechaPago: $('#fechaPago').val(),
+          metodoPago: $('#metodoPago').val(),
+          notas: $('#notasPago').val()
+        };
+        console.log('Datos del pago:', pagoData);
+        alert('Pago registrado exitosamente');
+        $('#modalPago').modal('hide');
+      } else {
+        $('#formPago')[0].reportValidity();
+      }
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>

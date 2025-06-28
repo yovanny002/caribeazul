@@ -1,0 +1,173 @@
+<%- include('../partials/header', { title: 'Nuevo Cliente' }) %>
+
+<div class="container-fluid px-4 py-4">
+  <div class="card border-0 shadow-lg rounded-4">
+    <div class="card-header bg-primary bg-gradient text-white py-4 rounded-top-4 d-flex align-items-center">
+      <i class="fas fa-user-plus me-3 fa-2x"></i>
+      <h2 class="mb-0 fw-bold">Registrar Nuevo Cliente</h2>
+    </div>
+
+    <div class="card-body p-5">
+ 
+
+      <form action="/clientes" method="POST" enctype="multipart/form-data" class="row g-4">
+        <div class="col-12 mb-3">
+          <h4 class="text-primary mb-3"><i class="fas fa-id-card-alt me-2"></i> Información Personal</h4>
+          <hr>
+        </div>
+        
+        <div class="col-md-6">
+          <label for="nombre" class="form-label fw-semibold">Nombre <span class="text-danger">*</span></label>
+          <input name="nombre" id="nombre" type="text" class="form-control form-control-lg" placeholder="Primer nombre" required aria-describedby="nombreHelp">
+          <div id="nombreHelp" class="form-text">Ingrese el nombre del cliente.</div>
+        </div>
+
+        <div class="col-md-6">
+          <label for="apellidos" class="form-label fw-semibold">Apellidos <span class="text-danger">*</span></label>
+          <input name="apellidos" id="apellidos" type="text" class="form-control form-control-lg" placeholder="Apellidos completos" required aria-describedby="apellidosHelp">
+          <div id="apellidosHelp" class="form-text">Ingrese los apellidos del cliente.</div>
+        </div>
+
+        <div class="col-md-6">
+          <label for="apodo" class="form-label fw-semibold">Apodo</label>
+          <input name="apodo" id="apodo" type="text" class="form-control" placeholder="Ej. 'El Jefe'" aria-describedby="apodoHelp">
+          <div id="apodoHelp" class="form-text">Un nombre corto o conocido para el cliente (opcional).</div>
+        </div>
+
+        <div class="col-md-6">
+          <label for="cedula" class="form-label fw-semibold">Cédula <span class="text-danger">*</span></label>
+          <input name="cedula" id="cedula" type="text" class="form-control" placeholder="000-0000000-0" required aria-describedby="cedulaHelp">
+          <div id="cedulaHelp" class="form-text">Número de identificación nacional (ej. Cédula Dominicana).</div>
+        </div>
+        
+        <div class="col-md-6">
+          <label for="profesion" class="form-label fw-semibold">Profesión</label>
+          <input name="profesion" id="profesion" type="text" class="form-control" placeholder="Ocupación del cliente" aria-describedby="profesionHelp">
+          <div id="profesionHelp" class="form-text">La ocupación actual del cliente (opcional).</div>
+        </div>
+
+        <div class="col-md-6">
+          <label for="foto" class="form-label fw-semibold">Foto de Perfil</label>
+          <input name="foto" id="foto" type="file" accept="image/*" class="form-control" aria-describedby="fotoHelp">
+          <div id="fotoHelp" class="form-text">Seleccione una imagen para el perfil del cliente (JPG, PNG, etc.).</div>
+        </div>
+
+        <div class="col-12 mt-5 mb-3">
+          <h4 class="text-primary mb-3"><i class="fas fa-address-book me-2"></i> Información de Contacto</h4>
+          <hr>
+        </div>
+
+        <div class="col-md-6">
+          <label for="telefono1" class="form-label fw-semibold">Teléfono Principal</label>
+          <input name="telefono1" id="telefono1" type="text" class="form-control" placeholder="(000) 000-0000" aria-describedby="tel1Help">
+          <div id="tel1Help" class="form-text">Número de contacto principal.</div>
+        </div>
+
+        <div class="col-md-6">
+          <label for="telefono2" class="form-label fw-semibold">Teléfono Secundario</label>
+          <input name="telefono2" id="telefono2" type="text" class="form-control" placeholder="(000) 000-0000" aria-describedby="tel2Help">
+          <div id="tel2Help" class="form-text">Número de contacto alternativo (opcional).</div>
+        </div>
+
+        <div class="col-12">
+          <label for="direccion" class="form-label fw-semibold">Dirección Residencial</label>
+          <textarea name="direccion" id="direccion" class="form-control" rows="3" placeholder="Calle, número, sector, ciudad..." aria-describedby="direccionHelp"></textarea>
+          <div id="direccionHelp" class="form-text">Dirección completa del domicilio del cliente.</div>
+        </div>
+
+        <div class="col-12 mt-5 mb-3">
+          <h4 class="text-primary mb-3"><i class="fas fa-info-circle me-2"></i> Estado del Cliente</h4>
+          <hr>
+        </div>
+
+        <div class="col-md-4">
+          <label for="estado" class="form-label fw-semibold">Estado <span class="text-danger">*</span></label>
+          <select name="estado" id="estado" class="form-select form-select-lg" required aria-describedby="estadoHelp">
+            <option value="activo" selected>Activo</option>
+            <option value="inactivo">Inactivo</option>
+          </select>
+          <div id="estadoHelp" class="form-text">Define si el cliente está activo o inactivo en el sistema.</div>
+        </div>
+
+        <div class="col-12 d-flex justify-content-between border-top pt-4 mt-5">
+          <a href="/clientes" class="btn btn-outline-secondary btn-lg rounded-pill px-4">
+            <i class="fas fa-arrow-left me-2"></i>Cancelar
+          </a>
+          <button type="submit" class="btn btn-success btn-lg rounded-pill px-4 shadow-sm">
+            <i class="fas fa-save me-2"></i>Guardar Cliente
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<style>
+  body {
+    background-color: #f8f9fa; /* Light background for the whole page */
+  }
+
+  .card {
+    border-radius: 0.75rem; /* More rounded corners for cards */
+    overflow: hidden; /* Ensures rounded corners are applied to children */
+  }
+
+  .card-header {
+    background-color: #007bff; /* Primary color for header */
+  }
+
+  .form-label {
+    color: #343a40; /* Darker text for labels */
+  }
+
+  .form-control, .form-select {
+    border-radius: 0.5rem; /* Slightly rounded inputs */
+    padding: 0.75rem 1rem; /* More padding for inputs */
+  }
+
+  .form-control-lg {
+    font-size: 1.1rem; /* Larger font for key inputs */
+  }
+
+  .btn-lg {
+    font-size: 1.1rem; /* Larger font for buttons */
+    padding: 0.75rem 1.5rem; /* More padding for buttons */
+  }
+
+  .btn-outline-secondary {
+    border-color: #6c757d;
+    color: #6c757d;
+  }
+
+  .btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: #fff;
+  }
+
+  .btn-success {
+    background-color: #28a745;
+    border-color: #28a745;
+  }
+
+  .btn-success:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+  }
+
+  .text-danger {
+    font-size: 0.9em; /* Smaller size for required indicator */
+  }
+
+  .form-text {
+    font-size: 0.875em;
+    color: #6c757d;
+    margin-top: 0.25rem;
+  }
+
+  hr {
+    border-top: 1px solid rgba(0,0,0,.1);
+    margin-bottom: 2rem;
+  }
+</style>

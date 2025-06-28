@@ -1,0 +1,31 @@
+<tbody>
+  <% if (gastos && gastos.length > 0) { %>
+    <% gastos.forEach(gasto => { %>
+      <tr>
+        <td><%= gasto.fecha %></td>
+        <td><%= gasto.descripcion %></td>
+        <td><%= gasto.categoria || 'N/A' %></td>
+        <td class="text-end">RD$ <%= parseFloat(gasto.monto).toFixed(2) %></td>
+        <td><%= gasto.registrado_por %></td>
+        <td>
+          <% if (gasto.estado === 'activo') { %>
+            <span class="badge bg-success">Activo</span>
+          <% } else { %>
+            <span class="badge bg-danger">Anulado</span>
+          <% } %>
+        </td>
+        <td>
+          <% if (gasto.estado === 'activo') { %>
+            <form action="/reportes/caja_chica/<%= gasto.id %>/anular" method="POST" onsubmit="return confirm('¿Anular este gasto?');">
+              <button type="submit" class="btn btn-sm btn-outline-danger">Anular</button>
+            </form>
+          <% } %>
+        </td>
+      </tr>
+    <% }) %>
+  <% } else { %>
+    <tr>
+      <td colspan="7" class="text-center text-muted">No hay gastos registrados.</td>
+    </tr>
+  <% } %>
+</tbody>

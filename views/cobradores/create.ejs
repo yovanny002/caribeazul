@@ -1,0 +1,212 @@
+<%- include('../partials/header', { title: 'Gestión de Cobradores | Nuevo Registro' }) %>
+
+<div class="container-lg my-5">
+  <div class="card shadow-lg border-0 rounded-4">
+    <div class="card-header bg-primary text-white p-4 rounded-top-4">
+      <div class="d-flex justify-content-between align-items-center">
+        <h2 class="h4 mb-0"><i class="fas fa-user-plus me-2"></i>Registrar nuevo cobrador</h2>
+        <a href="/cobradores" class="btn btn-outline-light btn-sm rounded-pill px-3">
+          <i class="fas fa-arrow-left me-1"></i> Volver a Cobradores
+        </a>
+      </div>
+    </div>
+
+    <div class="card-body p-5">
+      <form action="/cobradores" method="POST" enctype="multipart/form-data" class="needs-validation" novalidate>
+        <div class="row g-4">
+          <div class="col-md-6 border-end pe-md-4">
+            <h5 class="mb-4 text-primary"><i class="fas fa-info-circle me-2"></i>Información Personal</h5>
+
+            <div class="mb-3">
+              <label for="nombre" class="form-label">Nombre completo <span class="badge bg-danger-subtle text-danger fw-normal ms-1">Requerido</span></label>
+              <input type="text" id="nombre" name="nombre" class="form-control" required placeholder="Ej: Juan Pérez">
+              <div class="invalid-feedback">Por favor ingrese el nombre completo.</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="cedula" class="form-label">Cédula</label>
+              <input type="text" id="cedula" name="cedula" class="form-control"
+                     placeholder="000-0000000-0"
+                     pattern="^\d{3}-\d{7}-\d{1}$" title="Formato: 000-0000000-0">
+                     <div class="form-text text-muted">Formato: 000-0000000-0 (Ej. 001-1234567-8)</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="telefono" class="form-label">Teléfono</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                <input type="tel" id="telefono" name="telefono" class="form-control"
+                       placeholder="809-000-0000"
+                       pattern="^\d{3}-\d{3}-\d{4}$" title="Formato: 809-000-0000">
+              </div>
+              <div class="form-text text-muted">Formato: 809-000-0000 (Ej. 809-123-4567)</div>
+            </div>
+          </div>
+
+          <div class="col-md-6 ps-md-4">
+            <h5 class="mb-4 text-primary"><i class="fas fa-address-book me-2"></i>Contacto y Foto</h5>
+
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                <input type="email" id="email" name="email" class="form-control" placeholder="ejemplo@dominio.com">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="direccion" class="form-label">Dirección</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                <input type="text" id="direccion" name="direccion" class="form-control" placeholder="Calle, Sector, Ciudad">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="foto" class="form-label">Foto de Perfil</label>
+              <input type="file" id="foto" name="foto" accept="image/*" class="form-control">
+              <small class="form-text text-muted">Formatos: JPG, PNG, GIF (Máx. 2MB)</small>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <hr class="my-4">
+            <h5 class="mb-4 text-primary"><i class="fas fa-briefcase me-2"></i>Datos Laborales</h5>
+          </div>
+
+          <div class="col-md-6 border-end pe-md-4">
+            <div class="mb-3">
+              <label for="ruta_id" class="form-label">Ruta asignada <span class="badge bg-danger-subtle text-danger fw-normal ms-1">Requerido</span></label>
+              <select id="ruta_id" name="ruta_id" class="form-select" required>
+                <option value="" selected disabled>Seleccionar ruta...</option>
+                <% rutas.forEach(ruta => { %>
+                  <option value="<%= ruta.id %>">
+                    <%= ruta.zona %> - <%= ruta.nombre %>
+                  </option>
+                <% }) %>
+              </select>
+              <div class="invalid-feedback">Por favor seleccione una ruta.</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="tipo_contrato" class="form-label">Tipo de contrato</label>
+              <select id="tipo_contrato" name="tipo_contrato" class="form-select">
+                <option value="" selected disabled>-- Seleccionar --</option>
+                <option value="fijo">Fijo</option>
+                <option value="comision">Comisión</option>
+                <option value="mixto">Mixto</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="col-md-6 ps-md-4">
+            <div class="mb-3">
+              <label for="fecha_inicio" class="form-label">Fecha de inicio</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control">
+              </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="fecha_retiro" class="form-label">Fecha de retiro (si aplica)</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-calendar-times"></i></span>
+                    <input type="date" id="fecha_retiro" name="fecha_retiro" class="form-control">
+                </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="notas" class="form-label">Notas adicionales</label>
+              <textarea id="notas" name="notas" class="form-control" rows="3" placeholder="Observaciones o comentarios..."></textarea>
+            </div>
+
+            <div class="mb-3 form-check form-switch d-flex align-items-center">
+                <input class="form-check-input me-2" type="checkbox" role="switch" id="activo" name="activo" value="true" checked>
+                <label class="form-check-label" for="activo">Cobrador Activo</label>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="d-flex justify-content-end gap-3 pt-4 border-top">
+              <button type="reset" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="fas fa-eraser me-2"></i> Limpiar Campos
+              </button>
+              <button type="submit" class="btn btn-success rounded-pill px-4 shadow">
+                <i class="fas fa-save me-2"></i> Guardar Cobrador
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<script>
+(() => {
+  'use strict';
+
+  // Deshabilitar el envío del formulario si hay campos inválidos
+  const forms = document.querySelectorAll('.needs-validation');
+  Array.from(forms).forEach(form => {
+    form.addEventListener('submit', event => {
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      form.classList.add('was-validated');
+    }, false);
+  });
+
+  // Enmascaramiento para Cédula (000-0000000-0)
+  const cedulaInput = document.getElementById('cedula');
+  if (cedulaInput) {
+      cedulaInput.addEventListener('input', function (e) {
+          let value = e.target.value.replace(/\D/g, ''); // Eliminar no-dígitos
+          let formattedValue = '';
+          if (value.length > 0) {
+              formattedValue += value.substring(0, 3);
+          }
+          if (value.length > 3) {
+              formattedValue += '-' + value.substring(3, 10);
+          }
+          if (value.length > 10) {
+              formattedValue += '-' + value.substring(10, 11);
+          }
+          e.target.value = formattedValue;
+      });
+  }
+
+  // Enmascaramiento para Teléfono (809-000-0000)
+  const telefonoInput = document.getElementById('telefono');
+  if (telefonoInput) {
+      telefonoInput.addEventListener('input', function (e) {
+          let value = e.target.value.replace(/\D/g, ''); // Eliminar no-dígitos
+          let formattedValue = '';
+          if (value.length > 0) {
+              formattedValue += value.substring(0, 3);
+          }
+          if (value.length > 3) {
+              formattedValue += '-' + value.substring(3, 6);
+          }
+          if (value.length > 6) {
+              formattedValue += '-' + value.substring(6, 10);
+          }
+          e.target.value = formattedValue;
+      });
+  }
+
+  // Establecer la fecha actual como valor por defecto para 'Fecha de inicio'
+  const fechaInicioInput = document.getElementById('fecha_inicio');
+  if (fechaInicioInput && !fechaInicioInput.value) { // Solo si no tiene un valor preestablecido
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0'); // Meses son 0-index
+      const day = String(today.getDate()).padStart(2, '0');
+      fechaInicioInput.value = `${year}-${month}-${day}`;
+  }
+})();
+</script>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Solicitudes de Reenganche</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container mt-4">
+    <h1 class="mb-4">Solicitudes de Reenganche</h1>
+
+    <% if (mensaje) { %>
+      <div class="alert alert-info"><%= mensaje %></div>
+    <% } %>
+
+    <% if (elegible) { %>
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Cliente: <%= cliente.nombre %> <%= cliente.apellidos %></h5>
+          <p class="card-text">Préstamo anterior: #<%= elegible.prestamo_id %></p>
+          <p class="card-text">Monto aprobado: RD$ <%= elegible.monto_aprobado.toFixed(2) %></p>
+          <p class="card-text">Total pagado: RD$ <%= elegible.total_pagado.toFixed(2) %></p>
+          <p class="card-text"><strong>% pagado: <%= elegible.porcentaje_pagado %>%</strong></p>
+
+          <a href="/reenganche/nuevo/<%= cliente.id %>" class="btn btn-success">Solicitar Reenganche</a>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="alert alert-warning">
+        Este cliente no es elegible para un reenganche. Debe haber pagado al menos el 80% de su préstamo aprobado.
+      </div>
+    <% } %>
+
+    <a href="/clientes" class="btn btn-secondary">Volver a Clientes</a>
+  </div>
+</body>
+</html>

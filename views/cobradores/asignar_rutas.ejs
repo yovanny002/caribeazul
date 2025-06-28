@@ -1,0 +1,46 @@
+<%- include('../partials/header', { title: 'Asignar Rutas a Cobradores' }) %>
+
+<div class="container py-4">
+  <h2 class="mb-4 text-primary">Asignar Rutas a Cobradores</h2>
+
+  <% if (messages.error && messages.error.length > 0) { %>
+    <div class="alert alert-danger">
+      <ul>
+        <% messages.error.forEach(msg => { %>
+          <li><%= msg %></li>
+        <% }) %>
+      </ul>
+    </div>
+  <% } %>
+
+  <% if (messages.success && messages.success.length > 0) { %>
+    <div class="alert alert-success">
+      <ul>
+        <% messages.success.forEach(msg => { %>
+          <li><%= msg %></li>
+        <% }) %>
+      </ul>
+    </div>
+  <% } %>
+
+
+  <form method="POST" action="/cobradores/asignar_rutas">
+  <select name="cobrador_id" required>
+    <% cobradores.forEach(c => { %>
+      <option value="<%= c.id %>"><%= c.nombre %></option>
+    <% }) %>
+  </select>
+
+  <select name="ruta_id" required>
+    <% rutas.forEach(r => { %>
+      <option value="<%= r.id %>"><%= r.nombre %></option>
+    <% }) %>
+  </select>
+
+  <button type="submit" class="btn btn-primary">Asignar</button>
+</form>
+
+
+</div>
+
+<%- include('../partials/footer') %>

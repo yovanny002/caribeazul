@@ -1,0 +1,236 @@
+<%- include('../partials/header', { title: title }) %>
+
+<div class="container-fluid mt-4">
+  <div class="card shadow-sm border-danger">
+    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+      <h3 class="mb-0">
+        <i class="fas fa-exclamation-triangle me-2"></i>Préstamos Morosos
+      </h3>
+      <div>
+        <span class="badge bg-light text-dark fs-6">
+          <i class="fas fa-clock me-1"></i> Total: <%= prestamos.length %>
+        </span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <% if (messages.error_msg) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <%= messages.error_msg %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      <% } %>
+
+      <div class="table-responsive">
+        <table id="prestamosMorososTable" class="table table-striped table-hover table-bordered" style="width:100%">
+          <thead class="table-dark">
+            <tr>
+              <th># Préstamo</th>
+              <th>Cliente</th>
+              <th>Cédula</th>
+              <th>Cuota</th>
+              <th>Monto</th>
+              <th>Mora</th>
+              <th>Total</th>
+              <th>Fecha Venc.</th>
+              <th>Días Mora</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (prestamos.length > 0) { %>
+              <% prestamos.forEach(p => { 
+                const moraClass = p.dias_mora > 30 ? 'text-danger fw-bold' : 
+                                 p.dias_mora > 15 ? 'text-warning' : '';
+              %>
+                <tr>
+                  <td><%= p.prestamo_id %></td>
+                  <td><%= p.nombre %> <%= p.apellidos %></td>
+                  <td><%= p.cedula %></td>
+                  <td><%= p.numero_cuota %></td>
+                  <td data-order="<%= p.monto %>">RD$ <%= parseFloat(p.monto).toFixed(2) %></td>
+                  <td class="text-danger" data-order="<%= p.mora %>">
+                    RD$ <%= parseFloat(p.mora).toFixed(2) %>
+                    <br><small class="text-muted">(<%= p.dias_mora %> días)</small>
+                  </td>
+                  <td class="fw-bold" data-order="<%= p.total_a_pagar %>">
+                    RD$ <%= parseFloat(p.total_a_pagar).toFixed(2) %>
+                  </td>
+                  <td data-order="<%= moment(p.fecha_vencimiento).format('YYYYMMDD') %>">
+                    <%= moment(p.fecha_vencimiento).format('DD/MM/YYYY') %>
+                  </td>
+                  <td class="<%= moraClass %>" data-order="<%= p.dias_mora %>">
+                    <%= p.dias_mora %> días
+                  </td>
+                  <td class="text-center">
+                    <div class="btn-group" role="group">
+                      <button class="btn btn-sm btn-outline-success btn-cobrar" 
+                              data-prestamo="<%= p.prestamo_id %>"
+                              data-cuota="<%= p.cuota_id %>"
+                              data-monto="<%= p.monto %>"
+                              data-mora="<%= p.mora %>"
+                              title="Registrar Cobro">
+                        <i class="fas fa-money-bill-wave"></i>
+                      </button>
+                      <a href="/prestamos/<%= p.prestamo_id %>" 
+                         class="btn btn-sm btn-outline-primary"
+                         title="Ver Detalles">
+                        <i class="fas fa-eye"></i>
+                      </a>
+                      <% if (p.telefono) { %>
+                        <button class="btn btn-sm btn-outline-warning btn-notificar"
+                                data-cliente="<%= p.nombre %> <%= p.apellidos %>"
+                                data-telefono="<%= p.telefono %>"
+                                data-diasmora="<%= p.dias_mora %>"
+                                title="Notificar">
+                          <i class="fas fa-bell"></i>
+                        </button>
+                      <% } %>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="10" class="text-center">No hay préstamos morosos.</td>
+              </tr>
+            <% } %>
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="4" class="text-end">Total:</th>
+              <th>RD$ <%= prestamos.reduce((sum, p) => sum + parseFloat(p.monto), 0).toFixed(2) %></th>
+              <th>RD$ <%= prestamos.reduce((sum, p) => sum + parseFloat(p.mora), 0).toFixed(2) %></th>
+              <th>RD$ <%= prestamos.reduce((sum, p) => sum + parseFloat(p.total_a_pagar), 0).toFixed(2) %></th>
+              <th colspan="3"></th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para cobro -->
+<div class="modal fade" id="modalCobro" tabindex="-1" aria-hidden="true">
+  <!-- ... (mantener igual el modal existente) ... -->
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar DataTable con configuración corregida
+    const table = $('#prestamosMorososTable').DataTable({
+      dom: '<"row"<"col-md-6"B><"col-md-6"f>>rt<"row"<"col-md-6"l><"col-md-6"p>>',
+      buttons: [
+        {
+          extend: 'excel',
+          text: '<i class="fas fa-file-excel me-1"></i> Excel',
+          className: 'btn btn-success',
+          title: 'Prestamos_Morosos_<%= moment().format("YYYY-MM-DD") %>',
+          exportOptions: {
+            columns: [0, 1, 2, 3, 4, 5, 6, 7, 8], // Excluir columna de acciones
+            format: {
+              body: function(data, row, column, node) {
+                data = $('<div>').html(data).text();
+                if ([4, 5, 6].includes(column)) { // Columnas de montos
+                  return data.replace('RD$ ', '').trim();
+                }
+                return data;
+              }
+            }
+          }
+        },
+        {
+          extend: 'pdf',
+          text: '<i class="fas fa-file-pdf me-1"></i> PDF',
+          className: 'btn btn-danger',
+          title: 'Préstamos Morosos',
+          filename: 'Prestamos_Morosos_<%= moment().format("YYYY-MM-DD") %>',
+          orientation: 'landscape',
+          pageSize: 'A4',
+          exportOptions: {
+            columns: [0, 1, 2, 3, 4, 5, 6, 7, 8] // Excluir columna de acciones
+          },
+          customize: function(doc) {
+            doc.defaultStyle.fontSize = 8;
+            doc.styles.tableHeader.fontSize = 9;
+            doc.styles.title.fontSize = 12;
+            doc.content[1].table.widths = Array(9).fill('*'); // 9 columnas visibles
+            doc.footer = function(currentPage, pageCount) {
+              return {
+                text: 'Página ' + currentPage.toString() + ' de ' + pageCount,
+                alignment: 'center',
+                fontSize: 8
+              };
+            };
+          }
+        },
+        {
+          extend: 'print',
+          text: '<i class="fas fa-print me-1"></i> Imprimir',
+          className: 'btn btn-info',
+          title: '<div class="text-center"><h4>Préstamos Morosos</h4><p>Reporte generado el <%= moment().format("DD/MM/YYYY") %></p></div>',
+          exportOptions: {
+            columns: [0, 1, 2, 3, 4, 5, 6, 7, 8] // Excluir columna de acciones
+          }
+        }
+      ],
+      language: {
+        url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+      },
+      order: [[8, 'desc']], // Ordenar por días de mora
+      responsive: true,
+      columnDefs: [
+        { 
+          targets: -1, // Última columna (Acciones)
+          orderable: false,
+          searchable: false
+        },
+        { responsivePriority: 1, targets: 1 }, // Cliente
+        { responsivePriority: 2, targets: 5 }, // Mora
+        { responsivePriority: 3, targets: 6 }, // Total
+        { responsivePriority: 4, targets: 8 }  // Días mora
+      ],
+      createdRow: function(row, data, dataIndex) {
+        const diasMora = parseInt($('td:eq(8)', row).text());
+        if (diasMora > 30) {
+          $(row).addClass('table-danger');
+        } else if (diasMora > 15) {
+          $(row).addClass('table-warning');
+        }
+      },
+      initComplete: function() {
+        console.log('Tabla inicializada correctamente');
+        console.log('Número de columnas en header:', this.api().columns().header().length);
+        console.log('Número de columnas en primer row:', this.api().rows().data()[0].length);
+      }
+    });
+
+    // Resto del código JavaScript manteniendo las funciones existentes...
+    $(document).on('click', '.btn-cobrar', function() {
+      const row = $(this).closest('tr');
+      const prestamoId = $(this).data('prestamo');
+      const cuotaId = $(this).data('cuota');
+      const monto = parseFloat($(this).data('monto'));
+      const mora = parseFloat($(this).data('mora'));
+      const total = monto + mora;
+      const cliente = row.find('td:eq(1)').text();
+      const diasMora = row.find('td:eq(8)').text().split(' ')[0];
+      
+      $('#prestamoId').val(prestamoId);
+      $('#cuotaId').val(cuotaId);
+      $('#clienteNombre').val(cliente);
+      $('#montoOriginal').val(monto.toFixed(2));
+      $('#diasMora').val(diasMora + ' días');
+      $('#moraCalculada').val(mora.toFixed(2));
+      $('#totalCobrar').val(total.toFixed(2));
+      $('#montoRecibido').val(total.toFixed(2));
+      
+      $('#modalCobro').modal('show');
+    });
+
+    // Resto de funciones de manejo de eventos...
+  });
+</script>
+
+<%- include('../partials/footer') %>

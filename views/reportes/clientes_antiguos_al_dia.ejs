@@ -1,0 +1,180 @@
+<%- include('../partials/header', { title: title }) %>
+
+<div class="container-fluid mt-4">
+  <div class="card shadow-sm">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <h3 class="mb-0">
+        <i class="fas fa-user-check me-2"></i>Clientes Antiguos al Día
+      </h3>
+      <div>
+        <span class="badge bg-light text-dark fs-6">
+          <i class="fas fa-users me-1"></i> Total: <%= clientes.length %>
+        </span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <% if (messages.error_msg) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <%= messages.error_msg %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      <% } %>
+
+      <div class="table-responsive">
+        <table id="clientesTable" class="table table-striped table-hover table-bordered nowrap" style="width:100%">
+       <thead class="table-dark">
+  <tr>
+    <th># Cliente</th>
+    <th>Nombre</th>
+    <th>Cédula</th>
+    <th># Préstamo</th>
+    <th>Monto Aprobado</th>
+    <th>Fecha Préstamo</th>
+    <th>Acciones</th> <!-- 👈 7 columnas en total -->
+  </tr>
+</thead>
+
+        <tbody>
+  <% if (clientes.length > 0) { %>
+    <% clientes.forEach(cli => { %>
+      <tr>
+        <td><%= cli.id || '-' %></td>
+        <td><%= (cli.nombre || '') + ' ' + (cli.apellidos || '') %></td>
+        <td><%= cli.cedula || '-' %></td>
+        <td><%= cli.prestamo_id || '-' %></td>
+        <td>RD$ <%= cli.monto_aprobado ? parseFloat(cli.monto_aprobado).toFixed(2) : '0.00' %></td>
+        <td><%= cli.created_at ? moment(cli.created_at).format('YYYY-MM-DD') : '-' %></td>
+        <td>
+          <button class="btn btn-sm btn-outline-primary" title="Ver detalles">
+            <i class="fas fa-eye"></i>
+          </button>
+        </td>
+      </tr>
+    <% }) %>
+  <% } else { %>
+    <tr>
+      <td colspan="7" class="text-center">No hay clientes antiguos al día.</td>
+    </tr>
+  <% } %>
+</tbody>
+
+          <tfoot>
+            <tr>
+              <th colspan="4" class="text-end">Total:</th>
+              <th>RD$ <%= clientes.reduce((sum, cli) => sum + parseFloat(cli.monto_aprobado || 0), 0).toFixed(2) %></th>
+              <th colspan="2"></th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para detalles -->
+<div class="modal fade" id="detalleClienteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Detalles del Cliente</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="detalleClienteContent">
+        <!-- Contenido dinámico cargado por JS -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    $('#clientesTable').DataTable({
+      dom: '<"top"Bf>rt<"bottom"lip><"clear">',
+      buttons: [
+        {
+          extend: 'excel',
+          text: '<i class="fas fa-file-excel me-1"></i> Excel',
+          className: 'btn btn-success',
+          title: 'Clientes_Antiguos_Al_Dia',
+          exportOptions: {
+            columns: [0,1,2,3,4,5]
+          }
+        },
+        {
+          extend: 'pdf',
+          text: '<i class="fas fa-file-pdf me-1"></i> PDF',
+          className: 'btn btn-danger',
+          title: 'Clientes_Antiguos_Al_Dia',
+          exportOptions: {
+            columns: [0,1,2,3,4,5]
+          }
+        },
+        {
+          extend: 'print',
+          text: '<i class="fas fa-print me-1"></i> Imprimir',
+          className: 'btn btn-info',
+          title: 'Clientes Antiguos al Día',
+          exportOptions: {
+            columns: [0,1,2,3,4,5]
+          },
+          customize: function(win) {
+            $(win.document.body).find('table').addClass('display').css('font-size', '12px');
+            $(win.document.body).find('tr:nth-child(odd) td').css('background-color','#D0D0D0');
+            $(win.document.body).find('h1').css('text-align','center');
+          }
+        }
+      ],
+      language: {
+        url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+      },
+      responsive: true,
+      order: [[5, 'asc']],
+      columnDefs: [
+        { responsivePriority: 1, targets: 1 },
+        { responsivePriority: 2, targets: 2 },
+        { responsivePriority: 3, targets: 4 },
+        { orderable: false, targets: -1 }
+      ]
+    });
+
+    $('.dt-buttons .btn').removeClass('btn-secondary').addClass('me-2');
+
+    $('#clientesTable').on('click', '.btn-outline-primary', function () {
+      const row = $(this).closest('tr');
+      const id = row.find('td:eq(0)').text();
+      const nombre = row.find('td:eq(1)').text();
+      const cedula = row.find('td:eq(2)').text();
+      const prestamo = row.find('td:eq(3)').text();
+      const monto = row.find('td:eq(4)').text();
+      const fecha = row.find('td:eq(5)').text();
+
+      $('#detalleClienteContent').html(`
+        <div class="row">
+          <div class="col-md-6">
+            <h5>Información del Cliente</h5>
+            <p><strong>ID:</strong> ${id}</p>
+            <p><strong>Nombre:</strong> ${nombre}</p>
+            <p><strong>Cédula:</strong> ${cedula}</p>
+          </div>
+          <div class="col-md-6">
+            <h5>Información del Préstamo</h5>
+            <p><strong># Préstamo:</strong> ${prestamo}</p>
+            <p><strong>Monto:</strong> ${monto}</p>
+            <p><strong>Fecha:</strong> ${fecha}</p>
+          </div>
+        </div>
+        <hr>
+        <div class="text-center">
+          <p class="text-muted">Este es un resumen rápido. Más detalles pueden cargarse con AJAX.</p>
+        </div>
+      `);
+      $('#detalleClienteModal').modal('show');
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>

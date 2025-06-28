@@ -1,0 +1,145 @@
+<%- include('../partials/header', { title: 'Gestión de Cobradores' }) %>
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Gestión de Cobradores</h2>
+        <a href="/cobradores/nuevo" class="btn btn-primary shadow-sm">
+            <i class="fas fa-user-plus me-2"></i>Agregar Cobrador
+        </a>
+        <a href="/cobradores/asignar_rutas" class="btn btn-primary">Asignar Rutas</a>
+    </div>
+
+    <% if (cobradores.length > 0) { %>
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
+            <% cobradores.forEach(c => { %>
+                <div class="col">
+                    <div class="card h-100 shadow-sm border-0 rounded-3">
+                        <div class="card-body d-flex flex-column align-items-center text-center">
+                            <% if (c.foto) { %>
+                                <img src="<%= c.foto %>" alt="Foto <%= c.nombre %>" class="img-fluid rounded-circle mb-3" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid #007bff;">
+                            <% } else { %>
+                                <div class="bg-light text-muted rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 100px; height: 100px; font-size: 2.5rem;">
+                                    <i class="fas fa-user-circle"></i>
+                                </div>
+                            <% } %>
+                            <h5 class="card-title mb-1"><%= c.nombre %></h5>
+                            <p class="card-subtitle text-muted mb-2">
+                                <% if (c.ruta) { %>
+                                    <%= c.ruta.zona %> - <%= c.ruta.nombre %>
+                                <% } else { %>
+                                    Sin ruta asignada
+                                <% } %>
+                            </p>
+                            <p class="card-text text-muted mb-3"><%= c.telefono || 'Sin teléfono' %></p>
+                            <div class="mt-auto d-flex justify-content-center w-100">
+                                <button type="button" class="btn btn-outline-info btn-sm mx-1 flex-grow-1" data-bs-toggle="modal" data-bs-target="#detalleModal<%= c.id %>">
+                                    <i class="fas fa-eye me-1"></i>Detalles
+                                </button>
+                                <a href="/cobradores/editar/<%= c.id %>" class="btn btn-outline-warning btn-sm mx-1 flex-grow-1">
+                                    <i class="fas fa-edit me-1"></i>Editar
+                                </a>
+                                <form action="/cobradores/<%= c.id %>?_method=DELETE" method="POST" class="d-inline mx-1 flex-grow-1">
+                                    <!-- <button type="submit" class="btn btn-outline-danger btn-sm w-100" onclick="return confirm('¿Está seguro de eliminar a <%= c.nombre %>?')">
+                                        <i class="fas fa-trash-alt me-1"></i>Eliminar
+                                    </button> -->
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+
+        <% cobradores.forEach(c => { %>
+            <div class="modal fade" id="detalleModal<%= c.id %>" tabindex="-1" aria-labelledby="detalleModalLabel<%= c.id %>" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-scrollable modal-lg">
+                    <div class="modal-content rounded-3 shadow">
+                        <div class="modal-header bg-primary text-white border-0 rounded-top-3">
+                            <h5 class="modal-title" id="detalleModalLabel<%= c.id %>">Detalle de Cobrador</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <div class="row">
+                                <div class="col-md-4 text-center mb-3 mb-md-0">
+                                    <% if (c.foto) { %>
+                                        <img src="<%= c.foto %>" alt="Foto <%= c.nombre %>" class="img-fluid rounded-circle mb-3 border border-3 border-primary" style="max-height: 200px; object-fit: cover;">
+                                    <% } else { %>
+                                        <div class="bg-light text-muted rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 150px; height: 150px; font-size: 4rem; border: 2px dashed #ccc;">
+                                            <i class="fas fa-user-circle"></i>
+                                        </div>
+                                        <p class="text-muted">Sin foto disponible</p>
+                                    <% } %>
+                                    <h4 class="mt-3"><%= c.nombre %></h4>
+                                    <p class="text-muted">
+                                        <% if (c.ruta) { %>
+                                            <%= c.ruta.zona %> - <%= c.ruta.nombre %>
+                                        <% } else { %>
+                                            Sin ruta asignada
+                                        <% } %>
+                                    </p>
+                                </div>
+                                <div class="col-md-8">
+                                    <ul class="list-group list-group-flush border-top border-bottom">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>Cédula:</strong> <span><%= c.cedula || '-' %></span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>Teléfono:</strong> <span><%= c.telefono || '-' %></span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>Email:</strong> <span><%= c.email || '-' %></span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>Dirección:</strong> <span><%= c.direccion || '-' %></span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>Tipo de contrato:</strong> <span><%= c.tipo_contrato || '-' %></span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>Fecha inicio:</strong> <span><%= c.fecha_inicio ? new Date(c.fecha_inicio).toLocaleDateString() : '-' %></span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>Fecha retiro:</strong> <span><%= c.fecha_retiro ? new Date(c.fecha_retiro).toLocaleDateString() : '-' %></span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>Activo:</strong> 
+                                            <span>
+                                                <% if (c.activo) { %>
+                                                    <span class="badge bg-success"><i class="fas fa-check-circle"></i> Sí</span>
+                                                <% } else { %>
+                                                    <span class="badge bg-danger"><i class="fas fa-times-circle"></i> No</span>
+                                                <% } %>
+                                            </span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <strong>Creado:</strong> <span><%= c.fecha_creacion ? new Date(c.fecha_creacion).toLocaleDateString() : '-' %></span>
+                                        </li>
+                                        <li class="list-group-item">
+                                            <strong>Notas:</strong> <p class="text-muted mb-0"><%= c.notas || 'Ninguna' %></p>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer justify-content-between">
+                            <small class="text-muted">ID: <%= c.id %></small>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <% }) %>
+
+    <% } else { %>
+        <div class="alert alert-info text-center py-4 rounded-3 shadow-sm" role="alert">
+            <h4 class="alert-heading">¡No hay cobradores registrados!</h4>
+            <p>Parece que aún no tienes ningún cobrador en el sistema. ¡Es un buen momento para agregar el primero!</p>
+            <hr>
+            <a href="/cobradores/nuevo" class="btn btn-info">
+                <i class="fas fa-user-plus me-2"></i>Añadir Nuevo Cobrador
+            </a>
+        </div>
+    <% } %>
+</div>
+
+<%- include('../partials/footer') %>
