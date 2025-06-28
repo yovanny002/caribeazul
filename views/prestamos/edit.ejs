@@ -1,0 +1,129 @@
+<%- include('../partials/header', { title: 'Editar Préstamo' }) %>
+
+<div class="container my-5">
+  <div class="card">
+    <div class="card-header bg-primary text-white">
+      <h2 class="mb-0">Editar Préstamo #<%= prestamo.id %></h2>
+    </div>
+    <div class="card-body">
+      <form action="/prestamos/<%= prestamo.id %>?_method=PUT" method="POST">
+        <!-- Información del Cliente (solo lectura) -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <h4 class="border-bottom pb-2">Información del Cliente</h4>
+            <div class="mb-3">
+              <label class="form-label">Nombre del Cliente</label>
+              <input type="text" class="form-control" 
+                     value="<%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %>" readonly>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Profesión</label>
+              <input type="text" class="form-control" 
+                     value="<%= prestamo.cliente_profesion %>" readonly>
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <h4 class="border-bottom pb-2">Detalles del Préstamo</h4>
+            <div class="mb-3">
+              <label for="monto_solicitado" class="form-label">Monto Solicitado (RD$)</label>
+              <input type="number" step="0.01" class="form-control" 
+                     name="monto_solicitado" value="<%= prestamo.monto_solicitado %>" required>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detalles de Aprobación -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label for="monto_aprobado" class="form-label">Monto Aprobado (RD$)</label>
+              <input type="number" step="0.01" class="form-control" 
+                     name="monto_aprobado" value="<%= prestamo.monto_aprobado || '' %>">
+            </div>
+            <div class="mb-3">
+              <label for="interes_porcentaje" class="form-label">Tasa de Interés (%)</label>
+              <input type="number" step="0.01" class="form-control" 
+                     name="interes_porcentaje" value="<%= prestamo.interes_porcentaje || 0 %>">
+            </div>
+          </div>
+          
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label for="forma_pago" class="form-label">Forma de Pago</label>
+              <select class="form-select" name="forma_pago" required>
+                <option value="diario" <%= prestamo.forma_pago === 'diario' ? 'selected' : '' %>>Diario</option>
+                <option value="semanal" <%= prestamo.forma_pago === 'semanal' ? 'selected' : '' %>>Semanal</option>
+                <option value="quincenal" <%= prestamo.forma_pago === 'quincenal' ? 'selected' : '' %>>Quincenal</option>
+                <option value="mensual" <%= prestamo.forma_pago === 'mensual' ? 'selected' : '' %>>Mensual</option>
+              </select>
+            </div>
+            <% if (user.rol === 'admin' || user.rol === 'gerente') { %>
+              <div class="mb-3">
+                <label for="estado" class="form-label">Estado del Préstamo</label>
+                <select name="estado" class="form-select" required>
+                  <option value="pendiente" <%= prestamo.estado === 'pendiente' ? 'selected' : '' %>>Pendiente</option>
+                  <option value="aprobado" <%= prestamo.estado === 'aprobado' ? 'selected' : '' %>>Aprobado</option>
+                  <option value="rechazado" <%= prestamo.estado === 'rechazado' ? 'selected' : '' %>>Rechazado</option>
+                  <option value="reenganchado" <%= prestamo.estado === 'reenganchado' ? 'selected' : '' %>>Reenganchado</option>
+                </select>
+              </div>
+            <% } else { %>
+              <input type="hidden" name="estado" value="<%= prestamo.estado %>">
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Sección de Cuotas (solo si está aprobado) -->
+        <% if (prestamo.estado === 'aprobado') { %>
+          <div class="mb-4">
+            <h4 class="border-bottom pb-2">Cuotas</h4>
+            <div class="table-responsive">
+              <table class="table table-bordered">
+                <thead class="table-light">
+                  <tr>
+                    <th># Cuota</th>
+                    <th>Monto (RD$)</th>
+                    <th>Fecha Vencimiento</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (prestamo.cuotas && prestamo.cuotas.length > 0) { %>
+                    <% prestamo.cuotas.forEach(cuota => { %>
+                      <tr>
+                        <td><%= cuota.numero_cuota %></td>
+                        <td><%= cuota.monto %></td>
+                        <td><%= moment(cuota.fecha_vencimiento).format('DD/MM/YYYY') %></td>
+                        <td>
+                          <span class="badge bg-<%= cuota.estado === 'pagado' ? 'success' : 'warning' %>">
+                            <%= cuota.estado || 'pendiente' %>
+                          </span>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } else { %>
+                    <tr>
+                      <td colspan="4" class="text-center">No hay cuotas generadas</td>
+                    </tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        <% } %>
+
+        <div class="d-flex justify-content-between">
+          <a href="/prestamos" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Volver
+          </a>
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save me-2"></i>Guardar Cambios
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

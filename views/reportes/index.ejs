@@ -1,0 +1,91 @@
+<%- include('../partials/header', { title: 'Panel de Reportes' }) %>
+
+<div class="container py-4">
+  <h2 class="mb-4 text-primary">📊 Panel de Reportes</h2>
+
+  <% if (messages.error && messages.error.length > 0) { %>
+    <div class="alert alert-danger">
+      <ul>
+        <% messages.error.forEach(msg => { %>
+          <li><%= msg %></li>
+        <% }) %>
+      </ul>
+    </div>
+  <% } %>
+
+  <% if (messages.success && messages.success.length > 0) { %>
+    <div class="alert alert-success">
+      <ul>
+        <% messages.success.forEach(msg => { %>
+          <li><%= msg %></li>
+        <% }) %>
+      </ul>
+    </div>
+  <% } %>
+
+  <div class="row row-cols-1 row-cols-md-3 g-4">
+    
+    <!-- Caja Chica -->
+    <div class="col">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body text-center">
+          <i class="fas fa-cash-register fa-2x text-primary mb-3"></i>
+          <h5 class="card-title">Caja Chica</h5>
+          <p class="card-text">Visualiza los gastos registrados por sucursal o usuario.</p>
+          <a href="/reportes/gastos" class="btn btn-outline-primary">Ver Reporte</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clientes Nuevos -->
+    <div class="col">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body text-center">
+          <i class="fas fa-user-plus fa-2x text-success mb-3"></i>
+          <h5 class="card-title">Clientes Nuevos</h5>
+          <p class="card-text">Clientes que han solicitado préstamos en los últimos 30 días.</p>
+          <a href="/reportes/clientes_nuevos" class="btn btn-outline-success">Ver Clientes</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clientes Antiguos al Día -->
+    <div class="col">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body text-center">
+          <i class="fas fa-user-check fa-2x text-secondary mb-3"></i>
+          <h5 class="card-title">Clientes Antiguos al Día</h5>
+          <p class="card-text">Clientes con préstamos sin cuotas vencidas.</p>
+          <a href="/reportes/clientes_antiguos_al_dia" class="btn btn-outline-secondary">Ver Lista</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cuentas por Cobrar Hoy -->
+    <div class="col">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body text-center">
+          <i class="fas fa-calendar-day fa-2x text-info mb-3"></i>
+          <h5 class="card-title">Cuentas por Cobrar Hoy</h5>
+          <p class="card-text">Cuotas que deben pagarse en la fecha actual.</p>
+          <a href="/reportes/cuentas_por_cobrar_hoy" class="btn btn-outline-info">Ver Detalle</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Préstamos Vencidos (Morosos) -->
+    <div class="col">
+      <div class="card h-100 shadow-sm border-0">
+        <div class="card-body text-center">
+          <i class="fas fa-exclamation-circle fa-2x text-danger mb-3"></i>
+          <h5 class="card-title">Préstamos Vencidos</h5>
+          <p class="card-text">Préstamos con cuotas vencidas pendientes de pago.</p>
+          <a href="/reportes/prestamos_morosos" class="btn btn-outline-danger">Ver Morosos</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

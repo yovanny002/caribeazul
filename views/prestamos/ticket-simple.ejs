@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Recibo de Pago</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      width: 80mm;
+      margin: 0;
+      padding: 2px;
+      font-size: 12px;
+    }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .bold { font-weight: bold; }
+    .divider { border-top: 1px dashed #000; margin: 3px 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 1px 0; }
+  </style>
+</head>
+<body>
+  <div class="text-center bold"><%= negocio.nombre %></div>
+  <div class="text-center"><%= negocio.direccion %></div>
+  <div class="text-center">Tel: <%= negocio.telefono %> RNC: <%= negocio.rnc %></div>
+  <div class="divider"></div>
+
+  <div class="text-center bold">RECIBO DE PAGO #<%= prestamo.id %></div>
+  <div class="text-center"><%= moment().format('DD/MM/YYYY HH:mm') %></div>
+  <div class="divider"></div>
+
+  <div class="bold">CLIENTE:</div>
+  <div><%= cliente.nombre %> <%= cliente.apellidos %></div>
+  <div>Cédula: <%= cliente.cedula %></div>
+  <div class="divider"></div>
+
+  <div class="bold">DETALLE:</div>
+  <table>
+    <tr><td>Monto préstamo:</td><td class="text-right">RD$ <%= helpers.formatCurrency(prestamo.monto_aprobado || prestamo.monto_solicitado) %></td></tr>
+    <tr><td>Cuotas pagadas:</td><td class="text-right"><%= cuotasPagadas %>/<%= prestamo.numero_cuotas %></td></tr>
+    <% if(ultimoPago) { %>
+      <tr><td>Último pago:</td><td class="text-right">RD$ <%= helpers.formatCurrency(ultimoPago.monto) %></td></tr>
+      <tr><td>Fecha:</td><td class="text-right"><%= helpers.formatDateShort(ultimoPago.fecha) %></td></tr>
+    <% } %>
+  </table>
+  <div class="divider"></div>
+
+  <div class="bold">HISTORIAL:</div>
+  <% historialPagos.slice(0, 3).forEach(pago => { %>
+    <div><%= helpers.formatDateShort(pago.fecha) %> RD$ <%= helpers.formatCurrency(pago.monto) %></div>
+  <% }); %>
+  <div class="divider"></div>
+
+  <div class="text-center"><%= negocio.mensajeLegal %></div>
+</body>
+</html>

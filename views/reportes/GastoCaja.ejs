@@ -1,0 +1,74 @@
+<!-- views/reportes/caja_chica.ejs -->
+<%- include('../partials/header') %>
+<div class="container mt-5">
+  <h2 class="mb-4 text-primary">
+    <i class="fas fa-cash-register me-2"></i>Reporte de Salida de Caja Chica
+  </h2>
+
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+      <strong>Registrar Nueva Salida</strong>
+    </div>
+    <div class="card-body">
+      <form action="/reportes/caja-chica" method="POST">
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label for="descripcion" class="form-label">Descripción</label>
+            <input type="text" class="form-control" name="descripcion" id="descripcion" required>
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="monto" class="form-label">Monto</label>
+            <input type="number" step="0.01" min="0" class="form-control" name="monto" id="monto" required>
+          </div>
+          <div class="col-md-3 mb-3">
+            <label for="categoria" class="form-label">Categoría</label>
+            <input type="text" class="form-control" name="categoria" id="categoria">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-plus-circle"></i> Registrar Salida
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-header bg-light">
+      <strong>Historial de Salidas</strong>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>Fecha</th>
+              <th>Descripción</th>
+              <th>Categoría</th>
+              <th>Monto</th>
+              <th>Registrado por</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% let total = 0; %>
+            <% salidas.forEach(salida => { total += parseFloat(salida.monto || 0); %>
+              <tr>
+                <td><%= moment(salida.fecha).format('DD-MM-YYYY HH:mm') %></td>
+                <td><%= salida.descripcion %></td>
+                <td><%= salida.categoria || '-' %></td>
+                <td class="text-danger fw-bold">RD$ <%= parseFloat(salida.monto).toFixed(2) %></td>
+                <td><%= salida.registrado_por %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+          <tfoot class="table-light">
+            <tr>
+              <th colspan="3">Total Gastado</th>
+              <th colspan="2" class="text-danger fs-5">RD$ <%= total.toFixed(2) %></th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') %>

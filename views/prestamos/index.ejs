@@ -1,0 +1,194 @@
+<!-- header -->
+<%- include('../partials/header', { title: 'Gestión de Préstamos' }) %>
+
+<div class="container-fluid px-4 my-5">
+  <div class="card shadow-lg border-0 rounded-4">
+    <div class="card-header bg-primary text-white p-4 rounded-top-4 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+      <h3 class="mb-0 d-flex align-items-center gap-2">
+        <i class="fas fa-hand-holding-usd fa-lg"></i> <span>Listado de Préstamos</span>
+      </h3>
+      <a href="/prestamos/create" class="btn btn-light rounded-pill px-4 shadow-sm">
+        <i class="fas fa-plus me-2"></i> Nuevo Préstamo
+      </a>
+    </div>
+
+    <div class="card-body p-4">
+      <!-- Filtros -->
+      <form id="filtersForm" class="row mb-4 g-3 align-items-end">
+        <div class="col-md-3">
+          <label for="filter-status" class="form-label fw-semibold text-muted small">Estado del préstamo</label>
+          <select class="form-select" id="filter-status">
+            <option value="">Todos</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="aprobado">Aprobado</option>
+            <option value="rechazado">Rechazado</option>
+            <option value="reenganchado">Reenganchado</option>
+            <option value="pagado">Pagado</option>
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label for="filter-payment" class="form-label fw-semibold text-muted small">Forma de pago</label>
+          <select class="form-select" id="filter-payment">
+            <option value="">Todas</option>
+            <option value="diario">Diario</option>
+            <option value="semanal">Semanal</option>
+            <option value="quincenal">Quincenal</option>
+            <option value="mensual">Mensual</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label for="search-client" class="form-label fw-semibold text-muted small">Buscar cliente</label>
+          <div class="input-group">
+            <input type="text" class="form-control rounded-start-pill" id="search-client" placeholder="Buscar por nombre o cédula...">
+            <button type="button" class="btn btn-primary rounded-end-pill">
+              <i class="fas fa-search"></i>
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Tabla -->
+      <% if (prestamos && prestamos.length > 0) { %>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr class="align-middle text-center">
+                <th>ID</th>
+                <th>Cliente</th>
+                <th class="text-end">Monto Solicitado</th>
+                <th class="text-end">Monto Aprobado</th>
+                <th>Forma de Pago</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% prestamos.forEach(p => { %>
+                <tr>
+                  <td class="text-center text-muted small fw-bold"><%= p.id %></td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                        <%= p.cliente_nombre.charAt(0).toUpperCase() + p.cliente_apellidos.charAt(0).toUpperCase() %>
+                      </div>
+                      <div>
+                        <div class="fw-semibold"><%= p.cliente_nombre %> <%= p.cliente_apellidos %></div>
+                        <small class="text-muted"><%= p.cliente_profesion || 'N/A' %></small>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="text-end">
+                    <span class="text-danger fw-semibold">RD$ <%= Number(p.monto_solicitado).toLocaleString('es-DO', {minimumFractionDigits: 2}) %></span><br>
+                    <small class="text-muted">*********</small>
+                  </td>
+                  <td class="text-end">
+                    <% if (p.monto_aprobado) { %>
+                      <span class="text-success fw-semibold">RD$ <%= Number(p.monto_aprobado).toLocaleString('es-DO', {minimumFractionDigits: 2}) %></span><br>
+                      <small class="text-muted"><%= p.cuotas %> cuotas</small>
+                    <% } else { %>
+                      <span class="badge bg-secondary">No aprobado</span>
+                    <% } %>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-info text-dark rounded-pill px-3 py-2">
+                      <i class="fas fa-<%= 
+                        p.forma_pago === 'diario' ? 'calendar-day' : 
+                        p.forma_pago === 'semanal' ? 'calendar-week' : 
+                        p.forma_pago === 'quincenal' ? 'calendar-alt' : 
+                        p.forma_pago === 'mensual' ? 'calendar' : 'question-circle' 
+                      %> me-1"></i>
+                      <%= p.forma_pago.charAt(0).toUpperCase() + p.forma_pago.slice(1) %>
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge rounded-pill px-3 py-2 bg-<%= 
+                      p.estado === 'aprobado' ? 'success' : 
+                      p.estado === 'rechazado' ? 'danger' : 
+                      p.estado === 'reenganchado' ? 'warning text-dark' : 
+                      p.estado === 'pendiente' ? 'info text-dark' :
+                      p.estado === 'pagado' ? 'primary' : 'secondary' %>">
+                      <i class="fas fa-<%= 
+                        p.estado === 'aprobado' ? 'check-circle' : 
+                        p.estado === 'rechazado' ? 'times-circle' : 
+                        p.estado === 'reenganchado' ? 'sync-alt' : 
+                        p.estado === 'pendiente' ? 'clock' :
+                        p.estado === 'pagado' ? 'dollar-sign' : 'question-circle' 
+                      %> me-1"></i>
+                      <%= p.estado.charAt(0).toUpperCase() + p.estado.slice(1) %>
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    <div class="btn-group" role="group">
+                      <a href="/prestamos/<%= p.id %>/edit" class="btn btn-sm btn-outline-warning" data-bs-toggle="tooltip" title="Editar">
+                        <i class="fas fa-edit"></i>
+                      </a>
+                      <a href="/prestamos/<%= p.id %>" class="btn btn-sm btn-outline-info" data-bs-toggle="tooltip" title="Ver Detalles">
+                        <i class="fas fa-eye"></i>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <div class="alert alert-light text-center py-5 border rounded-3 shadow-sm mt-4">
+          <h4 class="mb-3"><i class="fas fa-info-circle text-primary me-2"></i>No hay préstamos registrados</h4>
+          <p>Empieza agregando tu primer préstamo al sistema.</p>
+          <a href="/prestamos/create" class="btn btn-outline-primary mt-3">
+            <i class="fas fa-plus-circle me-2"></i>Crear nuevo préstamo
+          </a>
+        </div>
+      <% } %>
+
+      <!-- Paginación -->
+      <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+          <li class="page-item disabled"><span class="page-link">Anterior</span></li>
+          <li class="page-item active"><span class="page-link">1</span></li>
+          <li class="page-item"><a class="page-link" href="#">2</a></li>
+          <li class="page-item"><a class="page-link" href="#">Siguiente</a></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- Script filtros -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const filterStatus = document.getElementById('filter-status');
+    const filterPayment = document.getElementById('filter-payment');
+    const searchClient = document.getElementById('search-client');
+    const rows = document.querySelectorAll('tbody tr');
+
+    function normalize(str) {
+      return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function applyFilters() {
+      const status = normalize(filterStatus.value);
+      const payment = normalize(filterPayment.value);
+      const search = normalize(searchClient.value);
+
+      rows.forEach(row => {
+        const name = normalize(row.querySelector('td:nth-child(2) .fw-semibold')?.textContent || '');
+        const statusText = normalize(row.querySelector('td:nth-child(6) .badge')?.textContent || '');
+        const paymentText = normalize(row.querySelector('td:nth-child(5) .badge')?.textContent || '');
+
+        const matchStatus = !status || statusText.includes(status);
+        const matchPayment = !payment || paymentText.includes(payment);
+        const matchSearch = !search || name.includes(search);
+
+        row.style.display = (matchStatus && matchPayment && matchSearch) ? '' : 'none';
+      });
+    }
+
+    [filterStatus, filterPayment, searchClient].forEach(el => el.addEventListener('input', applyFilters));
+  });
+</script>
+
+<%- include('../partials/footer') %>

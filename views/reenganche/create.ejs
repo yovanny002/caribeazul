@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Crear Reenganche</title>
+  <link rel="stylesheet" href="/css/bootstrap.min.css">
+</head>
+<body>
+  <div class="container mt-4">
+    <h1>Solicitud de Reenganche</h1>
+
+    <form action="/reenganche/guardar" method="POST">
+      <input type="hidden" name="cliente_id" value="<%= cliente.id %>">
+      <input type="hidden" name="prestamo_anterior_id" value="<%= prestamo.id %>">
+
+      <div class="mb-3">
+        <label for="cliente" class="form-label">Cliente</label>
+        <input type="text" id="cliente" class="form-control" value="<%= cliente.nombre %> <%= cliente.apellidos %>" disabled>
+      </div>
+
+      <div class="mb-3">
+        <label for="monto_solicitado" class="form-label">Monto Solicitado</label>
+        <input type="number" step="0.01" min="0" name="monto_solicitado" id="monto_solicitado" class="form-control" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="forma_pago" class="form-label">Forma de Pago</label>
+        <select name="forma_pago" id="forma_pago" class="form-control" required>
+          <option value="">Seleccione una opción</option>
+          <option value="diario">Diario</option>
+          <option value="semanal">Semanal</option>
+          <option value="quincenal">Quincenal</option>
+          <option value="mensual">Mensual</option>
+          <option value="abierto">Abierto</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="cuotas" class="form-label">Número de Cuotas</label>
+        <input type="number" min="1" name="cuotas" id="cuotas" class="form-control" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="interes_porcentaje" class="form-label">% de Interés</label>
+        <input type="number" name="interes_porcentaje" step="0.01" min="0" id="interes_porcentaje" class="form-control" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="profesion" class="form-label">Profesión</label>
+        <input type="text" name="profesion" id="profesion" class="form-control">
+      </div>
+
+      <div class="mb-3">
+        <label for="ingresos_mensuales" class="form-label">Ingresos Mensuales</label>
+        <input type="number" name="ingresos_mensuales" step="0.01" id="ingresos_mensuales" class="form-control">
+      </div>
+
+      <button type="submit" class="btn btn-primary">Enviar Solicitud</button>
+      <a href="/clientes" class="btn btn-secondary">Cancelar</a>
+    </form>
+  </div>
+</body>
+</html>

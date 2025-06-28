@@ -1,0 +1,453 @@
+<%- include('../partials/header', { title: 'Dashboard' }) %>
+
+<div class="container-fluid px-4 py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="mt-4 mb-1 fw-bold text-primary">Panel de Control</h1>
+      <p class="text-muted">Resumen operativo de Financiera Caribe Azul</p>
+    </div>
+    <div class="d-flex align-items-center">
+      <span class="badge bg-primary-subtle text-primary me-3 py-2 px-3 fs-6">
+        <i class="fas fa-calendar-alt me-2"></i>
+        <span id="current-date"><%= new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></span>
+      </span>
+      <button class="btn btn-outline-primary btn-lg rounded-pill shadow-sm btn-refresh">
+    <i class="fas fa-sync-alt me-2"></i> Actualizar Datos
+  </button>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-5">
+    <div class="col-xl-3 col-md-6">
+      <div class="card h-100 border-0 shadow-lg rounded-3 card-hover">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center">
+            <div class="bg-primary bg-gradient p-3 rounded-circle me-3 shadow-sm">
+              <i class="fas fa-users text-white fs-4"></i>
+            </div>
+            <div>
+              <h6 class="mb-1 text-muted">Total Clientes</h6>
+              <h3 class="mb-0 fw-bold text-primary"><%= total_clientes %></h3>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer bg-light border-top-0 py-3">
+          <a href="/clientes" class="text-decoration-none d-flex align-items-center justify-content-between text-primary fw-medium">
+            <span>Ver detalles</span>
+            <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <div class="card h-100 border-0 shadow-lg rounded-3 card-hover">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center">
+            <div class="bg-success bg-gradient p-3 rounded-circle me-3 shadow-sm">
+              <i class="fas fa-hand-holding-usd text-white fs-4"></i>
+            </div>
+            <div>
+              <h6 class="mb-1 text-muted">Préstamos Activos</h6>
+              <h3 class="mb-0 fw-bold text-success"><%= total_prestamos %></h3>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer bg-light border-top-0 py-3">
+          <a href="/prestamos" class="text-decoration-none d-flex align-items-center justify-content-between text-success fw-medium">
+            <span>Ver todos</span>
+            <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <div class="card h-100 border-0 shadow-lg rounded-3 card-hover">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center">
+            <div class="bg-warning bg-gradient p-3 rounded-circle me-3 shadow-sm">
+              <i class="fas fa-user-tie text-white fs-4"></i>
+            </div>
+            <div>
+              <h6 class="mb-1 text-muted">Cobradores Activos</h6>
+              <h3 class="mb-0 fw-bold text-warning"><%= total_cobradores %></h3>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer bg-light border-top-0 py-3">
+          <a href="/cobradores" class="text-decoration-none d-flex align-items-center justify-content-between text-warning fw-medium">
+            <span>Gestionar</span>
+            <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+      <div class="card h-100 border-0 shadow-lg rounded-3 card-hover">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center">
+            <div class="bg-info bg-gradient p-3 rounded-circle me-3 shadow-sm">
+              <i class="fas fa-money-bill-wave text-white fs-4"></i>
+            </div>
+            <div>
+              <h6 class="mb-1 text-muted">Pagos Recibidos Hoy</h6>
+              <h3 class="mb-0 fw-bold text-info">$<%= pagos_hoy.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></h3>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer bg-light border-top-0 py-3">
+          <a href="/pagos" class="text-decoration-none d-flex align-items-center justify-content-between text-info fw-medium">
+            <span>Ver transacciones</span>
+            <i class="fas fa-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-5">
+    <div class="col-lg-8">
+      <div class="card border-0 shadow-lg h-100 rounded-3">
+        <div class="card-header bg-white border-bottom-0 py-4 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 fw-bold text-primary">Últimos Préstamos Desembolsados</h5>
+          <a href="/prestamos" class="btn btn-sm btn-outline-primary rounded-pill">Ver Todos</a>
+        </div>
+        <div class="card-body p-0">
+          <div class="list-group list-group-flush">
+            <% if (prestamosRecientes && prestamosRecientes.length > 0) { %>
+              <% prestamosRecientes.forEach(p => { %>
+                <div class="list-group-item border-0 py-3 d-flex align-items-center">
+                  <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
+                    <i class="fas fa-file-invoice-dollar text-primary"></i>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h6 class="mb-1 fw-bold">Préstamo #<%= p.id %></h6>
+                    <small class="text-muted">Cliente: <%= p.nombre %> - Fecha: <%= new Date(p.fecha_aprobacion).toLocaleDateString('es-ES') %></small>
+                  </div>
+                  <span class="badge bg-success-subtle text-success py-2 px-3 fs-6">$<%= p.monto_aprobado.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                </div>
+              <% }) %>
+            <% } else { %>
+              <div class="list-group-item border-0 py-4 text-center text-muted">
+                No hay préstamos recientes para mostrar.
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card border-0 shadow-lg h-100 rounded-3">
+        <div class="card-header bg-white border-bottom-0 py-4 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 fw-bold text-warning">Próximos Pagos Pendientes</h5>
+          <a href="/pagos-pendientes" class="btn btn-sm btn-outline-warning rounded-pill">Ver Todos</a>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <% if (pagosPendientes && pagosPendientes.length > 0) { %>
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr class="text-muted text-uppercase">
+                  <th scope="col">Cliente</th>
+                  <th scope="col">Monto</th>
+                  <th scope="col">Vence</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% pagosPendientes.forEach(p => { %>
+                <tr>
+                  <td><small><%= p.nombre %></small></td>
+                  <td><span class="fw-bold">$<%= p.monto.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span></td>
+                  <td>
+                    <% const dueDate = new Date(p.fecha_vencimiento); %>
+                    <% const today = new Date(); %>
+                    <% today.setHours(0,0,0,0); %>
+                    <% dueDate.setHours(0,0,0,0); %>
+
+                    <% let badgeClass = ''; %>
+                    <% if (dueDate < today) { %>
+                      <% badgeClass = 'bg-danger text-white'; %>
+                    <% } else if (dueDate.getTime() === today.getTime()) { %>
+                      <% badgeClass = 'bg-info text-white'; %>
+                    <% } else { %>
+                      <% badgeClass = 'bg-warning-subtle text-warning'; %>
+                    <% } %>
+
+                    <span class="badge <%= badgeClass %> px-2 py-1">
+                      <%= dueDate < today ? 'Vencido' : dueDate.toLocaleDateString('es-ES') %>
+                    </span>
+                  </td>
+                </tr>
+                <% }) %>
+              </tbody>
+            </table>
+            <% } else { %>
+              <div class="p-4 text-center text-muted">
+                No hay pagos pendientes próximos.
+              </div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-lg-12">
+      <div class="card border-0 shadow-lg rounded-3">
+        <div class="card-header bg-white border-bottom-0 py-4">
+          <h5 class="mb-0 fw-bold text-info">Resumen Financiero General</h5>
+        </div>
+        <div class="card-body py-4">
+          <div class="row g-4">
+            <div class="col-md-3">
+              <div class="p-4 bg-light rounded-lg text-center financial-summary-card">
+                <h6 class="text-muted mb-2">Capital Prestado</h6>
+                <h4 class="fw-bold mb-0 text-dark">$<%= capital_prestado.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></h4>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="p-4 bg-light rounded-lg text-center financial-summary-card">
+                <h6 class="text-muted mb-2">Intereses Generados</h6>
+                <h4 class="fw-bold mb-0 text-dark">$<%= intereses_generados.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></h4>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="p-4 bg-light rounded-lg text-center financial-summary-card">
+                <h6 class="text-muted mb-2">Monto en Morosidad</h6>
+                <h4 class="fw-bold mb-0 text-danger">$<%= morosidad.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></h4>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="p-4 bg-light rounded-lg text-center financial-summary-card">
+                <h6 class="text-muted mb-2">Total Recuperado</h6>
+                <h4 class="fw-bold mb-0 text-success">$<%= recuperado.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></h4>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  // Función para formatear números como moneda
+  function formatCurrency(amount) {
+    return new Intl.NumberFormat('es-DO', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    }).format(amount);
+  }
+
+  // Función para actualizar los datos del dashboard
+  async function updateDashboardData() {
+    try {
+      const response = await fetch('/dashboard/data');
+      if (!response.ok) throw new Error('Error al obtener datos');
+      
+      const data = await response.json();
+      
+      // Actualizar métricas principales
+      document.querySelector('[data-metric="clientes"]').textContent = data.total_clientes;
+      document.querySelector('[data-metric="prestamos"]').textContent = data.total_prestamos;
+      document.querySelector('[data-metric="cobradores"]').textContent = data.total_cobradores;
+      document.querySelector('[data-metric="pagos-hoy"]').textContent = '$' + formatCurrency(data.pagos_hoy);
+      
+      // Actualizar resumen financiero
+      document.querySelector('[data-metric="capital"]').textContent = '$' + formatCurrency(data.capital_prestado);
+      document.querySelector('[data-metric="intereses"]').textContent = '$' + formatCurrency(data.intereses_generados);
+      document.querySelector('[data-metric="morosidad"]').textContent = '$' + formatCurrency(data.morosidad);
+      document.querySelector('[data-metric="recuperado"]').textContent = '$' + formatCurrency(data.recuperado);
+      
+      // Actualizar lista de préstamos recientes
+      const prestamosContainer = document.getElementById('prestamos-recientes');
+      prestamosContainer.innerHTML = data.prestamosRecientes.map(p => `
+        <div class="list-group-item border-0 py-3 d-flex align-items-center">
+          <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
+            <i class="fas fa-file-invoice-dollar text-primary"></i>
+          </div>
+          <div class="flex-grow-1">
+            <h6 class="mb-1 fw-bold">Préstamo #${p.id}</h6>
+            <small class="text-muted">Cliente: ${p.nombre}</small>
+          </div>
+          <span class="badge bg-success-subtle text-success py-2 px-3 fs-6">$${formatCurrency(p.monto_aprobado)}</span>
+        </div>
+      `).join('') || '<div class="list-group-item border-0 py-4 text-center text-muted">No hay préstamos recientes para mostrar.</div>';
+      
+      // Actualizar lista de pagos pendientes
+      const pagosContainer = document.getElementById('pagos-pendientes');
+      if (data.pagosPendientes && data.pagosPendientes.length > 0) {
+        pagosContainer.innerHTML = `
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr class="text-muted text-uppercase">
+                <th scope="col">Cliente</th>
+                <th scope="col">Monto</th>
+                <th scope="col">Vence</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.pagosPendientes.map(p => {
+                const dueDate = new Date(p.fecha_vencimiento);
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                dueDate.setHours(0,0,0,0);
+                
+                let badgeClass = '';
+                if (dueDate < today) {
+                  badgeClass = 'bg-danger text-white';
+                } else if (dueDate.getTime() === today.getTime()) {
+                  badgeClass = 'bg-info text-white';
+                } else {
+                  badgeClass = 'bg-warning-subtle text-warning';
+                }
+                
+                return `
+                <tr>
+                  <td><small>${p.nombre}</small></td>
+                  <td><span class="fw-bold">$${formatCurrency(p.monto)}</span></td>
+                  <td>
+                    <span class="badge ${badgeClass} px-2 py-1">
+                      ${dueDate < today ? 'Vencido' : dueDate.toLocaleDateString('es-ES')}
+                    </span>
+                  </td>
+                </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+      } else {
+        pagosContainer.innerHTML = '<div class="p-4 text-center text-muted">No hay pagos pendientes próximos.</div>';
+      }
+      
+      // Mostrar última actualización
+      const now = new Date();
+      document.getElementById('last-update').textContent = `Última actualización: ${now.toLocaleTimeString('es-ES')}`;
+      
+    } catch (error) {
+      console.error('Error al actualizar datos:', error);
+    }
+  }
+
+  // Actualizar datos inmediatamente y luego cada 15 minutos (900,000 ms)
+  updateDashboardData();
+  setInterval(updateDashboardData, 900000);
+  
+  // También puedes agregar un botón para actualización manual
+  document.querySelector('.btn-refresh').addEventListener('click', updateDashboardData);
+</script>
+<script>
+  // Función para actualizar los datos
+  async function updateDashboardData() {
+    try {
+      // Mostrar spinner de carga en el botón
+      const refreshBtn = document.querySelector('.btn-refresh');
+      refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Actualizando...';
+      refreshBtn.disabled = true;
+      
+      // Obtener los nuevos datos
+      const response = await fetch('/dashboard/data');
+      if (!response.ok) throw new Error('Error al obtener datos');
+      
+      const data = await response.json();
+      
+      // Aquí iría el código para actualizar la UI con los nuevos datos
+      // (el mismo que te mostré en respuestas anteriores)
+      
+      // Mostrar notificación de éxito
+      showToast('Datos actualizados correctamente', 'success');
+      
+    } catch (error) {
+      console.error('Error al actualizar:', error);
+      showToast('Error al actualizar datos', 'danger');
+    } finally {
+      // Restaurar el botón a su estado original
+      const refreshBtn = document.querySelector('.btn-refresh');
+      refreshBtn.innerHTML = '<i class="fas fa-sync-alt me-2"></i> Actualizar Datos';
+      refreshBtn.disabled = false;
+    }
+  }
+
+  // Función para mostrar notificaciones toast
+  function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type} border-0 show`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    toast.style.position = 'fixed';
+    toast.style.bottom = '20px';
+    toast.style.right = '20px';
+    toast.style.zIndex = '1000';
+    
+    toast.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">
+          ${message}
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Eliminar el toast después de 3 segundos
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
+
+  // Asignar el evento click al botón
+  document.querySelector('.btn-refresh').addEventListener('click', updateDashboardData);
+</script>
+<%- include('../partials/footer') %>
+
+<style>
+  body {
+    background-color: #f8f9fa; /* Light background for the whole page */
+  }
+
+  .card-hover:hover {
+    transform: translateY(-8px); /* Slightly more pronounced lift */
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important; /* Stronger shadow on hover */
+    transition: all 0.3s ease-in-out;
+  }
+
+  .card {
+    border-radius: 0.75rem; /* More rounded corners for cards */
+  }
+
+  .bg-primary-subtle {
+    background-color: #e0f2f7 !important; /* Lighter primary background for badges */
+  }
+
+  .text-primary {
+    color: #007bff !important; /* Ensure consistent primary color */
+  }
+
+  .bg-success-subtle {
+    background-color: #d4edda !important; /* Lighter success background for badges */
+  }
+
+  .bg-warning-subtle {
+    background-color: #fff3cd !important; /* Lighter warning background for badges */
+  }
+
+  .financial-summary-card {
+    border: 1px solid #e9ecef; /* Subtle border for financial summary cards */
+    transition: all 0.2s ease-in-out;
+  }
+
+  .financial-summary-card:hover {
+    background-color: #e2e6ea !important;
+  }
+
+  .list-group-item:hover {
+    background-color: #f2f2f2; /* Light hover effect for list items */
+    transition: background-color 0.2s ease;
+  }
+</style>

@@ -1,0 +1,35 @@
+<!-- views/error.ejs -->
+<%- include('partials/header', { title: typeof title !== 'undefined' ? title : 'Error' }) %>
+
+
+<div class="container mt-5">
+  <div class="card border-danger">
+    <div class="card-header bg-danger text-white">
+
+    </div>
+    <div class="card-body">
+      <h4 class="card-title"><%= message || 'Ocurrió un error inesperado' %></h4>
+      
+      <% if (error && process.env.NODE_ENV === 'development') { %>
+        <hr>
+        <div class="alert alert-warning">
+          <h5>Detalles del Error (Solo visible en desarrollo):</h5>
+          <% if (error.message) { %>
+            <p><strong>Mensaje:</strong> <%= error.message %></p>
+          <% } %>
+          <% if (error.stack) { %>
+            <pre class="text-muted"><%= error.stack %></pre>
+          <% } %>
+        </div>
+      <% } %>
+
+      <div class="mt-4">
+        <a href="/" class="btn btn-primary">
+          <i class="fas fa-home me-2"></i>Volver al Inicio
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
