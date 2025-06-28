@@ -108,6 +108,7 @@ findCuotasByPrestamo: async (prestamoId) => {
     return cuota;
   });
 },
+
   findAllWithClientes: async (estado = null) => {
     let query = `
       SELECT p.*, 
@@ -246,6 +247,19 @@ insertCuotas: async (cuotasData) => {
 generateCuotas: async (prestamoId, montoTotal, numeroCuotas, formaPago = 'mensual') => {
   if (!prestamoId) throw new Error('ID del préstamo no válido al generar cuotas');
 
+  // ✅ Verificar si ya existen cuotas para este préstamo
+  const [{ count }] = await db.query(`
+    SELECT COUNT(*)::int AS count FROM cuotas WHERE prestamo_id = $1
+  `, {
+    bind: [prestamoId],
+    type: QueryTypes.SELECT
+  });
+
+  if (count > 0) {
+    console.warn(`⚠️ Ya existen cuotas para el préstamo ${prestamoId}. Se omite la generación.`);
+    return;
+  }
+
   const numCuotas = parseInt(numeroCuotas);
   if (isNaN(numCuotas)) throw new Error('Número de cuotas no válido');
 
@@ -287,21 +301,6 @@ generateCuotas: async (prestamoId, montoTotal, numeroCuotas, formaPago = 'mensua
 
 
 
-  findCuotasByPrestamo: async (prestamoId) => {
-    const rows = await db.query(`
-      SELECT * FROM cuotas
-      WHERE prestamo_id = :prestamoId
-      ORDER BY numero_cuota ASC
-    `, {
-      replacements: { prestamoId },
-      type: QueryTypes.SELECT
-    });
-
-    return rows.map(row => ({
-      ...row,
-      monto: safeParseFloat(row.monto)
-    }));
-  },
 
   getHistorialPagos: async (prestamoId) => {
     const pagos = await db.query(`

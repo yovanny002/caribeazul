@@ -216,94 +216,92 @@
           </div>
         </div>
         <!-- Tab de Cuotas -->
-        <div class="tab-pane fade" id="cuotas" role="tabpanel">
-          <div class="card">
-            <div class="card-header bg-light d-flex justify-content-between align-items-center">
-              <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Plan de Pagos</h5>
-              <div>
-                <%
-                  const cp = cuotas.filter(c => c.estado === 'pagada').length;
-                  const cup = cuotas.length - cp;
-                %>
-                <span class="badge bg-success me-2">Pagadas: <%= cp %></span>
-                <span class="badge bg-warning text-dark">Pendientes: <%= cup %></span>
-              </div>
-            </div>
-            <div class="card-body p-0">
-              <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                  <thead class="table-light">
-                    <tr>
-                      <th>#</th>
-                      <th>Monto</th>
-                      <th>Vencimiento</th>
-                      <th>Mora</th>
-                      <th>Estado</th>
-                      <th>Pago</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% if (cuotas.length > 0) { %>
-                      <% cuotas.forEach(cuota => { %>
-                        <% const esVencida = new Date(cuota.fecha_vencimiento) < new Date() && cuota.estado !== 'pagada'; %>
-                        <tr class="<%= esVencida ? 'table-danger' : '' %>">
-                          <td><%= cuota.numero_cuota %></td>
-                          <td>RD$ <%= formatMoney(cuota.monto) %></td>
-                          <td>
-                            <%- moment(cuota.fecha_vencimiento).format('DD/MM/YYYY') %>
-                            <% if (esVencida) { %>
-                              <span class="badge bg-danger ms-2">Vencida</span>
-                            <% } %>
-                          </td>
-                           <td>
-                              RD$ <%= formatMoney(cuota.monto) %>
-                              <% if (esVencida) { %>
-                                <% const diasAtraso = Math.max(0, Math.floor((new Date() - new Date(cuota.fecha_vencimiento)) / (1000 * 60 * 60 * 24)) - 2); %>
-                                <% if (diasAtraso > 0) { %>
-                                  <br><small class="text-danger">+ RD$ <%= formatMoney(cuota.monto * 0.05 * diasAtraso) %> mora</small>
-                                <% } %>
-                              <% } %>
-                            </td>
-                          <td>
-                            <span class="badge <%= cuota.estado === 'pagada' ? 'bg-success' :
-                                                  cuota.estado === 'parcial' ? 'bg-info' : 'bg-secondary' %>">
-                              <%= cuota.estado %>
-                            </span>
-                          </td>
-                          <td>
-                            <%- cuota.fecha_pago ? moment(cuota.fecha_pago).format('DD/MM/YYYY') : '—' %>
-                          </td>
-                          <td>
-                            <% if (cuota.estado !== 'pagada') { %>
-                              <button class="btn btn-sm btn-outline-primary btn-pagar-cuota"
-                                data-cuota-id="<%= cuota.id %>"
-                                data-cuota-numero="<%= cuota.numero_cuota %>"
-                                data-monto="<%= cuota.monto %>">
-                                <i class="fas fa-money-bill-wave me-1"></i> Pagar
-                              </button>
-                            <% } else { %>
-                              <button class="btn btn-sm btn-outline-secondary btn-ver-recibo"
-                                data-pago-id="<%= historialPagos.find(p => p.cuota_id === cuota.id)?.id || '' %>">
-                                <i class="fas fa-receipt me-1"></i> Completado
-                              </button>
-                            <% } %>
-                          </td>
-                        </tr>
-                      <% }); %>
-                    <% } else { %>
-                      <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">
-                          No hay cuotas registradas para este préstamo
-                        </td>
-                      </tr>
+       <div class="tab-pane fade" id="cuotas" role="tabpanel">
+  <div class="card">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+      <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Plan de Pagos</h5>
+      <div>
+        <%
+          const cp = cuotas.filter(c => c.estado === 'pagada').length;
+          const cup = cuotas.length - cp;
+        %>
+        <span class="badge bg-success me-2">Pagadas: <%= cp %></span>
+        <span class="badge bg-warning text-dark">Pendientes: <%= cup %></span>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Monto</th>
+              <th>Vencimiento</th>
+              <th>Mora</th>
+              <th>Estado</th>
+              <th>Pago</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (cuotas.length > 0) { %>
+              <% cuotas.forEach(cuota => { %>
+                <% const esVencida = new Date(cuota.fecha_vencimiento) < new Date() && cuota.estado !== 'pagada'; %>
+                <tr class="<%= esVencida ? 'table-danger' : '' %>">
+                  <td><%= cuota.numero_cuota %></td>
+                  <td>RD$ <%= formatMoney(cuota.monto) %></td>
+                  <td>
+                    <%- moment(cuota.fecha_vencimiento).format('DD/MM/YYYY') %>
+                    <% if (esVencida) { %>
+                      <span class="badge bg-danger ms-2">Vencida</span>
                     <% } %>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
+                  </td>
+                  <td>
+                    RD$ <%= formatMoney(cuota.monto) %>
+                    <% if (cuota.mora && cuota.mora > 0) { %>
+                      <br><small class="text-danger">+ RD$ <%= formatMoney(cuota.mora) %> mora</small>
+                    <% } %>
+                  </td>
+                  <td>
+                    <span class="badge <%= cuota.estado === 'pagada' ? 'bg-success' :
+                                              cuota.estado === 'parcial' ? 'bg-info' : 'bg-secondary' %>">
+                      <%= cuota.estado %>
+                    </span>
+                  </td>
+                  <td>
+                    <%- cuota.fecha_pago ? moment(cuota.fecha_pago).format('DD/MM/YYYY') : '—' %>
+                  </td>
+                  <td>
+                    <% if (cuota.estado !== 'pagada') { %>
+                      <button class="btn btn-sm btn-outline-primary btn-pagar-cuota"
+                        data-cuota-id="<%= cuota.id %>"
+                        data-cuota-numero="<%= cuota.numero_cuota %>"
+                        data-monto="<%= cuota.total_a_pagar || cuota.monto %>">
+                        <i class="fas fa-money-bill-wave me-1"></i> Pagar
+                      </button>
+                    <% } else { %>
+                      <button class="btn btn-sm btn-outline-secondary btn-ver-recibo"
+                        data-pago-id="<%= historialPagos.find(p => p.cuota_id === cuota.id)?.id || '' %>">
+                        <i class="fas fa-receipt me-1"></i> Completado
+                      </button>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="7" class="text-center py-4 text-muted">
+                  No hay cuotas registradas para este préstamo
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
         <!-- Tab de Historial de Pagos -->
         <div class="tab-pane fade" id="pagos" role="tabpanel">
           <div class="card">
