@@ -49,7 +49,7 @@ findById: async (id) => {
 
     const prestamo = rows[0];
     prestamo.monto_aprobado = safeParseFloat(prestamo.monto_aprobado);
-    prestamo.interes_porcentaje = safeParseFloat(prestamo.interes_porcentaje, 25);
+    prestamo.interes_porcentaje = safeParseFloat(prestamo.interes_porcentaje, 43);
     prestamo.monto_interes = prestamo.monto_aprobado * (prestamo.interes_porcentaje / 100);
     prestamo.monto_total = prestamo.monto_aprobado + prestamo.monto_interes;
     
@@ -129,7 +129,7 @@ findCuotasByPrestamo: async (prestamoId) => {
 
     return rows.map(row => {
       row.monto_aprobado = safeParseFloat(row.monto_aprobado);
-      row.interes_porcentaje = safeParseFloat(row.interes_porcentaje, 25);
+      row.interes_porcentaje = safeParseFloat(row.interes_porcentaje, 43);
       row.monto_interes = row.monto_aprobado * (row.interes_porcentaje / 100);
       row.monto_total = row.monto_aprobado + row.monto_interes;
       row.moras = safeParseFloat(row.moras, 0);
@@ -157,7 +157,7 @@ create: async (data) => {
   }
 
   const montoAprobadoVal = safeParseFloat(monto_aprobado || monto_solicitado);
-  const interes = safeParseFloat(interes_porcentaje, 25);
+  const interes = safeParseFloat(interes_porcentaje, 43);
   const montoInteres = montoAprobadoVal * (interes / 100);
   const montoTotal = montoAprobadoVal + montoInteres;
   const monto_por_cuota = parseFloat((montoTotal / numeroCuotas).toFixed(2));
