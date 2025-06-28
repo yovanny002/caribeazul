@@ -300,19 +300,19 @@
         </a>
       </li>
         <% } %> -->
+              <% if (rol === 'caja' || rol === 'administrador' || rol === 'servicio') { %>
+        <li class="nav-item">
+          <a class="nav-link" href="/rutas">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>Crear Rutas</span>
+          </a>
+        </li>
+      <% } %>
       <% if (rol === 'caja' || rol === 'administrador') { %>
         <li class="nav-item">
           <a class="nav-link" href="/reportes">
             <i class="fas fa-table"></i>
             <span>Rerpotes</span>
-          </a>
-        </li>
-      <% } %>
-      <% if (rol === 'caja' || rol === 'administrador' || rol === 'servicio') { %>
-        <li class="nav-item">
-          <a class="nav-link" href="/rutas">
-            <i class="fas fa-table"></i>
-            <span>Crear Rutas</span>
           </a>
         </li>
       <% } %>
