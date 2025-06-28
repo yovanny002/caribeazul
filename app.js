@@ -11,6 +11,8 @@ const cookieParser = require('cookie-parser');
 // const csrf = require('csurf');
 require('dotenv').config();
 
+// HABILITAR trust proxy para Render (o cualquier proxy que uses)
+app.set('trust proxy', 1);
 
 // Configuración de EJS
 app.set('view engine', 'ejs');
@@ -37,16 +39,6 @@ app.use(session({
   }
 }));
 
-
-// CSRF debe ir después de session y cookieParser
-// app.use(csrf({ cookie: false }));
-
-// Middleware para exponer el token CSRF a las vistas EJS
-// app.use((req, res, next) => {
-//   res.locals.csrfToken = req.csrfToken();
-//   next();
-// });
-
 // Flash messages
 app.use(flash());
 
@@ -72,7 +64,6 @@ app.use((req, res, next) => {
   next();
 });
 
-
 // Rutas
 const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
@@ -95,11 +86,10 @@ app.get('/logout', (req, res) => {
       console.error('Error al cerrar sesión:', err);
       return res.redirect('/');
     }
-    res.clearCookie('connect.sid'); // borra la cookie de sesión
-    res.redirect('/auth/login'); // o solo /login si no usas prefijo
+    res.clearCookie('connect.sid'); 
+    res.redirect('/auth/login');
   });
 });
-  
 
 // Ruta principal
 app.get('/', (req, res) => {
