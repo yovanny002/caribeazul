@@ -589,9 +589,6 @@
     </div>
   </div>
 </div>
-
-<%- include('../partials/footer') %>
-
 <script>
   // Variables globales necesarias para el JS externo
   window.prestamoData = {
@@ -779,4 +776,65 @@
       });
     }
   });
+  document.querySelectorAll('.btn-subir-doc').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tipo = btn.dataset.tipo;
+    const input = document.querySelector(`#upload${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+    input.click();
+
+    input.onchange = async () => {
+      const formData = new FormData();
+      formData.append('archivo', input.files[0]);
+      formData.append('tipo', tipo);
+
+      try {
+        const res = await fetch(`/documentos/<%= prestamo.id %>/subir`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showAlert('success', 'Documento subido');
+          setTimeout(() => window.location.reload(), 800);
+        } else {
+          throw new Error(data.message);
+        }
+      } catch (err) {
+        handleError(err);
+      }
+    };
+  });
+});
+
+document.querySelectorAll('.btn-eliminar-doc').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const tipo = btn.dataset.tipo;
+
+    if (!confirm(`¿Eliminar el documento "${tipo}"?`)) return;
+
+    try {
+      const res = await fetch(`/documentos/<%= prestamo.id %>/eliminar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showAlert('success', 'Documento eliminado');
+        setTimeout(() => window.location.reload(), 800);
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (err) {
+      handleError(err);
+    }
+  });
+});
+
 </script>
+
+
+<%- include('../partials/footer') %>
+

@@ -153,10 +153,6 @@ exports.show = async (req, res) => {
     req.flash('success', 'Cuota marcada como pagada');
     res.redirect('back');
   };
-  // Ruta POST: /prestamos/:id/pagar
-  // Corregir el método de pago
-  // Controlador para procesar pagos
-const Cuota = require('../models/Cuota'); // Asegúrate de tener este import
 
 exports.pagar = async (req, res) => {
   const { id: prestamoId } = req.params;
@@ -278,7 +274,7 @@ exports.pagar = async (req, res) => {
     }
   }
 };
-  
+
   // Funciones auxiliares para manejar respuestas
   async function handleSuccessResponse(res, req, { prestamoId, pagoId, ticketData, redirectUrl }) {
     if (req.xhr || req.accepts('json')) {
