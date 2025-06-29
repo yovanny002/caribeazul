@@ -2,89 +2,99 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=80mm, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Comprobante de Pago</title>
   <style>
-    @page {
-      size: 80mm auto;
-      margin: 0;
-    }
+    /* Estilos generales para impresión en 80mm y base para pantallas */
     body {
       font-family: 'Arial Narrow', Arial, sans-serif;
-      width: 80mm;
       margin: 0;
-      padding: 3mm;
+      padding: 5mm; /* Un poco más de padding para mejor visualización en pantalla */
       font-size: 11px;
-      line-height: 1.2;
+      line-height: 1.4; /* Aumentado ligeramente para legibilidad en pantalla */
+      background-color: #f4f4f4; /* Fondo ligero para la vista en pantalla */
+      color: #333;
     }
     .container {
       width: 100%;
-      margin: 0 auto;
+      max-width: 80mm; /* Mantiene la referencia a 80mm para impresión */
+      margin: 15px auto; /* Centrado y con margen superior/inferior para pantalla */
+      background-color: #fff;
+      padding: 10mm; /* Padding interno para el contenido en pantalla */
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Sombra para mejor presentación en pantalla */
+      box-sizing: border-box; /* Asegura que padding no aumente el width */
     }
     .header {
       text-align: center;
-      margin-bottom: 5px;
-      padding-bottom: 5px;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
       border-bottom: 2px solid #000;
     }
     .header h1 {
       margin: 0;
-      font-size: 16px;
+      font-size: 18px; /* Tamaño ligeramente mayor para pantalla */
       font-weight: bold;
       letter-spacing: 1px;
       text-transform: uppercase;
     }
     .header p {
       margin: 2px 0;
-      font-size: 10px;
+      font-size: 11px; /* Tamaño ligeramente mayor para pantalla */
     }
     .document-title {
       text-align: center;
       font-weight: bold;
-      font-size: 14px;
-      margin: 8px 0;
+      font-size: 16px; /* Tamaño ligeramente mayor para pantalla */
+      margin: 10px 0;
       text-decoration: underline;
     }
     .divider {
       border-top: 1px dashed #000;
-      margin: 6px 0;
+      margin: 8px 0;
     }
     .double-divider {
       border-top: 2px solid #000;
-      margin: 8px 0;
+      margin: 10px 0;
     }
     .details {
-      margin: 5px 0;
+      margin: 8px 0;
     }
     .details p {
-      margin: 4px 0;
+      margin: 5px 0;
       display: flex;
       justify-content: space-between;
+      align-items: baseline; /* Alineación para que el texto se vea mejor */
     }
     .details p span:first-child {
       font-weight: bold;
-      margin-right: 10px;
+      margin-right: 15px; /* Espacio para separar etiquetas de valores */
+      flex-shrink: 0; /* Evita que el label se encoja */
+    }
+    .details p span:last-child {
+        text-align: right; /* Alinea los valores a la derecha */
+        flex-grow: 1; /* Permite que el valor ocupe el espacio restante */
+        word-break: break-word; /* Para evitar desbordamiento en nombres largos */
     }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin: 8px 0;
-      font-size: 10px;
+      margin: 10px 0;
+      font-size: 11px; /* Tamaño ligeramente mayor para pantalla */
     }
     th {
       border-bottom: 1px solid #000;
-      padding: 3px 2px;
+      padding: 5px 3px;
       text-align: left;
       font-weight: bold;
     }
     td {
-      padding: 3px 2px;
+      padding: 5px 3px;
       border-bottom: 1px dashed #ccc;
     }
     .footer {
       text-align: center;
-      margin-top: 10px;
-      font-size: 9px;
+      margin-top: 15px;
+      font-size: 10px; /* Tamaño ligeramente mayor para pantalla */
       font-style: italic;
     }
     .payment-method {
@@ -111,20 +121,109 @@
     }
     .mora-details {
       background-color: #fff8f8;
-      padding: 5px;
-      margin: 5px 0;
+      padding: 8px; /* Más padding para mejor visibilidad */
+      margin: 8px 0;
       border-left: 3px solid #dc3545;
+      border-radius: 4px; /* Bordes ligeramente redondeados */
+    }
+    .mora-details p {
+        margin: 3px 0;
+    }
+
+    /* Estilos específicos para impresión */
+    @page {
+      size: 80mm auto; /* Mantiene el tamaño de recibo */
+      margin: 0;
     }
     @media print {
-      .no-print { display: none !important; }
       body {
         width: 80mm;
         margin: 0;
-        padding: 1mm;
-        font-size: 10px;
+        padding: 1mm; /* Reduce el padding para la impresión */
+        font-size: 10px; /* Tamaño de fuente para impresión */
+        -webkit-print-color-adjust: exact; /* Para imprimir colores de fondo */
+        print-color-adjust: exact;
+        background-color: #fff; /* Asegura fondo blanco en impresión */
       }
       .container {
+        width: 80mm;
+        margin: 0;
         padding: 0;
+        box-shadow: none; /* Sin sombra en impresión */
+      }
+      .no-print {
+        display: none !important;
+      }
+      .header h1 {
+        font-size: 16px; /* Ajuste de fuente para impresión */
+      }
+      .header p {
+        font-size: 10px; /* Ajuste de fuente para impresión */
+      }
+      .document-title {
+        font-size: 14px; /* Ajuste de fuente para impresión */
+      }
+      .details p {
+        margin: 3px 0; /* Ajuste de margen para impresión */
+      }
+      table {
+        font-size: 10px; /* Ajuste de fuente para impresión */
+      }
+      th, td {
+        padding: 3px 2px; /* Ajuste de padding para impresión */
+      }
+      .footer {
+        font-size: 9px; /* Ajuste de fuente para impresión */
+      }
+    }
+
+    /* Estilos para dispositivos pequeños (móviles) */
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+        font-size: 12px;
+      }
+      .container {
+        margin: 10px auto;
+        padding: 15px;
+        max-width: 95%; /* Ocupa más ancho en móviles */
+      }
+      .header h1 {
+        font-size: 20px;
+      }
+      .document-title {
+        font-size: 18px;
+      }
+      .details p span:first-child {
+        margin-right: 10px;
+      }
+      table {
+        font-size: 12px;
+      }
+      th, td {
+        padding: 7px 5px;
+      }
+    }
+
+    /* Estilos para tabletas (dispositivos medianos) */
+    @media (min-width: 601px) and (max-width: 900px) {
+      body {
+        padding: 15px;
+        font-size: 13px;
+      }
+      .container {
+        margin: 20px auto;
+        padding: 20px;
+        max-width: 70%; /* Ocupa un ancho intermedio */
+      }
+      .header h1 {
+        font-size: 22px;
+      }
+      .document-title {
+        font-size: 20px;
+      }
+      table {
+        font-size: 13px;
       }
     }
   </style>
@@ -150,7 +249,7 @@
       <p><span>Cliente:</span> <span class="uppercase"><%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></span></p>
       <p><span>Cédula:</span> <span><%= prestamo.cliente_cedula %></span></p>
       <p><span>Préstamo #:</span> <span><%= prestamo.id %></span></p>
-      <p><span>Atendido por:</span> <span><%= pago.registrado_por || 'Sistema' %></span></p>
+      <p><span>Atendido por:</span> <span><%= pago.registrado_por || (user ? user.nombre : 'Sistema') %></span></p>
     </div>
 
     <div class="divider"></div>
@@ -160,7 +259,7 @@
       
       <% if (pago.moras && pago.moras > 0) { %>
         <div class="mora-details">
-          <p><span>Monto original:<span>RD$ <%= (pago.monto - pago.mora).toFixed(2) %></span></p>
+          <p><span>Monto original:</span><span>RD$ <%= (pago.monto - pago.moras).toFixed(2) %></span></p>
           <p><span>Mora (5%):</span> <span class="text-danger">RD$ <%= Number(pago.moras).toFixed(2) %></span></p>
           <p><span>Días de atraso:</span> <span><%= moment().diff(moment(cuota.fecha_vencimiento), 'days') %> días</span></p>
         </div>
@@ -222,9 +321,9 @@
     </div>
   </div>
 
-  <div class="no-print" style="text-align: center; margin-top: 10px;">
-    <button onclick="window.print()" style="padding: 5px 10px; margin: 3px; background: #000; color: #fff; border: none; cursor: pointer;">Imprimir</button>
-    <button onclick="window.close()" style="padding: 5px 10px; margin: 3px; background: #ccc; border: none; cursor: pointer;">Cerrar</button>
+  <div class="no-print" style="text-align: center; margin-top: 15px;">
+    <button onclick="window.print()" style="padding: 8px 15px; margin: 5px; background: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Imprimir Comprobante</button>
+    <button onclick="window.close()" style="padding: 8px 15px; margin: 5px; background: #6c757d; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Cerrar Vista</button>
   </div>
 
 </body>
