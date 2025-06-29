@@ -1,6 +1,7 @@
   const db = require('../models/db');
   const Prestamo = require('../models/Prestamo');
   const Cliente = require('../models/Cliente');
+  const Cuota = require('../models/Cuota');
   const Pago = require('../models/Pago');
   const Ruta = require('../models/Ruta'); // Asegúrate de que este archivo existe
   const moment = require('moment');
