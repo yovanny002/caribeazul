@@ -156,6 +156,8 @@ exports.show = async (req, res) => {
   // Ruta POST: /prestamos/:id/pagar
   // Corregir el método de pago
   // Controlador para procesar pagos
+const Cuota = require('../models/Cuota'); // Asegúrate de tener este import
+
 exports.pagar = async (req, res) => {
   const { id: prestamoId } = req.params;
   const { monto, metodo, notas, cuota_id } = req.body;
@@ -171,7 +173,7 @@ exports.pagar = async (req, res) => {
       throw new Error('Método de pago no válido');
     }
 
-    // Calcular mora si es pago de cuota
+    // Calcular mora si es pago de cuota vencida
     let mora = 0;
     if (cuota_id) {
       mora = await Cuota.calcularMora(cuota_id);
@@ -182,7 +184,7 @@ exports.pagar = async (req, res) => {
     // Registrar el pago
     const [result] = await db.query(
       `INSERT INTO pagos (prestamo_id, cuota_id, monto, mora, metodo, notas, registrado_por, fecha) 
-      VALUES (:prestamo_id, :cuota_id, :monto, :mora, :metodo, :notas, :registrado_por, NOW())`,
+       VALUES (:prestamo_id, :cuota_id, :monto, :mora, :metodo, :notas, :registrado_por, NOW())`,
       {
         replacements: {
           prestamo_id: prestamoId,
@@ -203,7 +205,7 @@ exports.pagar = async (req, res) => {
     if (cuota_id) {
       await db.query(
         `UPDATE cuotas SET estado = 'pagada', fecha_pago = NOW() 
-        WHERE id = :cuota_id AND prestamo_id = :prestamo_id`,
+         WHERE id = :cuota_id AND prestamo_id = :prestamo_id`,
         {
           replacements: {
             cuota_id: cuota_id,
@@ -213,26 +215,23 @@ exports.pagar = async (req, res) => {
       );
     }
 
-    // Obtener datos para el ticket
+    // Obtener datos del préstamo
     const prestamo = await Prestamo.findById(prestamoId);
-    if (!prestamo) {
-      throw new Error('Préstamo no encontrado');
-    }
+    if (!prestamo) throw new Error('Préstamo no encontrado');
 
     // Obtener número de cuota si aplica
-    let cuotaNumero = null;
+    let cuotaNumero = 'Adicional';
     if (cuota_id) {
       const cuotas = await Cuota.findCuotasByPrestamo(prestamoId);
       const cuotaPagada = cuotas.find(c => c.id == cuota_id);
-      cuotaNumero = cuotaPagada ? cuotaPagada.numero_cuota : null;
+      cuotaNumero = cuotaPagada ? cuotaPagada.numero_cuota : 'Adicional';
     }
 
-    // Preparar datos para impresión
     const ticketData = {
       cliente: `${prestamo.cliente_nombre} ${prestamo.cliente_apellidos}`,
       cedula: prestamo.cliente_cedula,
       prestamoId: prestamo.id,
-      cuotaNumero: cuotaNumero || 'Adicional',
+      cuotaNumero,
       monto: montoTotal.toFixed(2),
       mora: mora.toFixed(2),
       metodo: metodo.charAt(0).toUpperCase() + metodo.slice(1),
@@ -243,12 +242,14 @@ exports.pagar = async (req, res) => {
       })
     };
 
-    // Imprimir ticket (manejando errores)
-    try {
-      await imprimirTicket(ticketData);
-    } catch (error) {
-      console.error('Error al imprimir:', error.message);
-    }
+    // Imprimir ticket (no bloqueante)
+    setImmediate(async () => {
+      try {
+        await imprimirTicket(ticketData);
+      } catch (err) {
+        console.error('Error al imprimir ticket:', err.message);
+      }
+    });
 
     // Responder
     if (req.xhr || req.accepts('json')) {
@@ -265,7 +266,7 @@ exports.pagar = async (req, res) => {
 
   } catch (error) {
     console.error('Error en pagar:', error.message);
-    
+
     if (req.xhr || req.accepts('json')) {
       return res.status(400).json({
         success: false,
@@ -277,7 +278,7 @@ exports.pagar = async (req, res) => {
     }
   }
 };
-
+  
   // Funciones auxiliares para manejar respuestas
   async function handleSuccessResponse(res, req, { prestamoId, pagoId, ticketData, redirectUrl }) {
     if (req.xhr || req.accepts('json')) {
