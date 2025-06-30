@@ -3,6 +3,7 @@
   const Cliente = require('../models/Cliente');
   const Cuota = require('../models/Cuota');
   const Pago = require('../models/Pago');
+  const SolicitudPrestamo = require('../models/SolicitudPrestamo');
   const Ruta = require('../models/Ruta'); // Asegúrate de que este archivo existe
   const moment = require('moment');
   const { imprimirTicket } = require('../utils/impresora'); // crearás esto luego
