@@ -21,6 +21,7 @@ router.get('/:id', prestamoController.show);
 router.post('/:id/pagar', prestamoController.pagar);
 router.get('/:id/recibo', prestamoController.recibo);
 router.post('/:id/pagar-cuota', prestamoController.pagarCuota);
+router.get('/:id/imprimir', prestamoController.imprimir);
 
 router.get('/:id/imprimir-ticket', prestamoController.imprimirTicket);
 router.post('/api/imprimir-ticket', prestamoController.imprimirTicketApi);

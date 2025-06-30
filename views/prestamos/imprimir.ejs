@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contrato de Préstamo - Ciwita Financiera</title>
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Base Styles */
+    body {
+      font-family: 'Open Sans', sans-serif; /* Modern, clean sans-serif font for body text */
+      margin: 0;
+      padding: 30px; /* Adjust padding for better visual margins */
+      color: #333; /* Softer black for better readability */
+      line-height: 1.8; /* Increased line height for better readability */
+      background-color: #f8f9fa; /* Light grey background for a professional feel */
+    }
+
+    /* Container for the contract content */
+    .contract-container {
+      max-width: 800px; /* Optimal width for readability on larger screens */
+      margin: 40px auto; /* Centered with more vertical margin */
+      padding: 40px;
+      background-color: #fff; /* White background for the contract area */
+      border: 1px solid #e0e0e0; /* Subtle border */
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Soft shadow for depth */
+      border-radius: 8px; /* Slightly rounded corners */
+    }
+
+    /* Title Styling */
+    .title {
+      font-family: 'Merriweather', serif; /* A more traditional, strong serif font for the title */
+      text-align: center;
+      text-transform: uppercase;
+      font-size: 28px; /* Larger, more impactful title */
+      font-weight: 700; /* Bold */
+      color: #0f4c75; /* A deep, professional blue */
+      margin-bottom: 40px; /* More space below the title */
+      padding-bottom: 10px;
+      border-bottom: 2px solid #0f4c75; /* A strong bottom border for emphasis */
+      letter-spacing: 1.5px; /* Slight letter spacing for a refined look */
+    }
+
+    /* Section Styling */
+    .section {
+      margin-bottom: 30px; /* Increased margin between sections */
+      padding-bottom: 15px;
+      border-bottom: 1px dashed #e0e0e0; /* Lighter, dashed separator */
+    }
+
+    .section:last-of-type {
+      border-bottom: none; /* No border on the last section */
+      padding-bottom: 0;
+    }
+
+    .section-heading {
+      font-family: 'Open Sans', sans-serif;
+      font-size: 18px;
+      font-weight: 600; /* Semi-bold for section headings */
+      color: #0f4c75;
+      margin-bottom: 15px;
+      border-left: 4px solid #3282b8; /* A colored left border for emphasis */
+      padding-left: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Table Styling for Data Sections (Excel-like) */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse; /* Ensure borders are clean */
+      margin-bottom: 20px;
+      background-color: #fff;
+      border: 1px solid #cce0ec; /* Light blue border for the whole table */
+      display: block; /* Make table scrollable on small screens */
+      overflow-x: auto; /* Add horizontal scrollbar if needed */
+      white-space: nowrap; /* Prevent content from wrapping inside cells on small screens */
+    }
+
+    .data-table thead th {
+        background-color: #eaf4fa; /* Light blue background for header */
+        color: #0f4c75; /* Dark blue text for header */
+        font-weight: 700;
+        text-align: left;
+        padding: 12px 15px;
+        border: 1px solid #cce0ec;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .data-table tbody td {
+      padding: 10px 15px;
+      border: 1px solid #e0eaf1; /* Lighter blue border for cells */
+      font-size: 15px;
+      color: #333;
+      vertical-align: top; /* Align content to the top */
+    }
+
+    .data-table tbody tr:nth-child(even) {
+        background-color: #f9fcff; /* Very light blue for even rows */
+    }
+    
+    /* Revert table display for larger screens */
+    @media (min-width: 768px) {
+        .data-table {
+            display: table;
+            overflow-x: visible;
+            white-space: normal;
+        }
+    }
+
+
+    /* Disclaimer/Commitment Text */
+    .commitment-text {
+      background-color: #f2f7fc; /* Light blue background */
+      border-left: 5px solid #3282b8; /* Emphasized left border */
+      padding: 20px;
+      margin-top: 30px; /* Space above the text */
+      font-size: 15px;
+      color: #444;
+      border-radius: 4px;
+      line-height: 1.7;
+    }
+
+    .commitment-text strong {
+      color: #0f4c75; /* Highlight client's name */
+    }
+
+    /* Signature Section */
+    .signature-section {
+      margin-top: 60px; /* More space above signatures */
+      display: flex; /* Use flexbox for potential multiple signatures side-by-side */
+      justify-content: space-around; /* Distribute signatures evenly */
+      flex-wrap: wrap; /* Allow signatures to wrap on smaller screens */
+    }
+
+    .signature-block {
+      text-align: center;
+      margin: 20px; /* Space around each signature block */
+      flex: 1 1 300px; /* Allows blocks to grow/shrink but not smaller than 300px */
+      max-width: 400px; /* Max width for each block */
+    }
+
+    .signature-line {
+      border-top: 1px solid #000;
+      width: 80%; /* Width relative to its container */
+      margin: 10px auto 5px auto; /* Centered line with some margin */
+      padding-top: 5px;
+    }
+
+    .signature-label {
+      font-size: 14px;
+      color: #555;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      body {
+        padding: 15px;
+      }
+      .contract-container {
+        margin: 20px auto;
+        padding: 25px;
+        box-shadow: none; /* Reduce shadow on small devices */
+        border: none; /* Reduce border on small devices */
+      }
+      .title {
+        font-size: 22px;
+        margin-bottom: 25px;
+      }
+      .section-heading {
+        font-size: 16px;
+        margin-bottom: 10px;
+      }
+      .data-table thead th,
+      .data-table tbody td {
+          padding: 8px 10px; /* Smaller padding for cells on mobile */
+          font-size: 14px; /* Slightly smaller font for mobile readability */
+      }
+      .commitment-text {
+        padding: 15px;
+        font-size: 14px;
+      }
+      .signature-section {
+        flex-direction: column; /* Stack signature blocks vertically */
+        align-items: center;
+      }
+      .signature-block {
+        margin: 15px 0;
+        width: 100%; /* Full width for signature blocks */
+        max-width: 300px; /* Limit max width even when full width */
+      }
+    }
+
+    /* Print Specific Styles */
+    @media print {
+      body {
+        background-color: #fff; /* White background for printing */
+        -webkit-print-color-adjust: exact; /* Ensure colors print correctly */
+        color-adjust: exact;
+        margin: 0; /* No outer margin for printing */
+        padding: 0; /* No outer padding */
+      }
+      .contract-container {
+        box-shadow: none;
+        border: none;
+        margin: 0;
+        padding: 20mm; /* Use standard print margins */
+        max-width: 100%; /* Use full available width */
+      }
+      .title {
+        font-size: 24px;
+        border-bottom: 1px solid #000; /* Black border for print clarity */
+        color: #000; /* Black text for print clarity */
+      }
+      .section-heading {
+        color: #000; /* Black text for print clarity */
+        border-left-color: #000; /* Black border for print clarity */
+      }
+      .data-table thead th {
+        background-color: #e0e0e0 !important; /* Light grey for header background */
+        color: #000 !important;
+        border-color: #000 !important;
+      }
+      .data-table tbody td {
+        border-color: #666 !important; /* Darker border for print contrast */
+        color: #000 !important;
+      }
+      .data-table tbody tr:nth-child(even) {
+        background-color: #f0f0f0 !important; /* Light grey for alternating rows */
+      }
+      .commitment-text {
+        background-color: #f0f0f0 !important; /* Light grey background for printing */
+        border-left-color: #666 !important; /* Darker border for contrast */
+        color: #000 !important;
+      }
+      .commitment-text strong {
+        color: #000 !important;
+      }
+      .label, .value {
+        color: #000 !important; /* Black text for print clarity */
+      }
+      .signature-line {
+        border-color: #000;
+      }
+      .signature-label {
+        color: #000;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="contract-container">
+    <div class="title">Contrato de Solicitud de Préstamo</div>
+
+    <div class="section">
+      <h3 class="section-heading">Información del Cliente</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Campo</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Nombre completo</td>
+            <td><%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></td>
+          </tr>
+          <tr>
+            <td>Apodo</td>
+            <td><%= prestamo.cliente_apodo || 'N/A' %></td>
+          </tr>
+          <tr>
+            <td>Cédula</td>
+            <td><%= prestamo.cliente_cedula %></td>
+          </tr>
+          <tr>
+            <td>Teléfono</td>
+            <td><%= prestamo.cliente_telefono1 %></td>
+          </tr>
+          <tr>
+            <td>Dirección</td>
+            <td><%= prestamo.cliente_direccion %></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h3 class="section-heading">Detalles del Préstamo</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Campo</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Ingresos Mensuales</td>
+            <td>RD$ <%= Number(prestamo.ingresos_mensuales).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+          </tr>
+          <tr>
+            <td>Fecha de Solicitud</td>
+            <td><%= prestamo.created_at ? new Date(prestamo.created_at).toLocaleDateString('es-DO') : 'Sin fecha' %></td>
+          </tr>
+          <tr>
+            <td>Monto Solicitado</td>
+            <td>RD$ <%= Number(prestamo.monto_solicitado).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+          </tr>
+          <tr>
+            <td>Monto Aprobado</td>
+            <td>RD$ <%= Number(prestamo.monto_aprobado || 0).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+          </tr>
+          <tr>
+            <td>Monto de Cuota</td>
+            <td>RD$ <%= Number(prestamo.monto_por_cuota || 0).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+          </tr>
+          <tr>
+            <td>Forma de Pago</td>
+            <td><%= prestamo.forma_pago %></td>
+          </tr>
+          <tr>
+            <td>Cuotas</td>
+            <td><%= prestamo.cuotas %></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h3 class="section-heading">Términos y Condiciones</h3>
+      <p class="commitment-text" style="text-align: justify;">
+        Yo, <strong><%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></strong>, con cédula de identidad y electoral número <%= prestamo.cliente_cedula %>,
+        por medio del presente, me comprometo formalmente a pagar el préstamo aprobado bajo las condiciones establecidas, en el plazo y forma de pago
+        indicados anteriormente. En caso de incumplimiento de cualquier cuota, acepto y reconozco un recargo por mora del <strong>5% diario</strong>
+        a partir del segundo día posterior al vencimiento de la cuota correspondiente. Este contrato representa mi consentimiento expreso y mi compromiso inquebrantable
+        con las obligaciones financieras adquiridas.
+       
+        <br><br>
+        Asimismo, reconozco que de persistir la falta de pago, me comprometo a responder con cualquier bien de mi propiedad 
+        (muebles, inmuebles, vehículos u otros) como garantía para saldar la deuda, autorizando expresamente a Financiera Caribe Azul a iniciar las acciones legales y/o judiciales correspondientes para recuperar el monto adeudado.
+      </p>
+    </div>
+
+    <div class="signature-section">
+      <div class="signature-block">
+        <div class="signature-line"></div>
+        <p class="signature-label">Firma del Cliente</p>
+        <p class="signature-label">Fecha: <%= new Date().toLocaleDateString('es-DO') %></p>
+      </div>
+      <div class="signature-block">
+        <div class="signature-line"></div>
+        <p class="signature-label">Firma y Sello Financiera</p>
+        <p class="signature-label">Fecha: <%= new Date().toLocaleDateString('es-DO') %></p>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

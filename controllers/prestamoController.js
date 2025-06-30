@@ -565,3 +565,15 @@ exports.recibo = async (req, res) => {
     }
   };
 
+exports.imprimir = async (req, res) => {
+  try {
+    const prestamo = await SolicitudPrestamo.findByIdWithCliente(req.params.id);
+    if (!prestamo) {
+      return res.status(404).send('Préstamo no encontrado');
+    }
+    res.render('prestamos/imprimir', { prestamo });
+  } catch (error) {
+    console.error('Error al cargar vista de impresión:', error);
+    res.status(500).send('Error interno del servidor');
+  }
+};
