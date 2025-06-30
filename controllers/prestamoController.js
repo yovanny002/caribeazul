@@ -572,7 +572,7 @@ exports.imprimir = async (req, res) => {
     if (!prestamo) {
       return res.status(404).send('Préstamo no encontrado');
     }
-    res.render('prestamos/imprimir', { prestamo });
+    res.render('prestamos/imprimir', { prestamo, layout: false });
   } catch (error) {
     console.error('Error al cargar vista de impresión:', error);
     res.status(500).send('Error interno del servidor');
