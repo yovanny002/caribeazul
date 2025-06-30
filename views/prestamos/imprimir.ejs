@@ -3,248 +3,235 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contrato de Préstamo - Ciwita Financiera</title>
+  <title>Contrato de Préstamo -Financiera Caribe Azul</title>
   <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     /* Base Styles */
     body {
-      font-family: 'Open Sans', sans-serif; /* Modern, clean sans-serif font for body text */
+      font-family: 'Open Sans', sans-serif;
       margin: 0;
-      padding: 30px; /* Adjust padding for better visual margins */
-      color: #333; /* Softer black for better readability */
-      line-height: 1.8; /* Increased line height for better readability */
-      background-color: #f8f9fa; /* Light grey background for a professional feel */
+      padding: 0;
+      color: #333;
+      line-height: 1.6;
+      background-color: #fff;
+      font-size: 12px;
     }
 
     /* Container for the contract content */
     .contract-container {
-      max-width: 800px; /* Optimal width for readability on larger screens */
-      margin: 40px auto; /* Centered with more vertical margin */
-      padding: 40px;
-      background-color: #fff; /* White background for the contract area */
-      border: 1px solid #e0e0e0; /* Subtle border */
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Soft shadow for depth */
-      border-radius: 8px; /* Slightly rounded corners */
+      width: 100%;
+      max-width: 7.5in; /* Adjusted to fit within letter size */
+      margin: 0 auto;
+      padding: 0.5in;
+      background-color: #fff;
     }
 
     /* Title Styling */
     .title {
-      font-family: 'Merriweather', serif; /* A more traditional, strong serif font for the title */
+      font-family: 'Merriweather', serif;
       text-align: center;
       text-transform: uppercase;
-      font-size: 28px; /* Larger, more impactful title */
-      font-weight: 700; /* Bold */
-      color: #0f4c75; /* A deep, professional blue */
-      margin-bottom: 40px; /* More space below the title */
-      padding-bottom: 10px;
-      border-bottom: 2px solid #0f4c75; /* A strong bottom border for emphasis */
-      letter-spacing: 1.5px; /* Slight letter spacing for a refined look */
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f4c75;
+      margin-bottom: 20px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #0f4c75;
+      letter-spacing: 1px;
     }
 
     /* Section Styling */
     .section {
-      margin-bottom: 30px; /* Increased margin between sections */
-      padding-bottom: 15px;
-      border-bottom: 1px dashed #e0e0e0; /* Lighter, dashed separator */
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed #e0e0e0;
     }
 
     .section:last-of-type {
-      border-bottom: none; /* No border on the last section */
+      border-bottom: none;
       padding-bottom: 0;
     }
 
     .section-heading {
       font-family: 'Open Sans', sans-serif;
-      font-size: 18px;
-      font-weight: 600; /* Semi-bold for section headings */
+      font-size: 14px;
+      font-weight: 600;
       color: #0f4c75;
-      margin-bottom: 15px;
-      border-left: 4px solid #3282b8; /* A colored left border for emphasis */
-      padding-left: 10px;
+      margin-bottom: 10px;
+      border-left: 3px solid #3282b8;
+      padding-left: 8px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
-    /* Table Styling for Data Sections (Excel-like) */
+    /* Table Styling for Data Sections */
     .data-table {
       width: 100%;
-      border-collapse: collapse; /* Ensure borders are clean */
-      margin-bottom: 20px;
+      border-collapse: collapse;
+      margin-bottom: 15px;
       background-color: #fff;
-      border: 1px solid #cce0ec; /* Light blue border for the whole table */
-      display: block; /* Make table scrollable on small screens */
-      overflow-x: auto; /* Add horizontal scrollbar if needed */
-      white-space: nowrap; /* Prevent content from wrapping inside cells on small screens */
+      border: 1px solid #cce0ec;
+      font-size: 11px;
     }
 
     .data-table thead th {
-        background-color: #eaf4fa; /* Light blue background for header */
-        color: #0f4c75; /* Dark blue text for header */
+        background-color: #eaf4fa;
+        color: #0f4c75;
         font-weight: 700;
         text-align: left;
-        padding: 12px 15px;
+        padding: 8px 10px;
         border: 1px solid #cce0ec;
         text-transform: uppercase;
         letter-spacing: 0.3px;
     }
 
     .data-table tbody td {
-      padding: 10px 15px;
-      border: 1px solid #e0eaf1; /* Lighter blue border for cells */
-      font-size: 15px;
-      color: #333;
-      vertical-align: top; /* Align content to the top */
+      padding: 6px 10px;
+      border: 1px solid #e0eaf1;
+      vertical-align: top;
     }
 
     .data-table tbody tr:nth-child(even) {
-        background-color: #f9fcff; /* Very light blue for even rows */
+        background-color: #f9fcff;
     }
-    
-    /* Revert table display for larger screens */
-    @media (min-width: 768px) {
-        .data-table {
-            display: table;
-            overflow-x: visible;
-            white-space: normal;
-        }
-    }
-
 
     /* Disclaimer/Commitment Text */
     .commitment-text {
-      background-color: #f2f7fc; /* Light blue background */
-      border-left: 5px solid #3282b8; /* Emphasized left border */
-      padding: 20px;
-      margin-top: 30px; /* Space above the text */
-      font-size: 15px;
+      background-color: #f2f7fc;
+      border-left: 3px solid #3282b8;
+      padding: 12px;
+      margin-top: 15px;
+      font-size: 11px;
       color: #444;
-      border-radius: 4px;
-      line-height: 1.7;
+      border-radius: 3px;
+      line-height: 1.5;
     }
 
     .commitment-text strong {
-      color: #0f4c75; /* Highlight client's name */
+      color: #0f4c75;
     }
 
     /* Signature Section */
     .signature-section {
-      margin-top: 60px; /* More space above signatures */
-      display: flex; /* Use flexbox for potential multiple signatures side-by-side */
-      justify-content: space-around; /* Distribute signatures evenly */
-      flex-wrap: wrap; /* Allow signatures to wrap on smaller screens */
+      margin-top: 30px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
     }
 
     .signature-block {
       text-align: center;
-      margin: 20px; /* Space around each signature block */
-      flex: 1 1 300px; /* Allows blocks to grow/shrink but not smaller than 300px */
-      max-width: 400px; /* Max width for each block */
+      margin: 10px 0;
+      width: 45%;
     }
 
     .signature-line {
       border-top: 1px solid #000;
-      width: 80%; /* Width relative to its container */
-      margin: 10px auto 5px auto; /* Centered line with some margin */
-      padding-top: 5px;
+      width: 80%;
+      margin: 8px auto 4px auto;
+      padding-top: 3px;
     }
 
     .signature-label {
-      font-size: 14px;
+      font-size: 10px;
       color: #555;
-    }
-
-    /* Responsive Adjustments */
-    @media (max-width: 768px) {
-      body {
-        padding: 15px;
-      }
-      .contract-container {
-        margin: 20px auto;
-        padding: 25px;
-        box-shadow: none; /* Reduce shadow on small devices */
-        border: none; /* Reduce border on small devices */
-      }
-      .title {
-        font-size: 22px;
-        margin-bottom: 25px;
-      }
-      .section-heading {
-        font-size: 16px;
-        margin-bottom: 10px;
-      }
-      .data-table thead th,
-      .data-table tbody td {
-          padding: 8px 10px; /* Smaller padding for cells on mobile */
-          font-size: 14px; /* Slightly smaller font for mobile readability */
-      }
-      .commitment-text {
-        padding: 15px;
-        font-size: 14px;
-      }
-      .signature-section {
-        flex-direction: column; /* Stack signature blocks vertically */
-        align-items: center;
-      }
-      .signature-block {
-        margin: 15px 0;
-        width: 100%; /* Full width for signature blocks */
-        max-width: 300px; /* Limit max width even when full width */
-      }
     }
 
     /* Print Specific Styles */
     @media print {
-      body {
-        background-color: #fff; /* White background for printing */
-        -webkit-print-color-adjust: exact; /* Ensure colors print correctly */
-        color-adjust: exact;
-        margin: 0; /* No outer margin for printing */
-        padding: 0; /* No outer padding */
+      @page {
+        size: letter;
+        margin: 0.5in;
       }
+
+      body {
+        background-color: #fff;
+        -webkit-print-color-adjust: exact;
+        color-adjust: exact;
+        margin: 0;
+        padding: 0;
+        font-size: 11px;
+      }
+
       .contract-container {
         box-shadow: none;
         border: none;
         margin: 0;
-        padding: 20mm; /* Use standard print margins */
-        max-width: 100%; /* Use full available width */
+        padding: 0.5in;
+        max-width: 7.5in;
+        width: 100%;
       }
+
+      /* Adjust font sizes for print */
       .title {
-        font-size: 24px;
-        border-bottom: 1px solid #000; /* Black border for print clarity */
-        color: #000; /* Black text for print clarity */
+        font-size: 18px;
+        border-bottom: 1px solid #000;
+        color: #000;
+        margin-bottom: 15px;
+        padding-bottom: 5px;
       }
+      
       .section-heading {
-        color: #000; /* Black text for print clarity */
-        border-left-color: #000; /* Black border for print clarity */
+        font-size: 14px;
+        color: #000;
+        border-left-color: #000;
+        margin-bottom: 8px;
+        padding-left: 6px;
       }
+      
       .data-table thead th {
-        background-color: #e0e0e0 !important; /* Light grey for header background */
+        background-color: #e0e0e0 !important;
         color: #000 !important;
         border-color: #000 !important;
+        font-size: 11px;
+        padding: 6px 8px;
       }
+      
       .data-table tbody td {
-        border-color: #666 !important; /* Darker border for print contrast */
+        border-color: #666 !important;
         color: #000 !important;
+        font-size: 10px;
+        padding: 5px 8px;
       }
+      
       .data-table tbody tr:nth-child(even) {
-        background-color: #f0f0f0 !important; /* Light grey for alternating rows */
+        background-color: #f0f0f0 !important;
       }
+      
       .commitment-text {
-        background-color: #f0f0f0 !important; /* Light grey background for printing */
-        border-left-color: #666 !important; /* Darker border for contrast */
+        background-color: #f0f0f0 !important;
+        border-left-color: #666 !important;
         color: #000 !important;
+        font-size: 10px;
+        padding: 10px;
+        margin-top: 15px;
       }
+      
       .commitment-text strong {
         color: #000 !important;
       }
-      .label, .value {
-        color: #000 !important; /* Black text for print clarity */
+      
+      .signature-section {
+        margin-top: 25px;
       }
+      
+      .signature-block {
+        margin: 8px 0;
+      }
+      
       .signature-line {
         border-color: #000;
+        margin-top: 6px;
       }
+      
       .signature-label {
         color: #000;
+        font-size: 9px;
+      }
+      
+      /* Prevent page breaks inside important sections */
+      .section, .signature-section {
+        page-break-inside: avoid;
       }
     }
   </style>
@@ -332,16 +319,16 @@
 
     <div class="section">
       <h3 class="section-heading">Términos y Condiciones</h3>
-      <p class="commitment-text" style="text-align: justify;">
+      <p class="commitment-text">
         Yo, <strong><%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></strong>, con cédula de identidad y electoral número <%= prestamo.cliente_cedula %>,
         por medio del presente, me comprometo formalmente a pagar el préstamo aprobado bajo las condiciones establecidas, en el plazo y forma de pago
         indicados anteriormente. En caso de incumplimiento de cualquier cuota, acepto y reconozco un recargo por mora del <strong>5% diario</strong>
         a partir del segundo día posterior al vencimiento de la cuota correspondiente. Este contrato representa mi consentimiento expreso y mi compromiso inquebrantable
         con las obligaciones financieras adquiridas.
-       
+
         <br><br>
-        Asimismo, reconozco que de persistir la falta de pago, me comprometo a responder con cualquier bien de mi propiedad 
-        (muebles, inmuebles, vehículos u otros) como garantía para saldar la deuda, autorizando expresamente a Financiera Caribe Azul a iniciar las acciones legales y/o judiciales correspondientes para recuperar el monto adeudado.
+        Asimismo, reconozco que de persistir la falta de pago, me comprometo a responder con cualquier bien de mi propiedad (muebles, inmuebles, vehículos u otros) como garantía para saldar la deuda, autorizando expresamente a Financiera Caribe Azul a iniciar las acciones 
+        legales y/o judiciales correspondientes para recuperar el monto adeudado.
       </p>
     </div>
 
@@ -353,11 +340,18 @@
       </div>
       <div class="signature-block">
         <div class="signature-line"></div>
-        <p class="signature-label">Firma y Sello Financiera</p>
+        <p class="signature-label">Firma de Ciwita Financiera</p>
         <p class="signature-label">Fecha: <%= new Date().toLocaleDateString('es-DO') %></p>
       </div>
     </div>
   </div>
-
+<script>
+  window.onload = function () {
+    window.print();
+  };
+  window.onafterprint = function () {
+    window.close();
+  };
+</script>
 </body>
 </html>
