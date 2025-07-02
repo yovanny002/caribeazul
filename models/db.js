@@ -4,7 +4,7 @@ const { Sequelize } = require('sequelize');
 let sequelize;
 
 if (process.env.DATABASE_URL) {
-  // 🔁 Producción (Render u otro host que usa URL completa)
+  // Producción con URL
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     protocol: 'postgres',
@@ -12,12 +12,12 @@ if (process.env.DATABASE_URL) {
     dialectOptions: {
       ssl: {
         require: true,
-        rejectUnauthorized: false // necesario para Render y otras nubes
+        rejectUnauthorized: false
       }
     }
   });
 } else {
-  // 🖥️ Desarrollo local
+  // Local o conexión con parámetros individuales
   sequelize = new Sequelize(
     process.env.DB_NAME,
     process.env.DB_USER,
@@ -26,7 +26,13 @@ if (process.env.DATABASE_URL) {
       host: process.env.DB_HOST,
       port: process.env.DB_PORT || 5432,
       dialect: 'postgres',
-      logging: false
+      logging: false,
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false
+        }
+      }
     }
   );
 }
