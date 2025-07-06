@@ -1,0 +1,92 @@
+<%- include('../partials/header', { title: 'Detalle del Préstamo Especial' }) %>
+
+<div class="container-fluid px-4 mt-4">
+  <div class="card shadow">
+    <div class="card-header bg-success text-white py-3">
+      <h2 class="mb-0"><i class="fas fa-eye me-2"></i>Detalles del Préstamo Especial</h2>
+    </div>
+    <div class="card-body">
+      <div class="row g-4">
+        <!-- Datos del Cliente -->
+        <div class="col-md-6">
+          <div class="card border-success">
+            <div class="card-header bg-light">
+              <h5 class="mb-0 text-success"><i class="fas fa-user me-2"></i>Cliente</h5>
+            </div>
+            <div class="card-body">
+              <p><strong>Nombre:</strong> <%= prestamo.cliente.nombre %> <%= prestamo.cliente.apellidos %></p>
+              <p><strong>Cédula:</strong> <%= prestamo.cliente.cedula %></p>
+              <% if (prestamo.ruta) { %>
+                <p><strong>Ruta:</strong> <%= prestamo.ruta.zona %> - <%= prestamo.ruta.nombre %></p>
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detalles del Préstamo -->
+        <div class="col-md-6">
+          <div class="card border-success">
+            <div class="card-header bg-light">
+              <h5 class="mb-0 text-success"><i class="fas fa-info-circle me-2"></i>Préstamo</h5>
+            </div>
+            <div class="card-body">
+              <p><strong>Monto Aprobado:</strong> RD$ <%= prestamo.monto_aprobado.toFixed(2) %></p>
+              <p><strong>Interés Aplicado:</strong> <%= prestamo.interes_porcentaje %> %</p>
+              <p><strong>Frecuencia de Pago:</strong> <%= prestamo.forma_pago %></p>
+              <p><strong>Capital Restante:</strong> RD$ <%= prestamo.capital_restante.toFixed(2) %></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historial de Pagos -->
+      <div class="card mt-4 border-success">
+        <div class="card-header bg-light">
+          <h5 class="mb-0 text-success"><i class="fas fa-history me-2"></i>Historial de Pagos</h5>
+        </div>
+        <div class="card-body">
+          <% if (pagos.length === 0) { %>
+            <p>No hay pagos registrados.</p>
+          <% } else { %>
+            <table class="table table-bordered table-hover">
+              <thead class="table-success">
+                <tr>
+                  <th>Fecha</th>
+                  <th>Monto</th>
+                  <th>Interés Cubierto</th>
+                  <th>Capital Abonado</th>
+                  <th>Método</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% pagos.forEach(p => { %>
+                  <tr>
+                    <td><%= new Date(p.fecha).toLocaleDateString('es-DO') %></td>
+                    <td>RD$ <%= p.monto.toFixed(2) %></td>
+                    <td>RD$ <%= p.interes_pagado.toFixed(2) %></td>
+                    <td>RD$ <%= p.capital_pagado.toFixed(2) %></td>
+                    <td><%= p.metodo.toUpperCase() %></td>
+                    <td>
+                      <a href="/prestamos-especiales/<%= prestamo.id %>/recibo/<%= p.id %>" class="btn btn-sm btn-outline-primary" target="_blank">
+                        <i class="fas fa-print"></i>
+                      </a>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Botones -->
+      <div class="d-flex justify-content-end mt-4">
+        <a href="/prestamos-especiales" class="btn btn-secondary">Volver</a>
+        <a href="/prestamos-especiales/<%= prestamo.id %>/pago" class="btn btn-success ms-3">Registrar Pago</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

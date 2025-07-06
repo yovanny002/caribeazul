@@ -1,0 +1,70 @@
+<%- include('../partials/header', { title: 'Recibo de Pago Especial' }) %>
+
+<div class="container-fluid px-4 mt-4">
+  <div class="card shadow">
+    <div class="card-header bg-primary text-white py-3">
+      <h2 class="mb-0 text-uppercase"><i class="fas fa-receipt me-2"></i>Recibo de Pago Especial</h2>
+    </div>
+    <div class="card-body">
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="card border-primary">
+            <div class="card-header bg-light">
+              <h5 class="mb-0 text-primary"><i class="fas fa-user me-2"></i>Cliente</h5>
+            </div>
+            <div class="card-body">
+              <p><strong>Nombre:</strong> <%= prestamo.cliente.nombre %> <%= prestamo.cliente.apellidos %></p>
+              <p><strong>Cédula:</strong> <%= prestamo.cliente.cedula %></p>
+              <% if (prestamo.ruta) { %>
+                <p><strong>Ruta:</strong> <%= prestamo.ruta.zona %> - <%= prestamo.ruta.nombre %></p>
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="card border-primary">
+            <div class="card-header bg-light">
+              <h5 class="mb-0 text-primary"><i class="fas fa-info-circle me-2"></i>Pago</h5>
+            </div>
+            <div class="card-body">
+              <p><strong>Pago ID:</strong> <%= pago.id %></p>
+              <p><strong>Fecha:</strong> <%= new Date(pago.fecha).toLocaleDateString('es-DO') %></p>
+              <p><strong>Hora:</strong> <%= new Date(pago.fecha).toLocaleTimeString('es-DO', {hour: '2-digit', minute: '2-digit'}) %></p>
+              <p><strong>Método:</strong> <%= pago.metodo.toUpperCase() %></p>
+              <p><strong>Referencia:</strong> <%= pago.referencia || 'N/A' %></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mt-4">
+        <div class="col-md-12">
+          <div class="card border-primary">
+            <div class="card-header bg-light">
+              <h5 class="mb-0 text-primary"><i class="fas fa-money-bill-wave me-2"></i>Detalle del Pago</h5>
+            </div>
+            <div class="card-body">
+              <p><strong>Monto Pagado:</strong> RD$ <%= pago.monto.toFixed(2) %></p>
+              <p><strong>Interés Cubierto:</strong> RD$ <%= pago.interes_pagado.toFixed(2) %></p>
+              <p><strong>Abono a Capital:</strong> RD$ <%= pago.capital_pagado.toFixed(2) %></p>
+              <p><strong>Capital Restante:</strong> RD$ <%= prestamo.capital_restante.toFixed(2) %></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center mt-4">
+        <p class="text-muted">Este documento no es válido como factura.</p>
+        <p class="text-muted">Impreso el <%= new Date().toLocaleDateString('es-DO') %> a las <%= new Date().toLocaleTimeString('es-DO', {hour: '2-digit', minute: '2-digit'}) %></p>
+      </div>
+
+      <div class="text-center mt-3">
+        <button onclick="window.print()" class="btn btn-outline-primary"><i class="fas fa-print me-1"></i>Imprimir</button>
+        <button onclick="window.close()" class="btn btn-outline-secondary"><i class="fas fa-times me-1"></i>Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

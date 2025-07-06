@@ -1,0 +1,119 @@
+<%- include('../partials/header', { title: 'Nuevo Préstamo Especial' }) %>
+
+<div class="container-fluid px-4 mt-4">
+  <div class="card border-0 shadow">
+    <div class="card-header bg-success text-white py-3">
+      <h2 class="mb-0">
+        <i class="fas fa-star me-2"></i>Solicitud de Préstamo Especial
+      </h2>
+    </div>
+
+    <div class="card-body">
+      <form id="form-prestamo-especial" action="/prestamos-especiales/create" method="POST" class="needs-validation" novalidate>
+        <div class="row g-4">
+
+          <!-- Datos del Cliente -->
+          <div class="col-md-6">
+            <div class="card border-success">
+              <div class="card-header bg-light">
+                <h5 class="mb-0 text-success"><i class="fas fa-user me-2"></i>Cliente</h5>
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <label for="cliente_id" class="form-label fw-bold">Seleccionar Cliente</label>
+                  <select name="cliente_id" id="cliente_id" class="form-select" required>
+                    <option value="">-- Seleccione un cliente --</option>
+                    <% clientes.forEach(c => { %>
+                      <option value="<%= c.id %>"><%= c.nombre %> <%= c.apellidos %> - <%= c.cedula %></option>
+                    <% }) %>
+                  </select>
+                  <div class="invalid-feedback">Debe seleccionar un cliente</div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="ruta_id" class="form-label">Ruta / Zona</label>
+                  <select name="ruta_id" id="ruta_id" class="form-select">
+                    <option value="">-- Opcional --</option>
+                    <% rutas.forEach(r => { %>
+                      <option value="<%= r.id %>"><%= r.zona %> - <%= r.nombre %></option>
+                    <% }) %>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detalles del Préstamo -->
+          <div class="col-md-6">
+            <div class="card border-success">
+              <div class="card-header bg-light">
+                <h5 class="mb-0 text-success"><i class="fas fa-info-circle me-2"></i>Detalles</h5>
+              </div>
+              <div class="card-body">
+                <div class="mb-3">
+                  <label for="monto_solicitado" class="form-label fw-bold">Monto Solicitado</label>
+                  <input type="number" name="monto_solicitado" id="monto_solicitado" class="form-control" required min="1" step="0.01">
+                </div>
+                <div class="mb-3">
+                  <label for="monto_aprobado" class="form-label fw-bold">Monto Aprobado</label>
+                  <input type="number" name="monto_aprobado" id="monto_aprobado" class="form-control" required min="1" step="0.01">
+                </div>
+                <div class="mb-3">
+                  <label for="interes_porcentaje" class="form-label fw-bold">Interés a Cobrar (%)</label>
+                  <input type="number" name="interes_porcentaje" id="interes_porcentaje" class="form-control" required min="0" step="0.01">
+                </div>
+                <div class="mb-3">
+                  <label for="forma_pago" class="form-label fw-bold">Frecuencia de Pago</label>
+                  <select name="forma_pago" id="forma_pago" class="form-select" required>
+                    <option value="">-- Seleccione --</option>
+                    <option value="diario">Diario</option>
+                    <option value="semanal">Semanal</option>
+                    <option value="quincenal">Quincenal</option>
+                    <option value="mensual">Mensual</option>
+                  </select>
+                </div>
+                <div class="bg-light p-3 rounded">
+                  <h6 class="fw-bold">Resumen:</h6>
+                  <p><strong>Capital:</strong> <span id="res-capital">RD$ 0.00</span></p>
+                  <p><strong>Interés estimado:</strong> <span id="res-interes">RD$ 0.00</span></p>
+                  <p><strong>Total a pagar:</strong> <span id="res-total" class="text-success">RD$ 0.00</span></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Botones -->
+        <div class="d-flex justify-content-end mt-4">
+          <a href="/prestamos-especiales" class="btn btn-secondary">Cancelar</a>
+          <button type="submit" class="btn btn-success ms-3">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const monto = document.getElementById('monto_aprobado');
+    const interes = document.getElementById('interes_porcentaje');
+    const resCapital = document.getElementById('res-capital');
+    const resInteres = document.getElementById('res-interes');
+    const resTotal = document.getElementById('res-total');
+
+    function actualizarResumen() {
+      const capital = parseFloat(monto.value) || 0;
+      const porc = parseFloat(interes.value) || 0;
+      const intMonto = (capital * porc) / 100;
+      resCapital.textContent = `RD$ ${capital.toFixed(2)}`;
+      resInteres.textContent = `RD$ ${intMonto.toFixed(2)}`;
+      resTotal.textContent = `RD$ ${(capital + intMonto).toFixed(2)}`;
+    }
+
+    monto.addEventListener('input', actualizarResumen);
+    interes.addEventListener('input', actualizarResumen);
+  });
+</script>
+
+<%- include('../partials/footer') %>

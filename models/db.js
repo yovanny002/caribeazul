@@ -4,7 +4,6 @@ const { Sequelize } = require('sequelize');
 let sequelize;
 
 if (process.env.DATABASE_URL) {
-  // Producción con URL
   sequelize = new Sequelize(process.env.DATABASE_URL, {
     dialect: 'postgres',
     protocol: 'postgres',
@@ -17,7 +16,6 @@ if (process.env.DATABASE_URL) {
     }
   });
 } else {
-  // Local o conexión con parámetros individuales
   sequelize = new Sequelize(
     process.env.DB_NAME,
     process.env.DB_USER,
