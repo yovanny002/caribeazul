@@ -8,9 +8,20 @@ const moment = require('moment');
 // Listar todos los préstamos especiales con paginación
 // controllers/prestamosEspecialesController.js
 // controllers/prestamosEspecialesController.js
+// controllers/prestamosEspecialesController.js
 exports.index = async (req, res) => {
   try {
-    const prestamos = await PrestamoEspecial.findAllWithClienteYRuta();
+    // Pagination parameters
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    // Get total count of records
+    const totalCount = await PrestamoEspecial.countAll();
+    const totalPages = Math.ceil(totalCount / limit);
+
+    // Get paginated data
+    const prestamos = await PrestamoEspecial.findAllWithClienteYRutaPaginated(offset, limit);
     
     const formattedPrestamos = prestamos.map(p => ({
       ...p,
@@ -18,7 +29,6 @@ exports.index = async (req, res) => {
       capital_restante: parseFloat(p.monto_aprobado) || parseFloat(p.monto_solicitado) || 0,
       interes_porcentaje: parseFloat(p.interes_porcentaje) || 0,
       fecha_creacion: p.created_at,
-      // Aseguramos que los campos relacionados tengan valores por defecto
       cliente_nombre: p.cliente_nombre || 'Cliente no encontrado',
       cliente_apellidos: p.cliente_apellidos || '',
       ruta_zona: p.ruta_zona || 'Sin zona asignada'
@@ -27,7 +37,11 @@ exports.index = async (req, res) => {
     res.render('prestamosEspeciales/index', {
       prestamos: formattedPrestamos,
       title: 'Préstamos Especiales',
-      messages: req.flash()
+      messages: req.flash(),
+      // Pagination variables
+      currentPage: page,
+      totalPages,
+      limit
     });
   } catch (error) {
     console.error('Error al listar préstamos especiales:', error);
@@ -35,7 +49,6 @@ exports.index = async (req, res) => {
     res.redirect('/');
   }
 };
-
 // Mostrar formulario para crear préstamo especial
 exports.createForm = async (req, res) => {
   try {

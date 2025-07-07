@@ -2,6 +2,73 @@
 const db = require('./db');
 
 const PrestamoEspecial = {
+  // Método para contar todos los préstamos especiales (para paginación)
+  countAll: async (options = {}) => {
+    let query = 'SELECT COUNT(*) as count FROM prestamos_especiales pe';
+    const replacements = {};
+    const whereClauses = [];
+
+    if (options.where) {
+      if (options.where.estado) {
+        whereClauses.push('pe.estado = :estado');
+        replacements.estado = options.where.estado;
+      }
+      if (options.where.cliente_id) {
+        whereClauses.push('pe.cliente_id = :cliente_id');
+        replacements.cliente_id = options.where.cliente_id;
+      }
+    }
+
+    if (whereClauses.length > 0) {
+      query += ' WHERE ' + whereClauses.join(' AND ');
+    }
+
+    const [rows] = await db.query(query, { replacements });
+    return rows[0].count;
+  },
+
+  // Método para obtener préstamos con paginación
+  findAllPaginated: async (options = {}) => {
+    const page = options.page || 1;
+    const limit = options.limit || 10;
+    const offset = (page - 1) * limit;
+
+    let query = `
+      SELECT pe.*, 
+             c.nombre as cliente_nombre, 
+             c.apellidos as cliente_apellidos, 
+             c.cedula as cliente_cedula,
+             r.zona as ruta_zona
+      FROM prestamos_especiales pe
+      LEFT JOIN clientes c ON pe.cliente_id = c.id
+      LEFT JOIN rutas r ON pe.ruta_id = r.id
+    `;
+
+    const replacements = { limit, offset };
+    const whereClauses = [];
+
+    if (options.where) {
+      if (options.where.estado) {
+        whereClauses.push('pe.estado = :estado');
+        replacements.estado = options.where.estado;
+      }
+      if (options.where.cliente_id) {
+        whereClauses.push('pe.cliente_id = :cliente_id');
+        replacements.cliente_id = options.where.cliente_id;
+      }
+    }
+
+    if (whereClauses.length > 0) {
+      query += ' WHERE ' + whereClauses.join(' AND ');
+    }
+
+    query += ' ORDER BY pe.created_at DESC LIMIT :limit OFFSET :offset';
+
+    const [rows] = await db.query(query, { replacements });
+    return rows;
+  },
+
+  // Métodos existentes mejorados
   findAll: async (options = {}) => {
     let query = `
       SELECT pe.*, c.nombre, c.apellidos
@@ -10,11 +77,9 @@ const PrestamoEspecial = {
     `;
     
     const replacements = {};
+    const whereClauses = [];
     
-    // Filtros
     if (options.where) {
-      const whereClauses = [];
-      
       if (options.where.cliente_id) {
         whereClauses.push('pe.cliente_id = :cliente_id');
         replacements.cliente_id = options.where.cliente_id;
@@ -24,13 +89,12 @@ const PrestamoEspecial = {
         whereClauses.push('pe.estado = :estado');
         replacements.estado = options.where.estado;
       }
-      
-      if (whereClauses.length > 0) {
-        query += ' WHERE ' + whereClauses.join(' AND ');
-      }
     }
     
-    // Orden
+    if (whereClauses.length > 0) {
+      query += ' WHERE ' + whereClauses.join(' AND ');
+    }
+    
     if (options.order) {
       const [column, direction] = options.order[0];
       query += ` ORDER BY ${column} ${direction}`;
@@ -38,7 +102,6 @@ const PrestamoEspecial = {
       query += ' ORDER BY pe.fecha_creacion DESC';
     }
     
-    // Paginación
     if (options.limit) {
       query += ' LIMIT :limit';
       replacements.limit = options.limit;
@@ -107,22 +170,20 @@ const PrestamoEspecial = {
     const replacements = { id };
     
     Object.keys(updateData).forEach(key => {
-      fields.push(`${key} = :${key}`);
-      replacements[key] = updateData[key];
+      if (updateData[key] !== undefined) {
+        fields.push(`${key} = :${key}`);
+        replacements[key] = updateData[key];
+      }
     });
     
     if (fields.length === 0) {
       throw new Error('No hay datos para actualizar');
     }
     
-    const query = `
-      UPDATE prestamos_especiales
-      SET ${fields.join(', ')}
-      WHERE id = :id
-    `;
-    
-    await db.query(query, { replacements });
-    return true;
+    await db.query(
+      `UPDATE prestamos_especiales SET ${fields.join(', ')} WHERE id = :id`,
+      { replacements }
+    );
   },
 
   updateCapital: async (id, nuevoCapital) => {
@@ -135,7 +196,7 @@ const PrestamoEspecial = {
     });
   },
 
-findAllWithClienteYRuta: async (options = {}) => {
+  findAllWithClienteYRuta: async (options = {}) => {
     try {
       let query = `
         SELECT 
@@ -178,6 +239,16 @@ findAllWithClienteYRuta: async (options = {}) => {
 
       query += ' ORDER BY pe.created_at DESC';
 
+      if (options.limit) {
+        query += ' LIMIT :limit';
+        replacements.limit = options.limit;
+        
+        if (options.offset) {
+          query += ' OFFSET :offset';
+          replacements.offset = options.offset;
+        }
+      }
+
       const [rows] = await db.query(query, { replacements });
       return rows || [];
     } catch (error) {
@@ -186,54 +257,32 @@ findAllWithClienteYRuta: async (options = {}) => {
     }
   },
 
-
-findByIdWithClienteYRuta: async (id) => {
-  const [rows] = await db.query(`
-    SELECT pe.*, 
-           c.nombre AS cliente_nombre, c.apellidos AS cliente_apellidos, c.cedula AS cliente_cedula,
-           r.zona AS ruta_zona, r.nombre AS ruta_nombre
-    FROM prestamos_especiales pe
-    LEFT JOIN clientes c ON pe.cliente_id = c.id
-    LEFT JOIN rutas r ON pe.ruta_id = r.id
-    WHERE pe.id = :id
-  `, {
-    replacements: { id }
-  });
-  
-  if (rows[0]) {
-    // Convertir valores numéricos
-    rows[0].monto_aprobado = Number(rows[0].monto_aprobado) || 0;
-    rows[0].capital_restante = Number(rows[0].capital_restante) || 0;
-    rows[0].interes_porcentaje = Number(rows[0].interes_porcentaje) || 0;
-  }
-  
-  return rows[0];
-},
-  calcularInteres: (monto, porcentaje) => {
-    return monto * (porcentaje / 100);
-  },
-    update: async (id, updateData) => {
-    const fields = [];
-    const replacements = { id };
-    
-    Object.keys(updateData).forEach(key => {
-      if (updateData[key] !== undefined) {
-        fields.push(`${key} = :${key}`);
-        replacements[key] = updateData[key];
-      }
+  findByIdWithClienteYRuta: async (id) => {
+    const [rows] = await db.query(`
+      SELECT pe.*, 
+             c.nombre AS cliente_nombre, c.apellidos AS cliente_apellidos, c.cedula AS cliente_cedula,
+             r.zona AS ruta_zona, r.nombre AS ruta_nombre
+      FROM prestamos_especiales pe
+      LEFT JOIN clientes c ON pe.cliente_id = c.id
+      LEFT JOIN rutas r ON pe.ruta_id = r.id
+      WHERE pe.id = :id
+    `, {
+      replacements: { id }
     });
     
-    if (fields.length === 0) {
-      throw new Error('No hay datos para actualizar');
+    if (rows[0]) {
+      // Convertir valores numéricos
+      rows[0].monto_aprobado = Number(rows[0].monto_aprobado) || 0;
+      rows[0].capital_restante = Number(rows[0].capital_restante) || 0;
+      rows[0].interes_porcentaje = Number(rows[0].interes_porcentaje) || 0;
     }
     
-    await db.query(
-      `UPDATE prestamos_especiales SET ${fields.join(', ')} WHERE id = :id`,
-      { replacements }
-    );
+    return rows[0];
+  },
+
+  calcularInteres: (monto, porcentaje) => {
+    return monto * (porcentaje / 100);
   }
 };
 
-
-
-module.exports = PrestamoEspecial;
+module.exports = PrestamoEspecial;  
