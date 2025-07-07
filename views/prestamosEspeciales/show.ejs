@@ -118,7 +118,7 @@
       </div>
     </div>
 
-    <div class="col-md-4">
+     <div class="col-md-4">
       <div class="card border-0 shadow mb-4">
         <div class="card-header bg-primary text-white py-3">
           <div class="d-flex justify-content-between align-items-center">
@@ -127,66 +127,46 @@
             </h3>
           </div>
         </div>
-          <div class="card-body">
-            <% if (prestamo.estado === 'aprobado' && !isNaN(prestamo.capital_restante) && prestamo.capital_restante > 0) { %>
-              <a href="/prestamos-especiales/<%= prestamo.id %>/pago" class="btn btn-success w-100">
-                <i class="fas fa-plus-circle me-2"></i>Nuevo Pago
-              </a>
-            <% } else if (!isNaN(prestamo.capital_restante) && prestamo.capital_restante <= 0) { %>
-              <div class="alert alert-success">
-                <i class="fas fa-check-circle me-2"></i>Préstamo completamente pagado
-              </div>
-            <% } else { %>
-              <div class="alert alert-warning">
-                <i class="fas fa-exclamation-circle me-2"></i>Préstamo no aprobado para pagos
-              </div>
-            <% } %>
-          </div>
-      </div>
-
-      <div class="card border-0 shadow">
-        <div class="card-header bg-primary text-white py-3">
-          <div class="d-flex justify-content-between align-items-center">
-            <h3 class="mb-0">
-              <i class="fas fa-list me-2"></i>Historial de Pagos
-            </h3>
-          </div>
-        </div>
         <div class="card-body">
-          <% if (pagos.length > 0) { %>
-            <div class="table-responsive">
-              <table class="table table-sm">
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Monto</th>
-                    <th>Acción</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% pagos.forEach(pago => { %>
-                    <tr>
-                      <td><%= pago.fecha %></td>
-                      <td>RD$ <%= pago.monto.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
-                      <td>
-                        <a href="/prestamos-especiales/<%= prestamo.id %>/recibo/<%= pago.id %>" 
-                           class="btn btn-sm btn-outline-primary" title="Recibo">
-                          <i class="fas fa-receipt"></i>
-                        </a>
-                      </td>
-                    </tr>
-                  <% }) %>
-                </tbody>
-              </table>
+          <% 
+          // Debug: Mostrar valores importantes para diagnóstico
+          console.log('Estado:', prestamo.estado);
+          console.log('Capital Restante:', prestamo.capital_restante);
+          console.log('Es NaN:', isNaN(prestamo.capital_restante));
+          
+          const puedePagar = prestamo.estado === 'aprobado' && 
+                           !isNaN(parseFloat(prestamo.capital_restante)) && 
+                           parseFloat(prestamo.capital_restante) > 0;
+          
+          const estaPagado = !isNaN(parseFloat(prestamo.capital_restante)) && 
+                           parseFloat(prestamo.capital_restante) <= 0;
+          %>
+          
+          <% if (puedePagar) { %>
+            <a href="/prestamos-especiales/<%= prestamo.id %>/pago" class="btn btn-success w-100">
+              <i class="fas fa-plus-circle me-2"></i>Nuevo Pago
+            </a>
+            <div class="mt-2 text-center">
+              <small class="text-muted">Capital restante: RD$ <%= parseFloat(prestamo.capital_restante).toFixed(2) %></small>
             </div>
+          
+          <% } else if (estaPagado) { %>
+            <div class="alert alert-success">
+              <i class="fas fa-check-circle me-2"></i>Préstamo completamente pagado
+            </div>
+          
           <% } else { %>
-            <div class="alert alert-info">
-              <i class="fas fa-info-circle me-2"></i>No hay pagos registrados
+            <div class="alert alert-warning">
+              <i class="fas fa-exclamation-circle me-2"></i>
+              <% if (prestamo.estado !== 'aprobado') { %>
+                Préstamo no está aprobado
+              <% } else { %>
+                No se puede procesar pagos (capital restante: <%= prestamo.capital_restante %>)
+              <% } %>
             </div>
           <% } %>
         </div>
       </div>
-    </div>
   </div>
 </div>
 
