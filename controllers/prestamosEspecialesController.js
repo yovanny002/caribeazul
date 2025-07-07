@@ -3,10 +3,15 @@ const PagoEspecial = require('../models/PagoEspecial'); // Asumo que tienes este
 const moment = require('moment');
 
 // Listar todos los préstamos especiales
+// Listar todos los préstamos especiales
 exports.index = async (req, res) => {
   try {
-    const prestamos = await PrestamoEspecial.findAllWithClienteYRuta();
-    res.render('prestamosEspeciales/index', { prestamos, title: 'Préstamos Especiales', messages: req.flash() });
+    const prestamos = await PrestamoEspecial.findAll();
+    res.render('prestamosEspeciales/index', {
+      prestamos,
+      title: 'Préstamos Especiales',
+      messages: req.flash()
+    });
   } catch (error) {
     console.error('Error al listar préstamos especiales:', error);
     req.flash('error', 'No se pudieron cargar los préstamos especiales.');
@@ -46,17 +51,19 @@ exports.create = async (req, res) => {
 };
 
 // Mostrar detalle de un préstamo especial
+// Mostrar detalle de un préstamo especial
 exports.show = async (req, res) => {
   try {
-    const prestamo = await PrestamoEspecial.findByIdWithClienteYRuta(req.params.id);
-
+    const prestamo = await PrestamoEspecial.findById(req.params.id);
     if (!prestamo) {
       req.flash('error', 'Préstamo especial no encontrado.');
       return res.redirect('/prestamos-especiales');
     }
 
-    // Obtener pagos asociados al préstamo especial (ajusta según tu modelo)
-    const pagos = await PagoEspecial.findAllByPrestamoId(prestamo.id);
+    const pagos = await PagoEspecial.findAll({
+      where: { prestamo_id: prestamo.id },
+      order: [['fecha', 'DESC']]
+    });
 
     res.render('prestamosEspeciales/show', {
       prestamo,
