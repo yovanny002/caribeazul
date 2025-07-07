@@ -1,4 +1,3 @@
-// controllers/prestamosEspecialesController.js
 const PrestamoEspecial = require('../models/PrestamoEspecial');
 const PagoEspecial = require('../models/PagoEspecial');
 const Cliente = require('../models/Cliente');
@@ -6,28 +5,19 @@ const Ruta = require('../models/Ruta');
 const moment = require('moment');
 
 // Listar todos los préstamos especiales con paginación
-// controllers/prestamosEspecialesController.js
-// controllers/prestamosEspecialesController.js
-// controllers/prestamosEspecialesController.js
 exports.index = async (req, res) => {
   try {
-    // Pagination parameters
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
-    // Get total count and paginated data
     const [prestamos, totalCount] = await Promise.all([
-      PrestamoEspecial.findAllWithClienteYRuta({
-        limit,
-        offset
-      }),
+      PrestamoEspecial.findAllWithClienteYRuta({ limit, offset }),
       PrestamoEspecial.countAll()
     ]);
 
     const totalPages = Math.ceil(totalCount / limit);
 
-    // Format data
     const formattedPrestamos = prestamos.map(p => ({
       ...p,
       monto_aprobado: parseFloat(p.monto_aprobado) || 0,
@@ -42,10 +32,10 @@ exports.index = async (req, res) => {
       prestamos: formattedPrestamos,
       title: 'Préstamos Especiales',
       messages: req.flash(),
-      // Pagination variables
       currentPage: page,
       totalPages,
-      limit
+      limit,
+      moment
     });
   } catch (error) {
     console.error('Error al listar préstamos especiales:', error);
@@ -53,15 +43,16 @@ exports.index = async (req, res) => {
     res.redirect('/');
   }
 };
+
 // Mostrar formulario para crear préstamo especial
 exports.createForm = async (req, res) => {
   try {
-    const clientes = await Cliente.findAll({ 
+    const clientes = await Cliente.findAll({
       where: { estado: 'activo' },
       order: [['nombre', 'ASC']]
     });
-    
-    const rutas = await Ruta.findAll({ 
+
+    const rutas = await Ruta.findAll({
       order: [['zona', 'ASC'], ['nombre', 'ASC']]
     });
 
@@ -69,7 +60,7 @@ exports.createForm = async (req, res) => {
       clientes,
       rutas,
       title: 'Crear Préstamo Especial',
-      prestamo: {}, // Objeto vacío para evitar errores en la vista
+      prestamo: {},
       messages: req.flash()
     });
   } catch (error) {
@@ -82,7 +73,6 @@ exports.createForm = async (req, res) => {
 // Crear un nuevo préstamo especial
 exports.create = async (req, res) => {
   try {
-    // Validaciones básicas
     if (!req.body.cliente_id) {
       req.flash('error', 'Debe seleccionar un cliente');
       return res.redirect('/prestamos-especiales/nuevo');
@@ -120,20 +110,17 @@ exports.create = async (req, res) => {
 exports.show = async (req, res) => {
   try {
     const prestamo = await PrestamoEspecial.findByIdWithClienteYRuta(req.params.id);
-
     if (!prestamo) {
       req.flash('error', 'Préstamo especial no encontrado.');
       return res.redirect('/prestamos-especiales');
     }
 
-    // Asegurar valores numéricos
     prestamo.monto_aprobado = Number(prestamo.monto_aprobado) || 0;
     prestamo.capital_restante = Number(prestamo.capital_restante) || prestamo.monto_aprobado;
     prestamo.interes_porcentaje = Number(prestamo.interes_porcentaje) || 0;
 
     const pagos = await PagoEspecial.findAllByPrestamoId(prestamo.id) || [];
 
-    // Calcular totales con protección para array vacío
     const totalPagado = pagos.reduce((sum, pago) => sum + (Number(pago.monto) || 0), 0);
     const interesPagado = pagos.reduce((sum, pago) => sum + (Number(pago.interes_pagado) || 0), 0);
     const capitalPagado = pagos.reduce((sum, pago) => sum + (Number(pago.capital_pagado) || 0), 0);
@@ -157,13 +144,13 @@ exports.show = async (req, res) => {
       title: 'Detalle del Préstamo Especial',
       messages: req.flash()
     });
-
   } catch (error) {
     console.error('Error detallado:', error.stack);
     req.flash('error', 'Error al mostrar el préstamo especial.');
     res.redirect('/prestamos-especiales');
   }
 };
+
 // Formulario para editar préstamo especial
 exports.editForm = async (req, res) => {
   try {
@@ -173,12 +160,12 @@ exports.editForm = async (req, res) => {
       return res.redirect('/prestamos-especiales');
     }
 
-    const clientes = await Cliente.findAll({ 
+    const clientes = await Cliente.findAll({
       where: { estado: 'activo' },
       order: [['nombre', 'ASC']]
     });
-    
-    const rutas = await Ruta.findAll({ 
+
+    const rutas = await Ruta.findAll({
       order: [['zona', 'ASC'], ['nombre', 'ASC']]
     });
 
@@ -214,7 +201,6 @@ exports.update = async (req, res) => {
       estado: req.body.estado || 'pendiente'
     };
 
-    // Solo actualizar capital restante si el estado cambia a aprobado
     if (updateData.estado === 'aprobado' && prestamo.estado !== 'aprobado') {
       updateData.capital_restante = updateData.monto_aprobado;
     }
@@ -265,18 +251,15 @@ exports.procesarPago = async (req, res) => {
       return res.redirect('/prestamos-especiales');
     }
 
-    // Validar monto
     const monto = Number(req.body.monto) || 0;
     if (monto <= 0) {
       req.flash('error', 'Monto no válido');
       return res.redirect(`/prestamos-especiales/${req.params.id}/pago`);
     }
 
-    // Calcular distribución del pago
     const interesPagado = Math.min(monto, prestamo.monto_aprobado * (prestamo.interes_porcentaje / 100));
     const capitalPagado = monto - interesPagado;
 
-    // Registrar pago
     const pagoData = {
       prestamo_id: prestamo.id,
       monto: monto,
@@ -290,7 +273,6 @@ exports.procesarPago = async (req, res) => {
 
     await PagoEspecial.create(pagoData);
 
-    // Actualizar capital restante
     const nuevoCapital = prestamo.capital_restante - capitalPagado;
     await PrestamoEspecial.updateCapital(prestamo.id, nuevoCapital);
 
@@ -336,9 +318,11 @@ exports.recibo = async (req, res) => {
     res.redirect(`/prestamos-especiales/${req.params.id}`);
   }
 };
+
+// Mostrar préstamos especiales pendientes
 exports.pendientes = async (req, res) => {
   try {
-    const prestamosEspeciales = await PrestamoEspecial.findAllWithClienteYRuta({ 
+    const prestamosEspeciales = await PrestamoEspecial.findAllWithClienteYRuta({
       where: { estado: 'pendiente' }
     });
 
@@ -362,6 +346,8 @@ exports.pendientes = async (req, res) => {
     res.redirect('/');
   }
 };
+
+// Aprobar solicitud de préstamo general (si se usa también para solicitudes normales)
 exports.aprobarSolicitud = async (req, res) => {
   const id = req.params.id;
 
@@ -372,11 +358,7 @@ exports.aprobarSolicitud = async (req, res) => {
       return res.redirect('/prestamos/pendientes');
     }
 
-    // Marcar como aprobada
     await solicitud.update({ estado: 'aprobado' });
-
-    // Opcional: Puedes moverla a Prestamo si ya es oficial
-    // const nuevoPrestamoId = await Prestamo.create({ ... });
 
     req.flash('success', 'Solicitud aprobada correctamente');
     res.redirect('/prestamos/pendientes');
@@ -386,6 +368,8 @@ exports.aprobarSolicitud = async (req, res) => {
     res.redirect('/prestamos/pendientes');
   }
 };
+
+// Aprobar préstamo especial
 exports.aprobarPrestamoEspecial = async (req, res) => {
   const id = req.params.id;
 
