@@ -2,8 +2,6 @@
 const express = require('express');
 const router = express.Router();
 const prestamosEspecialesController = require('../controllers/prestamosEspecialesController');
-const prestamoController = require('../controllers/prestamoController'); // Importación añadida
-
 // Listado de préstamos especiales
 router.get('/', prestamosEspecialesController.index);
 

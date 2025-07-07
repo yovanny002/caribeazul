@@ -4,11 +4,13 @@
   const Cuota = require('../models/Cuota');
   const Pago = require('../models/Pago');
   const SolicitudPrestamo = require('../models/SolicitudPrestamo');
+  const PrestamoEspecial = require('../models/PrestamoEspecial'); // Asegúrate de importar este
   const Ruta = require('../models/Ruta'); // Asegúrate de que este archivo existe
   const moment = require('moment');
   const { imprimirTicket } = require('../utils/impresora'); // crearás esto luego
   const PDFDocument = require('pdfkit'); // Asegúrate de tener esta dependencia
   const fs = require('fs');
+
 
   // Mostrar todos los préstamos
   exports.index = async (req, res) => {
@@ -68,9 +70,7 @@ exports.createForm = async (req, res) => {
       res.redirect('/prestamos/create');
     }
   };
-const Prestamo = require('../models/Prestamo');
-const Cliente = require('../models/Cliente');
-const PrestamoEspecial = require('../models/PrestamoEspecial'); // Asegúrate de importar este
+
 
 exports.pendientes = async (req, res) => {
   try {
@@ -602,7 +602,7 @@ exports.imprimir = async (req, res) => {
     res.status(500).send('Error interno del servidor');
   }
 };
-const PrestamoEspecial = require('../models/PrestamoEspecial');
+
 
 exports.aprobarPrestamoEspecial = async (req, res) => {
   const id = req.params.id;
