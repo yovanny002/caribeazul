@@ -14,87 +14,121 @@
     </div>
 
     <div class="card-body">
-      <% if (typeof messages !== 'undefined' && messages.success) { %>
+      <% if (messages && messages.success) { %>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
           <%= messages.success %>
           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
       <% } %>
 
-      <% if (typeof messages !== 'undefined' && messages.error) { %>
+      <% if (messages && messages.error) { %>
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
           <%= messages.error %>
           <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
       <% } %>
 
-      <div class="table-responsive">
-        <table class="table table-hover table-striped">
-          <thead class="table-dark">
-            <tr>
-              <th>ID</th>
-              <th>Cliente</th>
-              <th>Cédula</th>
-              <th>Monto</th>
-              <th>Interés</th>
-              <th>Restante</th>
-              <th>Estado</th>
-              <th>Fecha</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% prestamos.forEach(prestamo => { %>
+      <% if (prestamos && prestamos.length > 0) { %>
+        <div class="table-responsive">
+          <table class="table table-hover table-striped">
+            <thead class="table-dark">
               <tr>
-                <td><%= prestamo.id %></td>
-                <td><%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></td>
-                <td><%= prestamo.cliente_cedula %></td>
-                <td>RD$ <%= prestamo.monto_aprobado.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
-                <td><%= prestamo.interes_porcentaje %>%</td>
-                <td>RD$ <%= prestamo.capital_restante.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
-                <td>
-                  <span class="badge bg-<%= prestamo.estado_class %>">
-                    <%= prestamo.estado.charAt(0).toUpperCase() + prestamo.estado.slice(1) %>
-                  </span>
-                </td>
-                <td><%= prestamo.fecha_creacion %></td>
-                <td>
-                  <a href="/prestamos-especiales/<%= prestamo.id %>" class="btn btn-sm btn-primary" title="Ver">
-                    <i class="fas fa-eye"></i>
-                  </a>
-                  <a href="/prestamos-especiales/<%= prestamo.id %>/editar" class="btn btn-sm btn-warning" title="Editar">
-                    <i class="fas fa-edit"></i>
-                  </a>
-                </td>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Cédula</th>
+                <th>Monto</th>
+                <th>Interés</th>
+                <th>Restante</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+                <th>Acciones</th>
               </tr>
-            <% }) %>
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              <% prestamos.forEach(prestamo => { %>
+                <tr>
+                  <td><%= prestamo.id %></td>
+                  <td><%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></td>
+                  <td><%= prestamo.cliente_cedula %></td>
+                  <td>RD$ <%= (prestamo.monto_aprobado || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                  <td><%= prestamo.interes_porcentaje %>%</td>
+                  <td>RD$ <%= (prestamo.capital_restante || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                  <td>
+                    <span class="badge bg-<%= prestamo.estado === 'aprobado' ? 'success' : prestamo.estado === 'pendiente' ? 'warning' : 'danger' %>">
+                      <%= prestamo.estado ? prestamo.estado.charAt(0).toUpperCase() + prestamo.estado.slice(1) : '' %>
+                    </span>
+                  </td>
+                  <td><%= prestamo.fecha_creacion ? new Date(prestamo.fecha_creacion).toLocaleDateString() : '' %></td>
+                  <td>
+                    <a href="/prestamos-especiales/<%= prestamo.id %>" class="btn btn-sm btn-primary" title="Ver">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="/prestamos-especiales/<%= prestamo.id %>/editar" class="btn btn-sm btn-warning" title="Editar">
+                      <i class="fas fa-edit"></i>
+                    </a>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
 
-      <!-- Paginación -->
-      <% if (totalPages > 1) { %>
-        <nav aria-label="Page navigation">
-          <ul class="pagination justify-content-center">
-            <% if (currentPage > 1) { %>
-              <li class="page-item">
-                <a class="page-link" href="?page=<%= currentPage - 1 %>&limit=<%= limit %>">Anterior</a>
-              </li>
-            <% } %>
+        <!-- Paginación mejorada -->
+        <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+          <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+              <% if (currentPage > 1) { %>
+                <li class="page-item">
+                  <a class="page-link" href="?page=<%= currentPage - 1 %><%= limit ? `&limit=${limit}` : '' %>">Anterior</a>
+                </li>
+              <% } %>
 
-            <% for (let i = 1; i <= totalPages; i++) { %>
-              <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-                <a class="page-link" href="?page=<%= i %>&limit=<%= limit %>"><%= i %></a>
-              </li>
-            <% } %>
+              <% const maxPagesToShow = 5;
+                 let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+                 let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+                 
+                 if (endPage - startPage + 1 < maxPagesToShow) {
+                   startPage = Math.max(1, endPage - maxPagesToShow + 1);
+                 }
+                 
+                 if (startPage > 1) { %>
+                <li class="page-item">
+                  <a class="page-link" href="?page=1<%= limit ? `&limit=${limit}` : '' %>">1</a>
+                </li>
+                <% if (startPage > 2) { %>
+                  <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                  </li>
+                <% } %>
+              <% } %>
+              
+              <% for (let i = startPage; i <= endPage; i++) { %>
+                <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                  <a class="page-link" href="?page=<%= i %><%= limit ? `&limit=${limit}` : '' %>"><%= i %></a>
+                </li>
+              <% } %>
+              
+              <% if (endPage < totalPages) { %>
+                <% if (endPage < totalPages - 1) { %>
+                  <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                  </li>
+                <% } %>
+                <li class="page-item">
+                  <a class="page-link" href="?page=<%= totalPages %><%= limit ? `&limit=${limit}` : '' %>"><%= totalPages %></a>
+                </li>
+              <% } %>
 
-            <% if (currentPage < totalPages) { %>
-              <li class="page-item">
-                <a class="page-link" href="?page=<%= currentPage + 1 %>&limit=<%= limit %>">Siguiente</a>
-              </li>
-            <% } %>
-          </ul>
-        </nav>
+              <% if (currentPage < totalPages) { %>
+                <li class="page-item">
+                  <a class="page-link" href="?page=<%= currentPage + 1 %><%= limit ? `&limit=${limit}` : '' %>">Siguiente</a>
+                </li>
+              <% } %>
+            </ul>
+          </nav>
+        <% } %>
+      <% } else { %>
+        <div class="alert alert-info">No se encontraron préstamos especiales</div>
       <% } %>
     </div>
   </div>

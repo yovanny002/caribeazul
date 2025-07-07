@@ -16,22 +16,26 @@ exports.index = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
-    // Get total count of records
-    const totalCount = await PrestamoEspecial.countAll();
+    // Get total count and paginated data
+    const [prestamos, totalCount] = await Promise.all([
+      PrestamoEspecial.findAllWithClienteYRuta({
+        limit,
+        offset
+      }),
+      PrestamoEspecial.countAll()
+    ]);
+
     const totalPages = Math.ceil(totalCount / limit);
 
-    // Get paginated data
-    const prestamos = await PrestamoEspecial.findAllWithClienteYRutaPaginated(offset, limit);
-    
+    // Format data
     const formattedPrestamos = prestamos.map(p => ({
       ...p,
       monto_aprobado: parseFloat(p.monto_aprobado) || 0,
-      capital_restante: parseFloat(p.monto_aprobado) || parseFloat(p.monto_solicitado) || 0,
+      capital_restante: parseFloat(p.capital_restante) || parseFloat(p.monto_aprobado) || 0,
       interes_porcentaje: parseFloat(p.interes_porcentaje) || 0,
       fecha_creacion: p.created_at,
-      cliente_nombre: p.cliente_nombre || 'Cliente no encontrado',
-      cliente_apellidos: p.cliente_apellidos || '',
-      ruta_zona: p.ruta_zona || 'Sin zona asignada'
+      estado_class: p.estado === 'aprobado' ? 'success' : 
+                   p.estado === 'pendiente' ? 'warning' : 'danger'
     }));
 
     res.render('prestamosEspeciales/index', {
