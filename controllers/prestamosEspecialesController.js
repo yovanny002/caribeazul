@@ -7,11 +7,10 @@ const moment = require('moment');
 exports.formulario = async (req, res) => {
   let clientes = await Cliente.findAll();
   clientes = clientes.filter(c => c.estado === 'activo');
-  
+
   const rutas = await Ruta.findAll();
   res.render('prestamosEspeciales/create', { clientes, rutas, title: 'Nuevo Préstamo Especial' });
 };
-
 
 exports.crear = async (req, res) => {
   try {
@@ -37,7 +36,6 @@ exports.crear = async (req, res) => {
 
 exports.index = async (req, res) => {
   try {
-    // Aquí llama al método findAll que ya hace el JOIN con clientes
     const prestamos = await PrestamoEspecial.findAll();
     res.render('prestamosEspeciales/index', { prestamos, title: 'Préstamos Especiales' });
   } catch (error) {
@@ -56,10 +54,7 @@ exports.show = async (req, res) => {
       return res.redirect('/prestamos-especiales');
     }
 
-    const pagos = await PagoEspecial.findAll({
-      where: { prestamo_id: prestamo.id },
-      order: [['fecha', 'DESC']]
-    });
+    const pagos = await PagoEspecial.findAllByPrestamoId(prestamo.id);
 
     res.render('prestamosEspeciales/show', {
       prestamo,
@@ -109,7 +104,7 @@ exports.procesarPago = async (req, res) => {
     const capitalRestante = nuevoCapital < 0 ? 0 : nuevoCapital;
     await PrestamoEspecial.updateCapital(prestamo.id, capitalRestante);
 
-    const pago = await PagoEspecial.create({
+    await PagoEspecial.create({
       prestamo_id: prestamo.id,
       monto,
       interes_pagado,
@@ -134,12 +129,8 @@ exports.reciboPago = async (req, res) => {
     const { id, pagoId } = req.params;
 
     const prestamo = await PrestamoEspecial.findById(id);
-    const pago = await PagoEspecial.findByPk(pagoId);
-
-    const historialPagos = await PagoEspecial.findAll({
-      where: { prestamo_id: id },
-      order: [['fecha', 'DESC']]
-    });
+    const pago = await PagoEspecial.findById(pagoId);
+    const historialPagos = await PagoEspecial.findAllByPrestamoId(id);
 
     const restante = prestamo.capital_restante;
 
