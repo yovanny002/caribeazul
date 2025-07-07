@@ -5,10 +5,13 @@ const PagoEspecial = require('../models/PagoEspecial');
 const moment = require('moment');
 
 exports.formulario = async (req, res) => {
-  const clientes = await Cliente.findAll({ where: { estado: 'activo' } });
+  let clientes = await Cliente.findAll();
+  clientes = clientes.filter(c => c.estado === 'activo');
+  
   const rutas = await Ruta.findAll();
   res.render('prestamosEspeciales/create', { clientes, rutas, title: 'Nuevo Préstamo Especial' });
 };
+
 
 exports.crear = async (req, res) => {
   try {
@@ -34,6 +37,7 @@ exports.crear = async (req, res) => {
 
 exports.index = async (req, res) => {
   try {
+    // Aquí llama al método findAll que ya hace el JOIN con clientes
     const prestamos = await PrestamoEspecial.findAll();
     res.render('prestamosEspeciales/index', { prestamos, title: 'Préstamos Especiales' });
   } catch (error) {
