@@ -9,7 +9,7 @@
     </div>
 
     <div class="card-body">
-      <form id="form-prestamo-especial" action="/prestamos-especiales/create" method="POST" class="needs-validation" novalidate>
+      <form id="form-prestamo-especial" action="/prestamos-especiales/crear" method="POST" class="needs-validation" novalidate>
         <div class="row g-4">
 
           <!-- Datos del Cliente -->
@@ -22,10 +22,13 @@
                 <div class="mb-3">
                   <label for="cliente_id" class="form-label fw-bold">Seleccionar Cliente</label>
                   <select name="cliente_id" id="cliente_id" class="form-select" required>
-                    <option value="">-- Seleccione un cliente --</option>
-                    <% clientes.forEach(c => { %>
-                      <option value="<%= c.id %>"><%= c.nombre %> <%= c.apellidos %> - <%= c.cedula %></option>
-                    <% }) %>
+                    <% if (clientes.length === 0) { %>
+                        <option value="">No hay clientes disponibles</option>
+                      <% } else { %>
+                        <% clientes.forEach(c => { %>
+                          <option value="<%= c.id %>"><%= c.nombre %> <%= c.apellidos %> - <%= c.cedula %></option>
+                        <% }) %>
+                      <% } %>
                   </select>
                   <div class="invalid-feedback">Debe seleccionar un cliente</div>
                 </div>

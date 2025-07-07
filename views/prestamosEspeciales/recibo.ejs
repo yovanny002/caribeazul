@@ -1,70 +1,145 @@
-<%- include('../partials/header', { title: 'Recibo de Pago Especial' }) %>
-
-<div class="container-fluid px-4 mt-4">
-  <div class="card shadow">
-    <div class="card-header bg-primary text-white py-3">
-      <h2 class="mb-0 text-uppercase"><i class="fas fa-receipt me-2"></i>Recibo de Pago Especial</h2>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recibo de Pago - Préstamo Especial</title>
+  <style>
+    /* Reset básico */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 1.5cm 2cm;
+      background: #fff;
+      color: #333;
+      font-size: 14px;
+    }
+    header {
+      border-bottom: 2px solid #2a9d8f;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header .logo {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: #2a9d8f;
+      letter-spacing: 1.5px;
+      user-select: none;
+    }
+    header .empresa-info {
+      text-align: right;
+      font-size: 0.85rem;
+      line-height: 1.3;
+    }
+    h1 {
+      color: #264653;
+      font-size: 1.8rem;
+      margin-bottom: 0.2em;
+    }
+    .info-cliente, .info-prestamo, .info-pago {
+      margin-bottom: 1.2em;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 6px;
+      background: #f7f7f7;
+    }
+    .info-cliente h2,
+    .info-prestamo h2,
+    .info-pago h2 {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+      color: #264653;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 5px;
+    }
+    .detalle {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .detalle li {
+      margin-bottom: 6px;
+    }
+    .detalle li strong {
+      display: inline-block;
+      width: 160px;
+      color: #2a9d8f;
+    }
+    footer {
+      border-top: 2px solid #2a9d8f;
+      padding-top: 15px;
+      margin-top: 30px;
+      font-size: 0.85rem;
+      color: #666;
+      text-align: center;
+    }
+    /* Estilo impresión */
+    @media print {
+      body {
+        margin: 0.5cm;
+        padding: 0;
+        font-size: 12px;
+      }
+      header, footer {
+        page-break-after: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">Financiera Caribe Azul</div>
+    <div class="empresa-info">
+      <div>Dirección: Av. Principal #123, Nagua, RD</div>
+      <div>Tel: (809) 555-1234</div>
+      <div>Email: contacto@sirtechsolutions.com</div>
+      <div>RNC: 131234567</div>
     </div>
-    <div class="card-body">
-      <div class="row g-4">
-        <div class="col-md-6">
-          <div class="card border-primary">
-            <div class="card-header bg-light">
-              <h5 class="mb-0 text-primary"><i class="fas fa-user me-2"></i>Cliente</h5>
-            </div>
-            <div class="card-body">
-              <p><strong>Nombre:</strong> <%= prestamo.cliente.nombre %> <%= prestamo.cliente.apellidos %></p>
-              <p><strong>Cédula:</strong> <%= prestamo.cliente.cedula %></p>
-              <% if (prestamo.ruta) { %>
-                <p><strong>Ruta:</strong> <%= prestamo.ruta.zona %> - <%= prestamo.ruta.nombre %></p>
-              <% } %>
-            </div>
-          </div>
-        </div>
+  </header>
 
-        <div class="col-md-6">
-          <div class="card border-primary">
-            <div class="card-header bg-light">
-              <h5 class="mb-0 text-primary"><i class="fas fa-info-circle me-2"></i>Pago</h5>
-            </div>
-            <div class="card-body">
-              <p><strong>Pago ID:</strong> <%= pago.id %></p>
-              <p><strong>Fecha:</strong> <%= new Date(pago.fecha).toLocaleDateString('es-DO') %></p>
-              <p><strong>Hora:</strong> <%= new Date(pago.fecha).toLocaleTimeString('es-DO', {hour: '2-digit', minute: '2-digit'}) %></p>
-              <p><strong>Método:</strong> <%= pago.metodo.toUpperCase() %></p>
-              <p><strong>Referencia:</strong> <%= pago.referencia || 'N/A' %></p>
-            </div>
-          </div>
-        </div>
-      </div>
+  <h1>Recibo de Pago</h1>
+  <p><em>Fecha de emisión: <%= new Date(pago.fecha).toLocaleDateString('es-DO') %></em></p>
 
-      <div class="row g-4 mt-4">
-        <div class="col-md-12">
-          <div class="card border-primary">
-            <div class="card-header bg-light">
-              <h5 class="mb-0 text-primary"><i class="fas fa-money-bill-wave me-2"></i>Detalle del Pago</h5>
-            </div>
-            <div class="card-body">
-              <p><strong>Monto Pagado:</strong> RD$ <%= pago.monto.toFixed(2) %></p>
-              <p><strong>Interés Cubierto:</strong> RD$ <%= pago.interes_pagado.toFixed(2) %></p>
-              <p><strong>Abono a Capital:</strong> RD$ <%= pago.capital_pagado.toFixed(2) %></p>
-              <p><strong>Capital Restante:</strong> RD$ <%= prestamo.capital_restante.toFixed(2) %></p>
-            </div>
-          </div>
-        </div>
-      </div>
+  <section class="info-cliente">
+    <h2>Información del Cliente</h2>
+    <ul class="detalle">
+      <li><strong>Nombre Completo:</strong> <%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></li>
+      <li><strong>Cédula:</strong> <%= prestamo.cliente_cedula %></li>
+    </ul>
+  </section>
 
-      <div class="text-center mt-4">
-        <p class="text-muted">Este documento no es válido como factura.</p>
-        <p class="text-muted">Impreso el <%= new Date().toLocaleDateString('es-DO') %> a las <%= new Date().toLocaleTimeString('es-DO', {hour: '2-digit', minute: '2-digit'}) %></p>
-      </div>
+  <section class="info-prestamo">
+    <h2>Detalles del Préstamo</h2>
+    <ul class="detalle">
+      <li><strong>ID Préstamo:</strong> <%= prestamo.id %></li>
+      <li><strong>Monto Aprobado:</strong> RD$ <%= prestamo.monto_aprobado.toFixed(2) %></li>
+      <li><strong>Interés (%):</strong> <%= prestamo.interes_porcentaje %></li>
+      <li><strong>Forma de Pago:</strong> <%= prestamo.forma_pago %></li>
+      <li><strong>Capital Restante:</strong> RD$ <%= prestamo.capital_restante.toFixed(2) %></li>
+    </ul>
+  </section>
 
-      <div class="text-center mt-3">
-        <button onclick="window.print()" class="btn btn-outline-primary"><i class="fas fa-print me-1"></i>Imprimir</button>
-        <button onclick="window.close()" class="btn btn-outline-secondary"><i class="fas fa-times me-1"></i>Cerrar</button>
-      </div>
-    </div>
-  </div>
-</div>
+  <section class="info-pago">
+    <h2>Detalles del Pago</h2>
+    <ul class="detalle">
+      <li><strong>ID Pago:</strong> <%= pago.id %></li>
+      <li><strong>Fecha de Pago:</strong> <%= new Date(pago.fecha).toLocaleDateString('es-DO') %></li>
+      <li><strong>Monto Pagado:</strong> RD$ <%= pago.monto.toFixed(2) %></li>
+      <li><strong>Interés Cubierto:</strong> RD$ <%= pago.interes_pagado.toFixed(2) %></li>
+      <li><strong>Capital Abonado:</strong> RD$ <%= pago.capital_pagado.toFixed(2) %></li>
+      <li><strong>Método de Pago:</strong> <%= pago.metodo.toUpperCase() %></li>
+    </ul>
+  </section>
 
-<%- include('../partials/footer') %>
+  <footer>
+    <p>Gracias por su pago. Para cualquier consulta contáctenos al (809) 555-1234 o contacto@sirtechsolutions.com</p>
+    <p>SirTech Solutions - Empresa líder en servicios de tecnología y finanzas.</p>
+  </footer>
+</body>
+</html>
