@@ -6,40 +6,32 @@ const Ruta = require('../models/Ruta');
 const moment = require('moment');
 
 // Listar todos los préstamos especiales con paginación
+// controllers/prestamosEspecialesController.js
+// controllers/prestamosEspecialesController.js
 exports.index = async (req, res) => {
   try {
-    // Opciones de paginación
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
-
-    // Obtener préstamos con paginación
-    const { prestamos, total } = await PrestamoEspecial.findAllWithClienteYRuta({ limit, offset });
-
+    const prestamos = await PrestamoEspecial.findAllWithClienteYRuta();
+    
     const formattedPrestamos = prestamos.map(p => ({
       ...p,
-      monto_aprobado: Number(p.monto_aprobado) || 0,
-      capital_restante: Number(p.capital_restante) || 0,
-      interes_porcentaje: Number(p.interes_porcentaje) || 0,
-      fecha_creacion: moment(p.fecha_creacion).format('DD/MM/YYYY'),
-      estado_class: p.estado === 'pendiente' ? 'warning' : 
-                   p.estado === 'aprobado' ? 'success' : 
-                   p.estado === 'rechazado' ? 'danger' : 'secondary'
+      monto_aprobado: parseFloat(p.monto_aprobado) || 0,
+      capital_restante: parseFloat(p.monto_aprobado) || parseFloat(p.monto_solicitado) || 0,
+      interes_porcentaje: parseFloat(p.interes_porcentaje) || 0,
+      fecha_creacion: p.created_at,
+      // Aseguramos que los campos relacionados tengan valores por defecto
+      cliente_nombre: p.cliente_nombre || 'Cliente no encontrado',
+      cliente_apellidos: p.cliente_apellidos || '',
+      ruta_zona: p.ruta_zona || 'Sin zona asignada'
     }));
 
-    const totalPages = Math.ceil(total / limit);
-
-    res.render('prestamosEspeciales/index', { 
+    res.render('prestamosEspeciales/index', {
       prestamos: formattedPrestamos,
       title: 'Préstamos Especiales',
-      currentPage: page,
-      totalPages,
-      limit,
       messages: req.flash()
     });
   } catch (error) {
     console.error('Error al listar préstamos especiales:', error);
-    req.flash('error', 'No se pudieron cargar los préstamos especiales.');
+    req.flash('error', 'No se pudieron cargar los préstamos especiales');
     res.redirect('/');
   }
 };

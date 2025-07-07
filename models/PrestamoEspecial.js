@@ -135,37 +135,57 @@ const PrestamoEspecial = {
     });
   },
 
- findAllWithClienteYRuta: async (options = {}) => {
-    let query = `
-      SELECT pe.*, 
-             c.nombre AS cliente_nombre, 
-             c.apellidos AS cliente_apellidos, 
-             c.cedula AS cliente_cedula,
-             r.zona AS ruta_zona, 
-             r.nombre AS ruta_nombre
-      FROM prestamos_especiales pe
-      LEFT JOIN clientes c ON pe.cliente_id = c.id
-      LEFT JOIN rutas r ON pe.ruta_id = r.id
-    `;
-    
-    const replacements = {};
-    
-    if (options.where) {
+findAllWithClienteYRuta: async (options = {}) => {
+    try {
+      let query = `
+        SELECT 
+          pe.id,
+          pe.cliente_id,
+          pe.ruta_id,
+          pe.monto_solicitado,
+          pe.monto_aprobado,
+          pe.interes_porcentaje,
+          pe.forma_pago,
+          pe.estado,
+          pe.created_at,
+          COALESCE(c.nombre, '') AS cliente_nombre,
+          COALESCE(c.apellidos, '') AS cliente_apellidos,
+          COALESCE(c.cedula, '') AS cliente_cedula,
+          COALESCE(r.zona, '') AS ruta_zona,
+          COALESCE(r.nombre, '') AS ruta_nombre
+        FROM prestamos_especiales pe
+        LEFT JOIN clientes c ON pe.cliente_id = c.id AND c.estado = 'activo'
+        LEFT JOIN rutas r ON pe.ruta_id = r.id AND r.activo = true
+      `;
+
+      const replacements = {};
       const whereClauses = [];
-      if (options.where.estado) {
-        whereClauses.push('pe.estado = :estado');
-        replacements.estado = options.where.estado;
+
+      if (options.where) {
+        if (options.where.estado) {
+          whereClauses.push('pe.estado = :estado');
+          replacements.estado = options.where.estado;
+        }
+        if (options.where.cliente_id) {
+          whereClauses.push('pe.cliente_id = :cliente_id');
+          replacements.cliente_id = options.where.cliente_id;
+        }
       }
+
       if (whereClauses.length > 0) {
-        query += ' WHERE ' + whereClauses.join(' AND ');
+        query += ` WHERE ${whereClauses.join(' AND ')}`;
       }
+
+      query += ' ORDER BY pe.created_at DESC';
+
+      const [rows] = await db.query(query, { replacements });
+      return rows || [];
+    } catch (error) {
+      console.error('Error en findAllWithClienteYRuta:', error);
+      throw error;
     }
-    
-    query += ' ORDER BY pe.fecha_creacion DESC';
-    
-    const [rows] = await db.query(query, { replacements });
-    return rows;
   },
+
 
 findByIdWithClienteYRuta: async (id) => {
   const [rows] = await db.query(`
