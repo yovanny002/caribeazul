@@ -274,7 +274,8 @@ exports.procesarPago = async (req, res) => {
       metodo: req.body.metodo || 'efectivo',
       referencia: req.body.referencia || '',
       fecha: new Date(),
-      registrado_por: req.user.id || 'Sistema'
+      registrado_por: (req.user && req.user.id) ? req.user.id : 'Sistema'
+
     };
 
     await PagoEspecial.create(pagoData);
