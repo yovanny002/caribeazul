@@ -73,38 +73,44 @@ exports.createForm = async (req, res) => {
 // Crear un nuevo préstamo especial
 exports.create = async (req, res) => {
   try {
-    if (!req.body.cliente_id) {
+    const { cliente_id, ruta_id, monto_solicitado, monto_aprobado, interes_porcentaje, forma_pago } = req.body;
+
+    if (!cliente_id) {
       req.flash('error', 'Debe seleccionar un cliente');
       return res.redirect('/prestamos-especiales/nuevo');
     }
 
-    if (!req.body.monto_solicitado || isNaN(req.body.monto_solicitado) || req.body.monto_solicitado <= 0) {
+    const montoSolicitado = Number(monto_solicitado) || 0;
+    const montoAprobado = Number(monto_aprobado) || montoSolicitado;
+
+    if (montoSolicitado <= 0) {
       req.flash('error', 'Monto solicitado no válido');
       return res.redirect('/prestamos-especiales/nuevo');
     }
 
     const prestamoData = {
-      cliente_id: req.body.cliente_id,
-      ruta_id: req.body.ruta_id || null,
-      monto_solicitado: Number(req.body.monto_solicitado) || 0,
-      monto_aprobado: Number(req.body.monto_aprobado) || Number(req.body.monto_solicitado) || 0,
-      interes_porcentaje: Number(req.body.interes_porcentaje) || 0,
-      forma_pago: req.body.forma_pago,
+      cliente_id,
+      ruta_id: ruta_id || null,
+      monto_solicitado: montoSolicitado,
+      monto_aprobado: montoAprobado,
+      interes_porcentaje: Number(interes_porcentaje) || 0,
+      forma_pago,
       estado: 'pendiente',
-      capital_restante: Number(req.body.monto_aprobado) || Number(req.body.monto_solicitado) || 0,
+      capital_restante: montoAprobado, // 👈 forzamos aquí
       fecha_creacion: new Date()
     };
 
-    const prestamoId = await PrestamoEspecial.create(prestamoData);
+    const nuevoPrestamo = await PrestamoEspecial.create(prestamoData);
 
     req.flash('success', 'Préstamo especial creado correctamente');
-    res.redirect(`/prestamos-especiales/${prestamoId}`);
+    res.redirect(`/prestamos-especiales/${nuevoPrestamo.id}`);
   } catch (error) {
-    console.error('Error al crear préstamo especial:', error);
+    console.error('❌ Error al crear préstamo especial:', error);
     req.flash('error', `Error al crear préstamo especial: ${error.message}`);
     res.redirect('/prestamos-especiales/nuevo');
   }
 };
+
 
 // Mostrar detalle de un préstamo especial
 exports.show = async (req, res) => {
