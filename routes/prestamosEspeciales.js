@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const prestamosEspecialesController = require('../controllers/prestamosEspecialesController');
+
 // Listado de préstamos especiales
 router.get('/', prestamosEspecialesController.index);
 
@@ -29,7 +30,7 @@ router.post('/:id/pago', prestamosEspecialesController.procesarPago);
 // Generar recibo de pago
 router.get('/:id/recibo/:pagoId', prestamosEspecialesController.recibo);
 
-// Ruta para aprobar préstamos especiales (mover al final para evitar conflictos)
-router.post('/:id/aprobar', prestamosEspecialesController.aprobarPrestamo);
+// Ruta para aprobar préstamos especiales
+router.post('/:id/aprobar', prestamosEspecialesController.aprobarPrestamoEspecial); // Changed from aprobarPrestamo
 
 module.exports = router;
