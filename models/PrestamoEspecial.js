@@ -60,6 +60,35 @@ const PrestamoEspecial = {
     `, {
       replacements: { id, nuevoCapital }
     });
+  },
+
+  // Método necesario para listar con cliente y ruta (evitar error)
+  findAllWithClienteYRuta: async () => {
+    const [rows] = await db.query(`
+      SELECT pe.*, 
+             c.nombre AS cliente_nombre, c.apellidos AS cliente_apellidos, c.cedula AS cliente_cedula,
+             r.zona AS ruta_zona, r.nombre AS ruta_nombre
+      FROM prestamos_especiales pe
+      LEFT JOIN clientes c ON pe.cliente_id = c.id
+      LEFT JOIN rutas r ON pe.ruta_id = r.id
+    `);
+    return rows;
+  },
+
+  // Método para obtener un préstamo por ID con cliente y ruta
+  findByIdWithClienteYRuta: async (id) => {
+    const [rows] = await db.query(`
+      SELECT pe.*, 
+             c.nombre AS cliente_nombre, c.apellidos AS cliente_apellidos, c.cedula AS cliente_cedula,
+             r.zona AS ruta_zona, r.nombre AS ruta_nombre
+      FROM prestamos_especiales pe
+      LEFT JOIN clientes c ON pe.cliente_id = c.id
+      LEFT JOIN rutas r ON pe.ruta_id = r.id
+      WHERE pe.id = :id
+    `, {
+      replacements: { id }
+    });
+    return rows[0];
   }
 };
 
