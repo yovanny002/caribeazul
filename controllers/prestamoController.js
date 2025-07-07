@@ -68,16 +68,40 @@ exports.createForm = async (req, res) => {
       res.redirect('/prestamos/create');
     }
   };
-  exports.pendientes = async (req, res) => {
+const Prestamo = require('../models/Prestamo');
+const Cliente = require('../models/Cliente');
+const PrestamoEspecial = require('../models/PrestamoEspecial'); // Asegúrate de importar este
+
+exports.pendientes = async (req, res) => {
   try {
-    const prestamos = await Prestamo.findAllWithClientes('pendiente');
-    res.render('prestamos/pendientes', { title: 'Préstamos Pendientes', prestamos });
+    // Préstamos normales pendientes
+    const prestamosNormales = await Prestamo.findAllWithClientes('pendiente');
+
+    // Préstamos especiales pendientes
+    const prestamosEspeciales = await PrestamoEspecial.findAllWithClienteYRuta({
+      where: { estado: 'pendiente' }
+    });
+
+    // Marcar tipo para que la vista pueda diferenciar
+    const prestamos = [
+      ...prestamosNormales.map(p => ({ ...p, tipo: 'normal' })),
+      ...prestamosEspeciales.map(p => ({ ...p, tipo: 'especial' }))
+    ];
+
+    // Ordenar por fecha
+    prestamos.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+    res.render('prestamos/pendientes', {
+      title: 'Préstamos Pendientes de Aprobación',
+      prestamos
+    });
   } catch (error) {
-    console.error('Error al cargar préstamos pendientes:', error);
+    console.error('❌ Error al cargar préstamos pendientes:', error);
     req.flash('error', 'No se pudieron cargar los préstamos');
     res.redirect('/');
   }
 };
+
 
 exports.aprobarPrestamo = async (req, res) => {
   const prestamoId = req.params.id;
@@ -576,5 +600,27 @@ exports.imprimir = async (req, res) => {
   } catch (error) {
     console.error('Error al cargar vista de impresión:', error);
     res.status(500).send('Error interno del servidor');
+  }
+};
+const PrestamoEspecial = require('../models/PrestamoEspecial');
+
+exports.aprobarPrestamoEspecial = async (req, res) => {
+  const id = req.params.id;
+
+  try {
+    const prestamo = await PrestamoEspecial.findById(id);
+    if (!prestamo) {
+      req.flash('error', 'Préstamo especial no encontrado');
+      return res.redirect('/prestamos/pendientes');
+    }
+
+    await PrestamoEspecial.update(id, { estado: 'aprobado' });
+
+    req.flash('success', 'Préstamo especial aprobado correctamente');
+    res.redirect('/prestamos/pendientes');
+  } catch (err) {
+    console.error('❌ Error al aprobar préstamo especial:', err.message);
+    req.flash('error', 'Error al aprobar préstamo especial');
+    res.redirect('/prestamos/pendientes');
   }
 };

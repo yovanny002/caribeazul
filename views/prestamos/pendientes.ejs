@@ -2,7 +2,7 @@
 
 <div class="container-fluid px-4 py-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="mt-4 mb-0 fw-bold text-primary">Préstamos Pendientes de Aprobación</h1>
+    <h1 class="mt-4 mb-0 fw-bold text-primary"><%= title || 'Préstamos Pendientes de Aprobación' %></h1>
     <a href="/dashboard" class="btn btn-outline-secondary rounded-pill px-4">
       <i class="fas fa-arrow-left me-2"></i> Volver al Dashboard
     </a>
@@ -48,26 +48,29 @@
                         <i class="fas fa-user text-muted"></i>
                       </div>
                       <span class="fw-medium text-dark">
-                        <%= p.cliente_nombre %> <%= p.cliente_apellidos %>
-                        <% if (p.cliente_cedula) { %>
-                          <small class="text-muted d-block"><%= p.cliente_cedula %></small>
+                        <%= p.cliente?.nombre || p.cliente_nombre || 'N/A' %>
+                        <%= p.cliente?.apellidos || p.cliente_apellidos || '' %>
+                        <% if (p.cliente?.cedula || p.cliente_cedula) { %>
+                          <small class="text-muted d-block">
+                            <%= p.cliente?.cedula || p.cliente_cedula %>
+                          </small>
                         <% } %>
                       </span>
                     </div>
                   </td>
                   <td>
                     <span class="badge bg-info-subtle text-info fs-6 py-2 px-3">
-                      RD$ <%= Number(p.monto_solicitado).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                      RD$ <%= Number(p.monto_solicitado || 0).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
                     </span>
                   </td>
                   <td>
                     <span class="badge bg-primary-subtle text-primary fs-6 py-2 px-3">
-                      RD$ <%= Number(p.monto_aprobado).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                      RD$ <%= Number(p.monto_aprobado || 0).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
                     </span>
                   </td>
                   <td>
                     <span class="text-muted">
-                      <%= moment(p.created_at || p.fecha_creacion).format('DD/MM/YYYY') %>
+                      <%= moment(p.created_at || p.fecha_creacion || p.fecha).format('DD/MM/YYYY') %>
                     </span>
                   </td>
                   <td class="text-center">
@@ -102,8 +105,7 @@
     aprobarBtns.forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
-        const prestamoId = btn.getAttribute('data-id');
-        const esEspecial = btn.closest('form').action.includes('especiales');
+        const form = btn.closest('form');
 
         Swal.fire({
           title: '¿Aprobar préstamo?',
@@ -116,7 +118,6 @@
           cancelButtonText: 'Cancelar'
         }).then((result) => {
           if (result.isConfirmed) {
-            const form = btn.closest('form');
             form.submit();
           }
         });
@@ -126,18 +127,19 @@
 </script>
 
 <%- include('../partials/footer') %>
+
 <style>
   body {
-    background-color: #f5f7fa; /* Matches main layout's background */
+    background-color: #f5f7fa;
     color: #3c4043;
   }
 
   .container-fluid {
-    padding-top: 20px; /* Adjust if header includes margin-top */
+    padding-top: 20px;
   }
 
   .text-primary {
-    color: #1a73e8 !important; /* Ensure consistent primary color */
+    color: #1a73e8 !important;
   }
 
   .btn-outline-secondary {
@@ -152,26 +154,26 @@
   }
 
   .alert-info {
-    background-color: #e0f7fa; /* Light blue background */
-    border-color: #b3e5fc; /* Slightly darker border */
-    color: #01579b; /* Darker blue text */
+    background-color: #e0f7fa;
+    border-color: #b3e5fc;
+    color: #01579b;
   }
 
   .alert-info .alert-heading {
-    color: #01579b; /* Darker blue for heading */
+    color: #01579b;
   }
 
   .alert-info i {
-    color: #039be5; /* Accent blue for icon */
+    color: #039be5;
   }
 
   .card {
-    border-radius: 0.75rem; /* Matches main layout's rounded cards */
+    border-radius: 0.75rem;
     overflow: hidden;
   }
 
   .card-header {
-    background: linear-gradient(90deg, #1a73e8, #0d47a1); /* Gradient from primary to a darker blue */
+    background: linear-gradient(90deg, #1a73e8, #0d47a1);
     color: white;
     padding: 1.5rem 2rem;
     border-bottom: none;
@@ -183,17 +185,17 @@
   }
 
   .table-responsive {
-    border-radius: 0.75rem; /* Match card radius */
-    overflow: hidden; /* Ensure rounded corners are respected */
+    border-radius: 0.75rem;
+    overflow: hidden;
   }
 
   .table {
-    border-collapse: separate; /* Required for border-radius on cells */
+    border-collapse: separate;
     border-spacing: 0;
   }
 
   .table thead th {
-    background-color: #212529; /* Darker header */
+    background-color: #212529;
     color: #fff;
     font-weight: 600;
     padding: 1rem 1.25rem;
@@ -207,14 +209,13 @@
   }
 
   .table-hover tbody tr:hover {
-    background-color: #f2f2f2; /* Light hover effect */
+    background-color: #f2f2f2;
   }
 
-  /* Custom badges to match overall theme */
   .badge {
-    font-size: 0.95em; /* Slightly larger font for better readability */
+    font-size: 0.95em;
     padding: 0.5em 0.8em;
-    border-radius: 0.5rem; /* More rounded */
+    border-radius: 0.5rem;
     font-weight: 600;
   }
 
@@ -229,7 +230,7 @@
   }
 
   .btn-success {
-    background-color: #34a853; /* Using secondary-color from root variables */
+    background-color: #34a853;
     border-color: #34a853;
   }
 
@@ -240,11 +241,11 @@
   }
 
   .btn-lg {
-    font-size: 1.05rem; /* Larger button text */
+    font-size: 1.05rem;
     padding: 0.6rem 1.2rem;
   }
 
   .rounded-pill {
-    border-radius: 50rem !important; /* Full pill shape */
+    border-radius: 50rem !important;
   }
 </style>

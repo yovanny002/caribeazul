@@ -362,28 +362,27 @@ exports.pendientes = async (req, res) => {
     res.redirect('/');
   }
 };
-exports.aprobarPrestamo = async (req, res) => {
+exports.aprobarSolicitud = async (req, res) => {
+  const id = req.params.id;
+
   try {
-    const { id } = req.params;
-    
-    // 1. Obtener el préstamo
-    const prestamo = await PrestamoEspecial.findById(id);
-    if (!prestamo) {
-      req.flash('error', 'Préstamo especial no encontrado');
-      return res.redirect('/prestamos-especiales');
+    const solicitud = await SolicitudPrestamo.findByPk(id);
+    if (!solicitud) {
+      req.flash('error', 'Solicitud no encontrada');
+      return res.redirect('/prestamos/pendientes');
     }
 
-    // 2. Actualizar el estado y establecer capital restante
-    await PrestamoEspecial.update(id, {
-      estado: 'aprobado',
-      capital_restante: prestamo.monto_aprobado || prestamo.monto_solicitado
-    });
+    // Marcar como aprobada
+    await solicitud.update({ estado: 'aprobado' });
 
-    req.flash('success', 'Préstamo especial aprobado correctamente');
-    res.redirect('/prestamos-especiales');
-  } catch (error) {
-    console.error('Error al aprobar préstamo especial:', error);
-    req.flash('error', 'No se pudo aprobar el préstamo especial');
-    res.redirect('/prestamos-especiales');
+    // Opcional: Puedes moverla a Prestamo si ya es oficial
+    // const nuevoPrestamoId = await Prestamo.create({ ... });
+
+    req.flash('success', 'Solicitud aprobada correctamente');
+    res.redirect('/prestamos/pendientes');
+  } catch (err) {
+    console.error('Error aprobando solicitud:', err);
+    req.flash('error', 'Error al aprobar solicitud');
+    res.redirect('/prestamos/pendientes');
   }
 };
