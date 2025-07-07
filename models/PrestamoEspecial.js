@@ -1,18 +1,61 @@
+// models/PrestamoEspecial.js
 const db = require('./db');
 
 const PrestamoEspecial = {
-  findAll: async () => {
-    const [rows] = await db.query(`
+  findAll: async (options = {}) => {
+    let query = `
       SELECT pe.*, c.nombre, c.apellidos
       FROM prestamos_especiales pe
       JOIN clientes c ON pe.cliente_id = c.id
-    `);
+    `;
+    
+    const replacements = {};
+    
+    // Filtros
+    if (options.where) {
+      const whereClauses = [];
+      
+      if (options.where.cliente_id) {
+        whereClauses.push('pe.cliente_id = :cliente_id');
+        replacements.cliente_id = options.where.cliente_id;
+      }
+      
+      if (options.where.estado) {
+        whereClauses.push('pe.estado = :estado');
+        replacements.estado = options.where.estado;
+      }
+      
+      if (whereClauses.length > 0) {
+        query += ' WHERE ' + whereClauses.join(' AND ');
+      }
+    }
+    
+    // Orden
+    if (options.order) {
+      const [column, direction] = options.order[0];
+      query += ` ORDER BY ${column} ${direction}`;
+    } else {
+      query += ' ORDER BY pe.fecha_creacion DESC';
+    }
+    
+    // Paginación
+    if (options.limit) {
+      query += ' LIMIT :limit';
+      replacements.limit = options.limit;
+      
+      if (options.offset) {
+        query += ' OFFSET :offset';
+        replacements.offset = options.offset;
+      }
+    }
+    
+    const [rows] = await db.query(query, { replacements });
     return rows;
   },
 
   findById: async (id) => {
     const [rows] = await db.query(`
-      SELECT pe.*, c.nombre, c.apellidos
+      SELECT pe.*, c.nombre, c.apellidos, c.cedula
       FROM prestamos_especiales pe
       JOIN clientes c ON pe.cliente_id = c.id
       WHERE pe.id = :id
@@ -30,13 +73,18 @@ const PrestamoEspecial = {
       monto_aprobado,
       interes_porcentaje,
       forma_pago,
-      estado = 'pendiente'
+      estado = 'pendiente',
+      capital_restante,
+      fecha_creacion = new Date()
     } = prestamo;
 
     const [result] = await db.query(`
       INSERT INTO prestamos_especiales
-      (cliente_id, ruta_id, monto_solicitado, monto_aprobado, interes_porcentaje, forma_pago, estado)
-      VALUES (:cliente_id, :ruta_id, :monto_solicitado, :monto_aprobado, :interes_porcentaje, :forma_pago, :estado)
+      (cliente_id, ruta_id, monto_solicitado, monto_aprobado, interes_porcentaje, 
+       forma_pago, estado, capital_restante, fecha_creacion)
+      VALUES 
+      (:cliente_id, :ruta_id, :monto_solicitado, :monto_aprobado, :interes_porcentaje, 
+       :forma_pago, :estado, :capital_restante, :fecha_creacion)
     `, {
       replacements: {
         cliente_id,
@@ -45,11 +93,36 @@ const PrestamoEspecial = {
         monto_aprobado,
         interes_porcentaje,
         forma_pago,
-        estado
+        estado,
+        capital_restante,
+        fecha_creacion
       }
     });
 
     return result.insertId;
+  },
+
+  update: async (id, updateData) => {
+    const fields = [];
+    const replacements = { id };
+    
+    Object.keys(updateData).forEach(key => {
+      fields.push(`${key} = :${key}`);
+      replacements[key] = updateData[key];
+    });
+    
+    if (fields.length === 0) {
+      throw new Error('No hay datos para actualizar');
+    }
+    
+    const query = `
+      UPDATE prestamos_especiales
+      SET ${fields.join(', ')}
+      WHERE id = :id
+    `;
+    
+    await db.query(query, { replacements });
+    return true;
   },
 
   updateCapital: async (id, nuevoCapital) => {
@@ -62,20 +135,65 @@ const PrestamoEspecial = {
     });
   },
 
-  // Método necesario para listar con cliente y ruta (evitar error)
-  findAllWithClienteYRuta: async () => {
-    const [rows] = await db.query(`
+  findAllWithClienteYRuta: async (options = {}) => {
+    let query = `
       SELECT pe.*, 
              c.nombre AS cliente_nombre, c.apellidos AS cliente_apellidos, c.cedula AS cliente_cedula,
              r.zona AS ruta_zona, r.nombre AS ruta_nombre
       FROM prestamos_especiales pe
       LEFT JOIN clientes c ON pe.cliente_id = c.id
       LEFT JOIN rutas r ON pe.ruta_id = r.id
-    `);
-    return rows;
+    `;
+    
+    const replacements = {};
+    
+    // Filtros
+    if (options.where) {
+      const whereClauses = [];
+      
+      if (options.where.cliente_id) {
+        whereClauses.push('pe.cliente_id = :cliente_id');
+        replacements.cliente_id = options.where.cliente_id;
+      }
+      
+      if (options.where.estado) {
+        whereClauses.push('pe.estado = :estado');
+        replacements.estado = options.where.estado;
+      }
+      
+      if (whereClauses.length > 0) {
+        query += ' WHERE ' + whereClauses.join(' AND ');
+      }
+    }
+    
+    // Orden por defecto
+    query += ' ORDER BY pe.fecha_creacion DESC';
+    
+    // Paginación
+    if (options.limit) {
+      query += ' LIMIT :limit';
+      replacements.limit = options.limit;
+      
+      if (options.offset) {
+        query += ' OFFSET :offset';
+        replacements.offset = options.offset;
+      }
+    }
+    
+    const [rows] = await db.query(query, { replacements });
+    
+    // Obtener total para paginación
+    let total = 0;
+    if (options.limit) {
+      const countQuery = query.replace(/SELECT.*FROM/, 'SELECT COUNT(*) as total FROM')
+                             .replace(/ORDER BY.*$/, '');
+      const [countResult] = await db.query(countQuery, { replacements });
+      total = countResult[0].total;
+    }
+    
+    return { prestamos: rows, total };
   },
 
-  // Método para obtener un préstamo por ID con cliente y ruta
   findByIdWithClienteYRuta: async (id) => {
     const [rows] = await db.query(`
       SELECT pe.*, 
@@ -89,8 +207,11 @@ const PrestamoEspecial = {
       replacements: { id }
     });
     return rows[0];
+  },
+
+  calcularInteres: (monto, porcentaje) => {
+    return monto * (porcentaje / 100);
   }
 };
 
 module.exports = PrestamoEspecial;
-// este es el modelo

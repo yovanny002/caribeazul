@@ -1,3 +1,4 @@
+// models/PagoEspecial.js
 const db = require('./db');
 
 const PagoEspecial = {
@@ -5,14 +6,24 @@ const PagoEspecial = {
     let query = `SELECT * FROM pagos_especiales`;
     const replacements = {};
 
-    if (options.where && options.where.prestamo_id) {
-      query += ` WHERE prestamo_id = :prestamo_id`;
-      replacements.prestamo_id = options.where.prestamo_id;
+    if (options.where) {
+      const whereClauses = [];
+      
+      if (options.where.prestamo_id) {
+        whereClauses.push('prestamo_id = :prestamo_id');
+        replacements.prestamo_id = options.where.prestamo_id;
+      }
+      
+      if (whereClauses.length > 0) {
+        query += ' WHERE ' + whereClauses.join(' AND ');
+      }
     }
 
     if (options.order) {
-      const [col, dir] = options.order[0];
-      query += ` ORDER BY ${col} ${dir}`;
+      const [column, direction] = options.order[0];
+      query += ` ORDER BY ${column} ${direction}`;
+    } else {
+      query += ' ORDER BY fecha DESC';
     }
 
     const [rows] = await db.query(query, { replacements });
@@ -28,6 +39,17 @@ const PagoEspecial = {
     return rows[0];
   },
 
+  findAllByPrestamoId: async (prestamoId) => {
+    const [rows] = await db.query(`
+      SELECT * FROM pagos_especiales 
+      WHERE prestamo_id = :prestamoId
+      ORDER BY fecha DESC
+    `, {
+      replacements: { prestamoId }
+    });
+    return rows;
+  },
+
   create: async (pago) => {
     const {
       prestamo_id,
@@ -39,6 +61,16 @@ const PagoEspecial = {
       fecha = new Date(),
       registrado_por = 'Sistema'
     } = pago;
+
+    // Validar que el monto sea positivo
+    if (monto <= 0) {
+      throw new Error('El monto del pago debe ser mayor que cero');
+    }
+
+    // Validar que la suma de capital e interés sea igual al monto
+    if (Math.abs((interes_pagado + capital_pagado) - monto) > 0.01) {
+      throw new Error('La suma de capital e interés debe ser igual al monto total');
+    }
 
     const [result] = await db.query(`
       INSERT INTO pagos_especiales
@@ -58,6 +90,14 @@ const PagoEspecial = {
     });
 
     return result.insertId;
+  },
+
+  calcularDistribucionPago: (monto, interesPorcentaje, capitalRestante) => {
+    const interes = capitalRestante * (interesPorcentaje / 100);
+    const interesPagado = Math.min(monto, interes);
+    const capitalPagado = monto - interesPagado;
+    
+    return { interesPagado, capitalPagado };
   }
 };
 
