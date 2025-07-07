@@ -29,5 +29,11 @@ router.post('/:id/pago', prestamosEspecialesController.procesarPago);
 
 // Generar recibo de pago
 router.get('/:id/recibo/:pagoId', prestamosEspecialesController.recibo);
+// Para préstamos normales
+router.post('/prestamos/:id/aprobar', prestamoController.aprobarPrestamo);
+
+// Para préstamos especiales
+router.post('/prestamos-especiales/:id/aprobar', prestamosEspecialesController.aprobarPrestamo);
+
 
 module.exports = router;
