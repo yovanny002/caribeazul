@@ -74,30 +74,28 @@ exports.createForm = async (req, res) => {
 
 exports.pendientes = async (req, res) => {
   try {
-    // Préstamos normales pendientes
-    const prestamosNormales = await Prestamo.findAllWithClientes('pendiente');
-
-    // Préstamos especiales pendientes
     const prestamosEspeciales = await PrestamoEspecial.findAllWithClienteYRuta({
       where: { estado: 'pendiente' }
     });
 
-    // Marcar tipo para que la vista pueda diferenciar
-    const prestamos = [
-      ...prestamosNormales.map(p => ({ ...p, tipo: 'normal' })),
-      ...prestamosEspeciales.map(p => ({ ...p, tipo: 'especial' }))
-    ];
-
-    // Ordenar por fecha
-    prestamos.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    const formattedPrestamos = prestamosEspeciales.map(p => ({
+      ...p,
+      tipo: 'especial',
+      monto_solicitado: Number(p.monto_solicitado) || 0,
+      monto_aprobado: Number(p.monto_aprobado) || 0,
+      capital_restante: Number(p.capital_restante) || 0,
+      fecha_creacion: moment(p.fecha_creacion).format('YYYY-MM-DD')
+    }));
 
     res.render('prestamos/pendientes', {
-      title: 'Préstamos Pendientes de Aprobación',
-      prestamos
+      title: 'Préstamos Especiales Pendientes',
+      prestamos: formattedPrestamos,
+      moment, // <-- Make sure to pass moment here
+      messages: req.flash() // Also good practice to include flash messages
     });
   } catch (error) {
-    console.error('❌ Error al cargar préstamos pendientes:', error);
-    req.flash('error', 'No se pudieron cargar los préstamos');
+    console.error('Error al cargar préstamos especiales pendientes:', error);
+    req.flash('error', 'No se pudieron cargar los préstamos especiales');
     res.redirect('/');
   }
 };
