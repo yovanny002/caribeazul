@@ -112,9 +112,6 @@ exports.create = async (req, res) => {
 };
 
 
-// Mostrar detalle de un préstamo especial
-const moment = require('moment');
-
 exports.show = async (req, res) => {
   try {
     const prestamo = await PrestamoEspecial.findByIdWithClienteYRuta(req.params.id);
@@ -123,26 +120,28 @@ exports.show = async (req, res) => {
       return res.redirect('/prestamos-especiales');
     }
 
-    // Conversión segura de campos numéricos
     prestamo.monto_aprobado = Number(prestamo.monto_aprobado) || 0;
     prestamo.capital_restante = Number(prestamo.capital_restante) || prestamo.monto_aprobado;
     prestamo.interes_porcentaje = Number(prestamo.interes_porcentaje) || 0;
 
-    // Obtener pagos y asegurar que sea array
     let pagos = await PagoEspecial.findAllByPrestamoId(prestamo.id);
-    const pagosArray = Array.isArray(pagos) ? pagos : [];
 
-    // Calcular totales de forma segura
-    const totalPagado = pagosArray.reduce((sum, pago) => sum + (Number(pago.monto) || 0), 0);
-    const interesPagado = pagosArray.reduce((sum, pago) => sum + (Number(pago.interes_pagado) || 0), 0);
-    const capitalPagado = pagosArray.reduce((sum, pago) => sum + (Number(pago.capital_pagado) || 0), 0);
+    // Validación robusta
+    if (!Array.isArray(pagos)) {
+      if (pagos?.rows) pagos = pagos.rows;
+      else pagos = [];
+    }
+
+    const totalPagado = pagos.reduce((sum, pago) => sum + (Number(pago.monto) || 0), 0);
+    const interesPagado = pagos.reduce((sum, pago) => sum + (Number(pago.interes_pagado) || 0), 0);
+    const capitalPagado = pagos.reduce((sum, pago) => sum + (Number(pago.capital_pagado) || 0), 0);
 
     res.render('prestamosEspeciales/show', {
       prestamo: {
         ...prestamo,
         fecha_creacion: moment(prestamo.fecha_creacion).format('DD/MM/YYYY')
       },
-      pagos: pagosArray.map(pago => ({
+      pagos: pagos.map(pago => ({
         ...pago,
         monto: Number(pago.monto) || 0,
         interes_pagado: Number(pago.interes_pagado) || 0,
@@ -163,6 +162,7 @@ exports.show = async (req, res) => {
     res.redirect('/prestamos-especiales');
   }
 };
+
 
 // Formulario para editar préstamo especial
 exports.editForm = async (req, res) => {
