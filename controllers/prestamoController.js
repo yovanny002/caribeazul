@@ -16,7 +16,7 @@
   exports.index = async (req, res) => {
     try {
       const prestamos = await Prestamo.findAllWithClientes();
-      res.render('prestamos/index', { prestamos, messages: req.flash() });
+      res.render('prestamos/index', { prestamos,moment, messages: req.flash() });
     } catch (error) {
       console.error('Error al obtener préstamos:', error);
       req.flash('error', 'Hubo un error al cargar los préstamos');
