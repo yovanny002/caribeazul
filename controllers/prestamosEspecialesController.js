@@ -4,13 +4,34 @@ const Ruta = require('../models/Ruta');
 const PagoEspecial = require('../models/PagoEspecial');
 const moment = require('moment');
 
+exports.index = async (req, res) => {
+  try {
+    // Aquí asumo que implementas un método que traiga prestamos con cliente y ruta incluidos
+    const prestamos = await PrestamoEspecial.findAllWithClienteYRuta();
+
+    res.render('prestamosEspeciales/index', { 
+      prestamos, 
+      title: 'Préstamos Especiales',
+      messages: req.flash()
+    });
+  } catch (error) {
+    console.error('Error al listar préstamos especiales:', error);
+    req.flash('error', 'No se pudieron cargar los préstamos especiales.');
+    res.redirect('/');
+  }
+};
+
 exports.formulario = async (req, res) => {
   try {
-    let clientes = await Cliente.findAll();
-    clientes = clientes.filter(c => c.estado === 'activo');
+    const clientes = await Cliente.findAll();
+    const clientesActivos = clientes.filter(c => c.estado === 'activo');
     const rutas = await Ruta.findAll();
 
-    res.render('prestamosEspeciales/create', { clientes, rutas, title: 'Nuevo Préstamo Especial' });
+    res.render('prestamosEspeciales/create', { 
+      clientes: clientesActivos, 
+      rutas, 
+      title: 'Nuevo Préstamo Especial' 
+    });
   } catch (error) {
     console.error('Error al cargar formulario:', error);
     req.flash('error', 'No se pudo cargar el formulario de préstamo especial.');
@@ -20,9 +41,16 @@ exports.formulario = async (req, res) => {
 
 exports.crear = async (req, res) => {
   try {
-    const { cliente_id, ruta_id, monto_solicitado, monto_aprobado, interes_porcentaje, forma_pago } = req.body;
+    const {
+      cliente_id,
+      ruta_id,
+      monto_solicitado,
+      monto_aprobado,
+      interes_porcentaje,
+      forma_pago
+    } = req.body;
 
-    await PrestamoEspecial.create({
+    const prestamoId = await PrestamoEspecial.create({
       cliente_id,
       ruta_id: ruta_id || null,
       monto_solicitado,
@@ -30,6 +58,9 @@ exports.crear = async (req, res) => {
       interes_porcentaje,
       forma_pago
     });
+
+    // Aquí puedes generar cuotas si aplica (similar a la otra lógica)
+    // await PrestamoEspecial.generateCuotas(prestamoId, ...);
 
     req.flash('success', 'Préstamo especial registrado exitosamente.');
     res.redirect('/prestamos-especiales');
@@ -40,21 +71,9 @@ exports.crear = async (req, res) => {
   }
 };
 
-exports.index = async (req, res) => {
-  try {
-    const prestamos = await PrestamoEspecial.findAll(); // Este método ya debe traer el JOIN con cliente/ruta si es necesario
-    res.render('prestamosEspeciales/index', { prestamos, title: 'Préstamos Especiales' });
-  } catch (error) {
-    console.error('Error al listar préstamos especiales:', error);
-    req.flash('error', 'No se pudieron cargar los préstamos especiales.');
-    res.redirect('/');
-  }
-};
-
 exports.show = async (req, res) => {
   try {
-    const prestamo = await PrestamoEspecial.findById(req.params.id);
-
+    const prestamo = await PrestamoEspecial.findByIdWithClienteYRuta(req.params.id);
     if (!prestamo) {
       req.flash('error', 'Préstamo especial no encontrado.');
       return res.redirect('/prestamos-especiales');
@@ -65,10 +84,11 @@ exports.show = async (req, res) => {
     res.render('prestamosEspeciales/show', {
       prestamo,
       pagos,
-      title: 'Detalle del Préstamo Especial'
+      title: 'Detalle del Préstamo Especial',
+      moment
     });
   } catch (error) {
-    console.error('Error al mostrar detalle:', error);
+    console.error('Error al cargar detalle:', error);
     req.flash('error', 'Error al mostrar el préstamo especial.');
     res.redirect('/prestamos-especiales');
   }
@@ -77,12 +97,10 @@ exports.show = async (req, res) => {
 exports.pagoForm = async (req, res) => {
   try {
     const prestamo = await PrestamoEspecial.findById(req.params.id);
-
     if (!prestamo) {
       req.flash('error', 'Préstamo especial no encontrado.');
       return res.redirect('/prestamos-especiales');
     }
-
     res.render('prestamosEspeciales/pago', { prestamo, title: 'Registrar Pago' });
   } catch (error) {
     console.error('Error al cargar formulario de pago:', error);
@@ -102,6 +120,7 @@ exports.procesarPago = async (req, res) => {
       return res.redirect('/prestamos-especiales');
     }
 
+    // Calcular intereses y capital pagado
     const interesGenerado = (prestamo.capital_restante * prestamo.interes_porcentaje) / 100;
     const interes_pagado = Math.min(monto, interesGenerado);
     const capital_pagado = monto > interesGenerado ? monto - interesGenerado : 0;
@@ -135,16 +154,19 @@ exports.reciboPago = async (req, res) => {
   try {
     const { id, pagoId } = req.params;
 
-    const prestamo = await PrestamoEspecial.findById(id);
+    const prestamo = await PrestamoEspecial.findByIdWithClienteYRuta(id);
     const pago = await PagoEspecial.findById(pagoId);
     const historialPagos = await PagoEspecial.findAllByPrestamoId(id);
+
+    const restante = prestamo.capital_restante;
 
     res.render('prestamosEspeciales/recibo', {
       prestamo,
       pago,
       historialPagos,
-      restante: prestamo.capital_restante,
-      user: req.user || null
+      restante,
+      user: req.user || null,
+      moment
     });
   } catch (error) {
     console.error('Error al generar recibo:', error);
