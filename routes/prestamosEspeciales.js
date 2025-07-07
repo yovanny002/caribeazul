@@ -3,7 +3,7 @@ const router = express.Router();
 const prestamosEspecialesController = require('../controllers/prestamosEspecialesController');
 
 // Mostrar formulario para nuevo préstamo especial
-router.get('/nuevo', prestamosEspecialesController.formulario);
+router.get('/nuevo', prestamosEspecialesController.formulario); 
 
 // Guardar nuevo préstamo especial
 router.post('/crear', prestamosEspecialesController.crear);
