@@ -5,11 +5,17 @@ const PagoEspecial = require('../models/PagoEspecial');
 const moment = require('moment');
 
 exports.formulario = async (req, res) => {
-  let clientes = await Cliente.findAll();
-  clientes = clientes.filter(c => c.estado === 'activo');
+  try {
+    let clientes = await Cliente.findAll();
+    clientes = clientes.filter(c => c.estado === 'activo');
+    const rutas = await Ruta.findAll();
 
-  const rutas = await Ruta.findAll();
-  res.render('prestamosEspeciales/create', { clientes, rutas, title: 'Nuevo Préstamo Especial' });
+    res.render('prestamosEspeciales/create', { clientes, rutas, title: 'Nuevo Préstamo Especial' });
+  } catch (error) {
+    console.error('Error al cargar formulario:', error);
+    req.flash('error', 'No se pudo cargar el formulario de préstamo especial.');
+    res.redirect('/prestamos-especiales');
+  }
 };
 
 exports.crear = async (req, res) => {
@@ -36,7 +42,7 @@ exports.crear = async (req, res) => {
 
 exports.index = async (req, res) => {
   try {
-    const prestamos = await PrestamoEspecial.findAll();
+    const prestamos = await PrestamoEspecial.findAll(); // Este método ya debe traer el JOIN con cliente/ruta si es necesario
     res.render('prestamosEspeciales/index', { prestamos, title: 'Préstamos Especiales' });
   } catch (error) {
     console.error('Error al listar préstamos especiales:', error);
@@ -62,7 +68,7 @@ exports.show = async (req, res) => {
       title: 'Detalle del Préstamo Especial'
     });
   } catch (error) {
-    console.error('Error al cargar detalle:', error);
+    console.error('Error al mostrar detalle:', error);
     req.flash('error', 'Error al mostrar el préstamo especial.');
     res.redirect('/prestamos-especiales');
   }
@@ -102,6 +108,7 @@ exports.procesarPago = async (req, res) => {
 
     const nuevoCapital = prestamo.capital_restante - capital_pagado;
     const capitalRestante = nuevoCapital < 0 ? 0 : nuevoCapital;
+
     await PrestamoEspecial.updateCapital(prestamo.id, capitalRestante);
 
     await PagoEspecial.create({
@@ -132,13 +139,11 @@ exports.reciboPago = async (req, res) => {
     const pago = await PagoEspecial.findById(pagoId);
     const historialPagos = await PagoEspecial.findAllByPrestamoId(id);
 
-    const restante = prestamo.capital_restante;
-
     res.render('prestamosEspeciales/recibo', {
       prestamo,
       pago,
       historialPagos,
-      restante,
+      restante: prestamo.capital_restante,
       user: req.user || null
     });
   } catch (error) {
