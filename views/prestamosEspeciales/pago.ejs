@@ -8,7 +8,7 @@
     <div class="card-body">
 
       <div class="mb-3">
-        <p><strong>Cliente:</strong> <%= prestamo.cliente.nombre %> <%= prestamo.cliente.apellidos %></p>
+        <p><strong>Cliente:</strong> <%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></p>
         <p><strong>Préstamo #:</strong> <%= prestamo.id %> | <strong>Capital Restante:</strong> RD$ <%= prestamo.capital_restante.toFixed(2) %></p>
         <p><strong>Interés Actual:</strong> <%= prestamo.interes_porcentaje %> %</p>
         <p><strong>Forma de Pago:</strong> <%= prestamo.forma_pago %></p>
@@ -75,5 +75,35 @@
     });
   });
 </script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('pagoForm');
+    const montoInput = document.getElementById('monto');
+    const capitalRestante = parseFloat("<%= prestamo.capital_restante %>");
+
+    form.addEventListener('submit', function (event) {
+      const monto = parseFloat(montoInput.value);
+
+      if (!form.checkValidity() || isNaN(monto) || monto <= 0 || monto > capitalRestante) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        let mensaje = 'Por favor complete todos los campos requeridos correctamente.';
+        if (monto > capitalRestante) {
+          mensaje = 'El monto no puede ser mayor al capital restante.';
+        }
+
+        Swal.fire({
+          icon: 'error',
+          title: 'Error de validación',
+          text: mensaje
+        });
+      }
+
+      form.classList.add('was-validated');
+    });
+  });
+</script>
+
 
 <%- include('../partials/footer') %>
