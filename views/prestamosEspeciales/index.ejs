@@ -31,8 +31,8 @@
                   <td><%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></td>
                   <td><%= prestamo.cliente_cedula %></td>
                   <td><%= prestamo.ruta_nombre || 'N/A' %></td>
-                  <td>RD$ <%= prestamo.monto_aprobado.toFixed(2) %></td>
-                  <td>RD$ <%= prestamo.capital_restante.toFixed(2) %></td>
+                  <td>RD$ <%= Number(prestamo.monto_aprobado).toFixed(2) %></td>
+                  <td>RD$ <%= Number(prestamo.capital_restante).toFixed(2) %></td>
                   <td><%= prestamo.forma_pago %></td>
                   <td>
                     <a href="/prestamos-especiales/<%= prestamo.id %>" class="btn btn-sm btn-outline-primary">
