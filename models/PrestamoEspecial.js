@@ -140,7 +140,7 @@ const PrestamoEspecial = {
    * Actualiza solo el capital restante de un préstamo
    */
   updateCapital: async (id, nuevoCapital) => {
-    if (isNaN(nuevoCapital) {
+    if (isNaN(nuevoCapital) || nuevoCapital < 0) {
       throw new Error('El capital debe ser un número válido');
     }
 
@@ -222,7 +222,7 @@ const PrestamoEspecial = {
    * Calcula el interés para un monto dado
    */
   calcularInteres: (monto, porcentaje) => {
-    if (isNaN(monto) throw new Error('Monto debe ser un número');
+    if (isNaN(monto)) throw new Error('Monto debe ser un número') ;
     if (isNaN(porcentaje)) throw new Error('Porcentaje debe ser un número');
     
     return monto * (porcentaje / 100);
