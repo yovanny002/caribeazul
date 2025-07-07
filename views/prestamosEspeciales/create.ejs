@@ -1,42 +1,48 @@
 <%- include('../partials/header', { title: 'Nuevo Préstamo Especial' }) %>
 
-<div class="container-fluid px-4 mt-4">
-  <div class="card border-0 shadow">
-    <div class="card-header bg-success text-white py-3">
-      <h2 class="mb-0">
-        <i class="fas fa-star me-2"></i>Solicitud de Préstamo Especial
+<div class="container-fluid py-4 px-4">
+  <div class="card shadow-lg border-0 rounded-3">
+    <div class="card-header bg-gradient-success text-white py-4">
+      <h2 class="mb-0 text-center">
+        <i class="fas fa-star me-2 fa-lg"></i>Solicitud de Préstamo Especial
       </h2>
     </div>
 
-    <div class="card-body">
+    <div class="card-body p-4">
       <form id="form-prestamo-especial" action="/prestamos-especiales/crear" method="POST" class="needs-validation" novalidate>
-        <div class="row g-4">
+        <div class="row g-5">
 
-          <!-- Datos del Cliente -->
           <div class="col-md-6">
-            <div class="card border-success">
-              <div class="card-header bg-light">
-                <h5 class="mb-0 text-success"><i class="fas fa-user me-2"></i>Cliente</h5>
+            <div class="card h-100 border-success shadow-sm">
+              <div class="card-header bg-success-subtle border-bottom border-success">
+                <h5 class="mb-0 text-success-emphasis">
+                  <i class="fas fa-user-circle me-2"></i>Datos del Cliente
+                </h5>
               </div>
               <div class="card-body">
-                <div class="mb-3">
-                  <label for="cliente_id" class="form-label fw-bold">Seleccionar Cliente</label>
-                  <select name="cliente_id" id="cliente_id" class="form-select" required>
+                <div class="mb-4">
+                  <label for="cliente_id" class="form-label fw-bold text-secondary">
+                    <i class="fas fa-address-book me-1"></i> Seleccionar Cliente
+                  </label>
+                  <select name="cliente_id" id="cliente_id" class="form-select form-select-lg" required aria-label="Seleccionar cliente">
                     <% if (clientes.length === 0) { %>
                         <option value="">No hay clientes disponibles</option>
                       <% } else { %>
+                        <option value="">-- Seleccione un cliente --</option>
                         <% clientes.forEach(c => { %>
                           <option value="<%= c.id %>"><%= c.nombre %> <%= c.apellidos %> - <%= c.cedula %></option>
                         <% }) %>
                       <% } %>
                   </select>
-                  <div class="invalid-feedback">Debe seleccionar un cliente</div>
+                  <div class="invalid-feedback">Por favor, seleccione un cliente.</div>
                 </div>
 
                 <div class="mb-3">
-                  <label for="ruta_id" class="form-label">Ruta / Zona</label>
-                  <select name="ruta_id" id="ruta_id" class="form-select">
-                    <option value="">-- Opcional --</option>
+                  <label for="ruta_id" class="form-label text-secondary">
+                    <i class="fas fa-map-marker-alt me-1"></i> Ruta / Zona (Opcional)
+                  </label>
+                  <select name="ruta_id" id="ruta_id" class="form-select" aria-label="Seleccionar ruta o zona">
+                    <option value="">-- Seleccione una ruta/zona --</option>
                     <% rutas.forEach(r => { %>
                       <option value="<%= r.id %>"><%= r.zona %> - <%= r.nombre %></option>
                     <% }) %>
@@ -46,40 +52,64 @@
             </div>
           </div>
 
-          <!-- Detalles del Préstamo -->
           <div class="col-md-6">
-            <div class="card border-success">
-              <div class="card-header bg-light">
-                <h5 class="mb-0 text-success"><i class="fas fa-info-circle me-2"></i>Detalles</h5>
+            <div class="card h-100 border-success shadow-sm">
+              <div class="card-header bg-success-subtle border-bottom border-success">
+                <h5 class="mb-0 text-success-emphasis">
+                  <i class="fas fa-dollar-sign me-2"></i>Detalles del Préstamo
+                </h5>
               </div>
               <div class="card-body">
-                <div class="mb-3">
-                  <label for="monto_solicitado" class="form-label fw-bold">Monto Solicitado</label>
-                  <input type="number" name="monto_solicitado" id="monto_solicitado" class="form-control" required min="1" step="0.01">
+                <div class="mb-4">
+                  <label for="monto_solicitado" class="form-label fw-bold text-secondary">
+                    <i class="fas fa-money-bill-wave me-1"></i> Monto Solicitado
+                  </label>
+                  <input type="number" name="monto_solicitado" id="monto_solicitado" class="form-control form-control-lg" required min="1" step="0.01" placeholder="Ej: 1000.00">
+                  <div class="invalid-feedback">Ingrese un monto solicitado válido.</div>
                 </div>
-                <div class="mb-3">
-                  <label for="monto_aprobado" class="form-label fw-bold">Monto Aprobado</label>
-                  <input type="number" name="monto_aprobado" id="monto_aprobado" class="form-control" required min="1" step="0.01">
+                <div class="mb-4">
+                  <label for="monto_aprobado" class="form-label fw-bold text-secondary">
+                    <i class="fas fa-hand-holding-usd me-1"></i> Monto Aprobado
+                  </label>
+                  <input type="number" name="monto_aprobado" id="monto_aprobado" class="form-control form-control-lg" required min="1" step="0.01" placeholder="Ej: 950.00">
+                  <div class="invalid-feedback">Ingrese un monto aprobado válido.</div>
                 </div>
-                <div class="mb-3">
-                  <label for="interes_porcentaje" class="form-label fw-bold">Interés a Cobrar (%)</label>
-                  <input type="number" name="interes_porcentaje" id="interes_porcentaje" class="form-control" required min="0" step="0.01">
+                <div class="mb-4">
+                  <label for="interes_porcentaje" class="form-label fw-bold text-secondary">
+                    <i class="fas fa-percent me-1"></i> Interés a Cobrar (%)
+                  </label>
+                  <input type="number" name="interes_porcentaje" id="interes_porcentaje" class="form-control form-control-lg" required min="0" step="0.01" placeholder="Ej: 5.00">
+                  <div class="invalid-feedback">Ingrese un porcentaje de interés válido.</div>
                 </div>
-                <div class="mb-3">
-                  <label for="forma_pago" class="form-label fw-bold">Frecuencia de Pago</label>
-                  <select name="forma_pago" id="forma_pago" class="form-select" required>
-                    <option value="">-- Seleccione --</option>
+                <div class="mb-4">
+                  <label for="forma_pago" class="form-label fw-bold text-secondary">
+                    <i class="fas fa-calendar-alt me-1"></i> Frecuencia de Pago
+                  </label>
+                  <select name="forma_pago" id="forma_pago" class="form-select form-select-lg" required aria-label="Seleccionar frecuencia de pago">
+                    <option value="">-- Seleccione una frecuencia --</option>
                     <option value="diario">Diario</option>
                     <option value="semanal">Semanal</option>
                     <option value="quincenal">Quincenal</option>
                     <option value="mensual">Mensual</option>
                   </select>
+                  <div class="invalid-feedback">Debe seleccionar una frecuencia de pago.</div>
                 </div>
-                <div class="bg-light p-3 rounded">
-                  <h6 class="fw-bold">Resumen:</h6>
-                  <p><strong>Capital:</strong> <span id="res-capital">RD$ 0.00</span></p>
-                  <p><strong>Interés estimado:</strong> <span id="res-interes">RD$ 0.00</span></p>
-                  <p><strong>Total a pagar:</strong> <span id="res-total" class="text-success">RD$ 0.00</span></p>
+
+                <hr class="my-4">
+
+                <div class="bg-success-subtle p-4 rounded-3 shadow-sm">
+                  <h5 class="fw-bold text-success-emphasis mb-3">
+                    <i class="fas fa-calculator me-2"></i>Resumen del Préstamo:
+                  </h5>
+                  <p class="lead mb-2">
+                    <strong class="text-primary">Capital:</strong> <span id="res-capital" class="float-end">RD$ 0.00</span>
+                  </p>
+                  <p class="lead mb-2">
+                    <strong class="text-info">Interés estimado:</strong> <span id="res-interes" class="float-end">RD$ 0.00</span>
+                  </p>
+                  <h4 class="fw-bolder text-success mt-3 pt-2 border-top border-success-subtle">
+                    Total a pagar: <span id="res-total" class="float-end">RD$ 0.00</span>
+                  </h4>
                 </div>
               </div>
             </div>
@@ -87,10 +117,13 @@
 
         </div>
 
-        <!-- Botones -->
-        <div class="d-flex justify-content-end mt-4">
-          <a href="/prestamos-especiales" class="btn btn-secondary">Cancelar</a>
-          <button type="submit" class="btn btn-success ms-3">Guardar</button>
+        <div class="d-flex justify-content-center justify-content-md-end mt-5 gap-3">
+          <a href="/prestamos-especiales" class="btn btn-outline-secondary btn-lg px-4">
+            <i class="fas fa-times-circle me-2"></i>Cancelar
+          </a>
+          <button type="submit" class="btn btn-success btn-lg px-4 shadow-sm">
+            <i class="fas fa-save me-2"></i>Guardar Préstamo
+          </button>
         </div>
       </form>
     </div>
@@ -98,6 +131,26 @@
 </div>
 
 <script>
+  // Script para la validación de Bootstrap y actualización del resumen
+  (function () {
+    'use strict'
+
+    // Fetch all the forms we want to apply custom Bootstrap validation styles to
+    const forms = document.querySelectorAll('.needs-validation')
+
+    // Loop over them and prevent submission
+    Array.from(forms).forEach(form => {
+      form.addEventListener('submit', event => {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+
+        form.classList.add('was-validated')
+      }, false)
+    })
+  })();
+
   document.addEventListener('DOMContentLoaded', () => {
     const monto = document.getElementById('monto_aprobado');
     const interes = document.getElementById('interes_porcentaje');
@@ -109,10 +162,14 @@
       const capital = parseFloat(monto.value) || 0;
       const porc = parseFloat(interes.value) || 0;
       const intMonto = (capital * porc) / 100;
+
       resCapital.textContent = `RD$ ${capital.toFixed(2)}`;
       resInteres.textContent = `RD$ ${intMonto.toFixed(2)}`;
       resTotal.textContent = `RD$ ${(capital + intMonto).toFixed(2)}`;
     }
+
+    // Actualizar al cargar la página en caso de que haya valores preestablecidos
+    actualizarResumen();
 
     monto.addEventListener('input', actualizarResumen);
     interes.addEventListener('input', actualizarResumen);
