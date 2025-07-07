@@ -113,6 +113,8 @@ exports.create = async (req, res) => {
 
 
 // Mostrar detalle de un préstamo especial
+const moment = require('moment');
+
 exports.show = async (req, res) => {
   try {
     const prestamo = await PrestamoEspecial.findByIdWithClienteYRuta(req.params.id);
@@ -121,22 +123,26 @@ exports.show = async (req, res) => {
       return res.redirect('/prestamos-especiales');
     }
 
+    // Conversión segura de campos numéricos
     prestamo.monto_aprobado = Number(prestamo.monto_aprobado) || 0;
     prestamo.capital_restante = Number(prestamo.capital_restante) || prestamo.monto_aprobado;
     prestamo.interes_porcentaje = Number(prestamo.interes_porcentaje) || 0;
 
-    const pagos = await PagoEspecial.findAllByPrestamoId(prestamo.id) || [];
+    // Obtener pagos y asegurar que sea array
+    let pagos = await PagoEspecial.findAllByPrestamoId(prestamo.id);
+    const pagosArray = Array.isArray(pagos) ? pagos : [];
 
-    const totalPagado = pagos.reduce((sum, pago) => sum + (Number(pago.monto) || 0), 0);
-    const interesPagado = pagos.reduce((sum, pago) => sum + (Number(pago.interes_pagado) || 0), 0);
-    const capitalPagado = pagos.reduce((sum, pago) => sum + (Number(pago.capital_pagado) || 0), 0);
+    // Calcular totales de forma segura
+    const totalPagado = pagosArray.reduce((sum, pago) => sum + (Number(pago.monto) || 0), 0);
+    const interesPagado = pagosArray.reduce((sum, pago) => sum + (Number(pago.interes_pagado) || 0), 0);
+    const capitalPagado = pagosArray.reduce((sum, pago) => sum + (Number(pago.capital_pagado) || 0), 0);
 
     res.render('prestamosEspeciales/show', {
       prestamo: {
         ...prestamo,
         fecha_creacion: moment(prestamo.fecha_creacion).format('DD/MM/YYYY')
       },
-      pagos: pagos.map(pago => ({
+      pagos: pagosArray.map(pago => ({
         ...pago,
         monto: Number(pago.monto) || 0,
         interes_pagado: Number(pago.interes_pagado) || 0,
@@ -150,6 +156,7 @@ exports.show = async (req, res) => {
       title: 'Detalle del Préstamo Especial',
       messages: req.flash()
     });
+
   } catch (error) {
     console.error('Error detallado:', error.stack);
     req.flash('error', 'Error al mostrar el préstamo especial.');
