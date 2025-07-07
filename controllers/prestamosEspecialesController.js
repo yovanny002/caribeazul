@@ -34,7 +34,8 @@ exports.index = async (req, res) => {
       title: 'Préstamos Especiales',
       currentPage: page,
       totalPages,
-      limit
+      limit,
+      messages: req.flash()
     });
   } catch (error) {
     console.error('Error al listar préstamos especiales:', error);
