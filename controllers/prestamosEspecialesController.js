@@ -117,26 +117,28 @@ exports.show = async (req, res) => {
       return res.redirect('/prestamos-especiales');
     }
 
+    // Asegurar que los valores numéricos son números válidos
+    prestamo.monto_aprobado = Number(prestamo.monto_aprobado) || 0;
+    prestamo.capital_restante = Number(prestamo.capital_restante) || 0;
+    prestamo.interes_porcentaje = Number(prestamo.interes_porcentaje) || 0;
+
     const pagos = await PagoEspecial.findAllByPrestamoId(prestamo.id);
 
-    // Calcular resumen
-    const totalPagado = pagos.reduce((sum, pago) => sum + Number(pago.monto), 0);
-    const interesPagado = pagos.reduce((sum, pago) => sum + Number(pago.interes_pagado), 0);
-    const capitalPagado = pagos.reduce((sum, pago) => sum + Number(pago.capital_pagado), 0);
+    // Calcular resumen con protección contra NaN
+    const totalPagado = pagos.reduce((sum, pago) => sum + (Number(pago.monto) || 0, 0));
+    const interesPagado = pagos.reduce((sum, pago) => sum + (Number(pago.interes_pagado) || 0, 0));
+    const capitalPagado = pagos.reduce((sum, pago) => sum + (Number(pago.capital_pagado) || 0, 0));
 
     res.render('prestamosEspeciales/show', {
       prestamo: {
         ...prestamo,
-        monto_aprobado: Number(prestamo.monto_aprobado),
-        capital_restante: Number(prestamo.capital_restante),
-        interes_porcentaje: Number(prestamo.interes_porcentaje),
         fecha_creacion: moment(prestamo.fecha_creacion).format('DD/MM/YYYY')
       },
       pagos: pagos.map(pago => ({
         ...pago,
-        monto: Number(pago.monto),
-        interes_pagado: Number(pago.interes_pagado),
-        capital_pagado: Number(pago.capital_pagado),
+        monto: Number(pago.monto) || 0,
+        interes_pagado: Number(pago.interes_pagado) || 0,
+        capital_pagado: Number(pago.capital_pagado) || 0,
         fecha: moment(pago.fecha).format('DD/MM/YYYY')
       })),
       totalPagado,

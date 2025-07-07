@@ -194,21 +194,28 @@ const PrestamoEspecial = {
     return { prestamos: rows, total };
   },
 
-  findByIdWithClienteYRuta: async (id) => {
-    const [rows] = await db.query(`
-      SELECT pe.*, 
-             c.nombre AS cliente_nombre, c.apellidos AS cliente_apellidos, c.cedula AS cliente_cedula,
-             r.zona AS ruta_zona, r.nombre AS ruta_nombre
-      FROM prestamos_especiales pe
-      LEFT JOIN clientes c ON pe.cliente_id = c.id
-      LEFT JOIN rutas r ON pe.ruta_id = r.id
-      WHERE pe.id = :id
-    `, {
-      replacements: { id }
-    });
-    return rows[0];
-  },
-
+findByIdWithClienteYRuta: async (id) => {
+  const [rows] = await db.query(`
+    SELECT pe.*, 
+           c.nombre AS cliente_nombre, c.apellidos AS cliente_apellidos, c.cedula AS cliente_cedula,
+           r.zona AS ruta_zona, r.nombre AS ruta_nombre
+    FROM prestamos_especiales pe
+    LEFT JOIN clientes c ON pe.cliente_id = c.id
+    LEFT JOIN rutas r ON pe.ruta_id = r.id
+    WHERE pe.id = :id
+  `, {
+    replacements: { id }
+  });
+  
+  if (rows[0]) {
+    // Convertir valores numéricos
+    rows[0].monto_aprobado = Number(rows[0].monto_aprobado) || 0;
+    rows[0].capital_restante = Number(rows[0].capital_restante) || 0;
+    rows[0].interes_porcentaje = Number(rows[0].interes_porcentaje) || 0;
+  }
+  
+  return rows[0];
+},
   calcularInteres: (monto, porcentaje) => {
     return monto * (porcentaje / 100);
   }

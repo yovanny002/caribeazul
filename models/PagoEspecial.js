@@ -39,16 +39,22 @@ const PagoEspecial = {
     return rows[0];
   },
 
-  findAllByPrestamoId: async (prestamoId) => {
-    const [rows] = await db.query(`
-      SELECT * FROM pagos_especiales 
-      WHERE prestamo_id = :prestamoId
-      ORDER BY fecha DESC
-    `, {
-      replacements: { prestamoId }
-    });
-    return rows;
-  },
+findAllByPrestamoId: async (prestamoId) => {
+  const [rows] = await db.query(`
+    SELECT * FROM pagos_especiales 
+    WHERE prestamo_id = :prestamoId
+    ORDER BY fecha DESC
+  `, {
+    replacements: { prestamoId }
+  });
+  
+  return rows.map(row => ({
+    ...row,
+    monto: Number(row.monto) || 0,
+    interes_pagado: Number(row.interes_pagado) || 0,
+    capital_pagado: Number(row.capital_pagado) || 0
+  }));
+},
 
   create: async (pago) => {
     const {
