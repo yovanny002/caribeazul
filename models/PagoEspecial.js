@@ -39,21 +39,23 @@ const PagoEspecial = {
     return rows[0];
   },
 
+// models/PagoEspecial.js
 findAllByPrestamoId: async (prestamoId) => {
   try {
     const [rows] = await db.query(`
       SELECT * FROM pagos_especiales 
-      WHERE prestamo_id = ?
+      WHERE prestamo_id = :prestamoId
       ORDER BY fecha DESC
-    `, [prestamoId]);
-    
-    return rows || []; // Siempre retornar un array
+    `, {
+      replacements: { prestamoId },
+      type: db.QueryTypes.SELECT
+    });
+    return rows || [];
   } catch (error) {
     console.error('Error en findAllByPrestamoId:', error);
-    return []; // Retornar array vacío en caso de error
+    return [];
   }
 },
-
   create: async (pago) => {
     const {
       prestamo_id,
