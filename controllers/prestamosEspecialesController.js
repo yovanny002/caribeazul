@@ -34,7 +34,7 @@ exports.crear = async (req, res) => {
 
 exports.index = async (req, res) => {
   try {
-    const prestamos = await PrestamoEspecial.findAll({ include: Cliente });
+    const prestamos = await PrestamoEspecial.findAll();
     res.render('prestamosEspeciales/index', { prestamos, title: 'Préstamos Especiales' });
   } catch (error) {
     console.error('Error al listar préstamos especiales:', error);
@@ -45,9 +45,7 @@ exports.index = async (req, res) => {
 
 exports.show = async (req, res) => {
   try {
-    const prestamo = await PrestamoEspecial.findByPk(req.params.id, {
-      include: [Cliente, Ruta]
-    });
+    const prestamo = await PrestamoEspecial.findById(req.params.id);
 
     if (!prestamo) {
       req.flash('error', 'Préstamo especial no encontrado.');
@@ -73,9 +71,7 @@ exports.show = async (req, res) => {
 
 exports.pagoForm = async (req, res) => {
   try {
-    const prestamo = await PrestamoEspecial.findByPk(req.params.id, {
-      include: Cliente
-    });
+    const prestamo = await PrestamoEspecial.findById(req.params.id);
 
     if (!prestamo) {
       req.flash('error', 'Préstamo especial no encontrado.');
@@ -95,7 +91,7 @@ exports.procesarPago = async (req, res) => {
     const { id } = req.params;
     const { monto, metodo, referencia } = req.body;
 
-    const prestamo = await PrestamoEspecial.findByPk(id);
+    const prestamo = await PrestamoEspecial.findById(id);
     if (!prestamo) {
       req.flash('error', 'Préstamo no encontrado.');
       return res.redirect('/prestamos-especiales');
@@ -106,8 +102,8 @@ exports.procesarPago = async (req, res) => {
     const capital_pagado = monto > interesGenerado ? monto - interesGenerado : 0;
 
     const nuevoCapital = prestamo.capital_restante - capital_pagado;
-    prestamo.capital_restante = nuevoCapital < 0 ? 0 : nuevoCapital;
-    await prestamo.save();
+    const capitalRestante = nuevoCapital < 0 ? 0 : nuevoCapital;
+    await PrestamoEspecial.updateCapital(prestamo.id, capitalRestante);
 
     const pago = await PagoEspecial.create({
       prestamo_id: prestamo.id,
@@ -133,10 +129,7 @@ exports.reciboPago = async (req, res) => {
   try {
     const { id, pagoId } = req.params;
 
-    const prestamo = await PrestamoEspecial.findByPk(id, {
-      include: Cliente
-    });
-
+    const prestamo = await PrestamoEspecial.findById(id);
     const pago = await PagoEspecial.findByPk(pagoId);
 
     const historialPagos = await PagoEspecial.findAll({

@@ -1,39 +1,66 @@
-// models/PrestamoEspecial.js
-const { DataTypes } = require('sequelize');
-const sequelize = require('./db');
+const db = require('./db');
 
-const PrestamoEspecial = sequelize.define('PrestamoEspecial', {
-  cliente_id: {
-    type: DataTypes.INTEGER,
-    allowNull: false
+const PrestamoEspecial = {
+  findAll: async () => {
+    const [rows] = await db.query(`
+      SELECT pe.*, c.nombre, c.apellidos
+      FROM prestamos_especiales pe
+      JOIN clientes c ON pe.cliente_id = c.id
+    `);
+    return rows;
   },
-  ruta_id: {
-    type: DataTypes.INTEGER,
-    allowNull: true
+
+  findById: async (id) => {
+    const [rows] = await db.query(`
+      SELECT pe.*, c.nombre, c.apellidos
+      FROM prestamos_especiales pe
+      JOIN clientes c ON pe.cliente_id = c.id
+      WHERE pe.id = :id
+    `, {
+      replacements: { id }
+    });
+    return rows[0];
   },
-  monto_solicitado: {
-    type: DataTypes.DECIMAL(10, 2),
-    allowNull: false
+
+  create: async (prestamo) => {
+    const {
+      cliente_id,
+      ruta_id = null,
+      monto_solicitado,
+      monto_aprobado,
+      interes_porcentaje,
+      forma_pago,
+      estado = 'pendiente'
+    } = prestamo;
+
+    const [result] = await db.query(`
+      INSERT INTO prestamos_especiales
+      (cliente_id, ruta_id, monto_solicitado, monto_aprobado, interes_porcentaje, forma_pago, estado)
+      VALUES (:cliente_id, :ruta_id, :monto_solicitado, :monto_aprobado, :interes_porcentaje, :forma_pago, :estado)
+    `, {
+      replacements: {
+        cliente_id,
+        ruta_id,
+        monto_solicitado,
+        monto_aprobado,
+        interes_porcentaje,
+        forma_pago,
+        estado
+      }
+    });
+
+    return result.insertId;
   },
-  monto_aprobado: {
-    type: DataTypes.DECIMAL(10, 2),
-    allowNull: false
-  },
-  interes_porcentaje: {
-    type: DataTypes.DECIMAL(5, 2),
-    allowNull: false
-  },
-  forma_pago: {
-    type: DataTypes.ENUM('diario', 'semanal', 'quincenal', 'mensual'),
-    allowNull: false
-  },
-  estado: {
-    type: DataTypes.ENUM('pendiente', 'activo', 'pagado'),
-    defaultValue: 'pendiente'
+
+  updateCapital: async (id, nuevoCapital) => {
+    await db.query(`
+      UPDATE prestamos_especiales
+      SET capital_restante = :nuevoCapital
+      WHERE id = :id
+    `, {
+      replacements: { id, nuevoCapital }
+    });
   }
-}, {
-  tableName: 'prestamos_especiales',
-  timestamps: true
-});
+};
 
 module.exports = PrestamoEspecial;
