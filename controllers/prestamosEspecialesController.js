@@ -1,11 +1,13 @@
 const PrestamoEspecial = require('../models/PrestamoEspecial');
-const PagoEspecial = require('../models/PagoEspecial'); // Asumo que tienes este modelo para pagos
+const PagoEspecial = require('../models/PagoEspecial');
+const Cliente = require('../models/Cliente');
+const Ruta = require('../models/Ruta');
 const moment = require('moment');
 
 // Listar todos los préstamos especiales
-exports.index = async (req, res) => {
+const index = async (req, res) => {
   try {
-    const prestamos = await PrestamoEspecial.findAllWithClienteYRuta(); // ✅ aquí estaba el fallo antes
+    const prestamos = await PrestamoEspecial.findAllWithClienteYRuta();
     res.render('prestamosEspeciales/index', { prestamos, title: 'Préstamos Especiales' });
   } catch (error) {
     console.error('Error al listar préstamos especiales:', error);
@@ -14,9 +16,8 @@ exports.index = async (req, res) => {
   }
 };
 
-
 // Mostrar formulario para crear préstamo especial
-exports.createForm = async (req, res) => {
+const createForm = async (req, res) => {
   try {
     const clientes = await Cliente.findAll();
     const rutas = await Ruta.findAll();
@@ -34,20 +35,20 @@ exports.createForm = async (req, res) => {
 };
 
 // Crear un nuevo préstamo especial
-exports.create = async (req, res) => {
+const create = async (req, res) => {
   try {
-    const prestamoId = await PrestamoEspecial.create(req.body);
+    await PrestamoEspecial.create(req.body);
     req.flash('success', 'Préstamo especial creado correctamente');
     res.redirect('/prestamos-especiales');
   } catch (error) {
     console.error('Error al crear préstamo especial:', error);
     req.flash('error', 'Error al crear préstamo especial: ' + error.message);
-    res.redirect('/prestamos-especiales/create');
+    res.redirect('/prestamos-especiales/nuevo');
   }
 };
 
 // Mostrar detalle de un préstamo especial
-exports.show = async (req, res) => {
+const show = async (req, res) => {
   try {
     const prestamo = await PrestamoEspecial.findByIdWithClienteYRuta(req.params.id);
 
@@ -56,7 +57,6 @@ exports.show = async (req, res) => {
       return res.redirect('/prestamos-especiales');
     }
 
-    // Obtener pagos asociados al préstamo especial (ajusta según tu modelo)
     const pagos = await PagoEspecial.findAllByPrestamoId(prestamo.id);
 
     res.render('prestamosEspeciales/show', {
@@ -73,75 +73,11 @@ exports.show = async (req, res) => {
   }
 };
 
-// Formulario para editar préstamo especial
-exports.editForm = async (req, res) => {
-  try {
-    const prestamo = await PrestamoEspecial.findByIdWithClienteYRuta(req.params.id);
-    const clientes = await Cliente.findAll();
-    const rutas = await Ruta.findAll();
-
-    if (!prestamo) {
-      req.flash('error', 'Préstamo especial no encontrado.');
-      return res.redirect('/prestamos-especiales');
-    }
-
-    res.render('prestamosEspeciales/edit', {
-      prestamo,
-      clientes,
-      rutas,
-      title: 'Editar Préstamo Especial',
-      messages: req.flash()
-    });
-  } catch (error) {
-    console.error('Error al cargar formulario de edición:', error);
-    req.flash('error', 'No se pudo cargar el préstamo especial');
-    res.redirect('/prestamos-especiales');
-  }
-};
-
-// Actualizar préstamo especial
-exports.update = async (req, res) => {
-  const id = req.params.id;
-  const {
-    cliente_id,
-    ruta_id,
-    monto_solicitado,
-    monto_aprobado,
-    interes_porcentaje,
-    forma_pago,
-    estado
-  } = req.body;
-
-  try {
-    await PrestamoEspecial.update(id, {
-      cliente_id,
-      ruta_id,
-      monto_solicitado,
-      monto_aprobado,
-      interes_porcentaje,
-      forma_pago,
-      estado
-    });
-
-    req.flash('success', 'Préstamo especial actualizado correctamente');
-    res.redirect('/prestamos-especiales');
-  } catch (error) {
-    console.error('Error al actualizar préstamo especial:', error);
-    req.flash('error', 'No se pudo actualizar el préstamo especial');
-    res.redirect(`/prestamos-especiales/${id}/edit`);
-  }
-};
-
-// Eliminar préstamo especial
-exports.delete = async (req, res) => {
-  const id = req.params.id;
-  try {
-    await PrestamoEspecial.delete(id);
-    req.flash('success', 'Préstamo especial eliminado correctamente');
-    res.redirect('/prestamos-especiales');
-  } catch (error) {
-    console.error('Error al eliminar préstamo especial:', error);
-    req.flash('error', 'No se pudo eliminar el préstamo especial');
-    res.redirect('/prestamos-especiales');
-  }
+// Exportar todo como objeto
+module.exports = {
+  index,
+  createForm,
+  create,
+  show
+  // Agrega aquí `editForm`, `update`, `delete`, `pagoForm`, `procesarPago`, etc. cuando los implementes.
 };
