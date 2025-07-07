@@ -94,9 +94,9 @@
               <div class="card bg-light mb-3">
                 <div class="card-header bg-secondary text-white">Estado de Pagos</div>
                 <div class="card-body">
-                  <div class="d-flex justify-content-between mb-2">
+                 <div class="d-flex justify-content-between mb-2">
                     <span>Total Pagado:</span>
-                    <strong>RD$ <%= totalPagado.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></strong>
+                    <strong>RD$ <%= isNaN(totalPagado) ? '0.00' : totalPagado.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></strong>
                   </div>
                   <div class="d-flex justify-content-between mb-2">
                     <span>Interés Pagado:</span>

@@ -40,20 +40,18 @@ const PagoEspecial = {
   },
 
 findAllByPrestamoId: async (prestamoId) => {
-  const [rows] = await db.query(`
-    SELECT * FROM pagos_especiales 
-    WHERE prestamo_id = :prestamoId
-    ORDER BY fecha DESC
-  `, {
-    replacements: { prestamoId }
-  });
-  
-  return rows.map(row => ({
-    ...row,
-    monto: Number(row.monto) || 0,
-    interes_pagado: Number(row.interes_pagado) || 0,
-    capital_pagado: Number(row.capital_pagado) || 0
-  }));
+  try {
+    const [rows] = await db.query(`
+      SELECT * FROM pagos_especiales 
+      WHERE prestamo_id = ?
+      ORDER BY fecha DESC
+    `, [prestamoId]);
+    
+    return rows || []; // Siempre retornar un array
+  } catch (error) {
+    console.error('Error en findAllByPrestamoId:', error);
+    return []; // Retornar array vacío en caso de error
+  }
 },
 
   create: async (pago) => {

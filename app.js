@@ -49,6 +49,12 @@ app.use((req, res, next) => {
   res.locals.user = req.session.user || null;
   next();
 });
+// En tu app.js o archivo principal
+app.use((err, req, res, next) => {
+  console.error('Error no manejado:', err.stack);
+  req.flash('error', 'Ocurrió un error inesperado');
+  res.redirect('back');
+});
 
 // Middleware de autenticación (para vistas)
 app.use(authMiddleware.setUser);

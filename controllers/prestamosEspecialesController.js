@@ -117,17 +117,17 @@ exports.show = async (req, res) => {
       return res.redirect('/prestamos-especiales');
     }
 
-    // Asegurar que los valores numéricos son números válidos
+    // Asegurar valores numéricos
     prestamo.monto_aprobado = Number(prestamo.monto_aprobado) || 0;
-    prestamo.capital_restante = Number(prestamo.capital_restante) || 0;
+    prestamo.capital_restante = Number(prestamo.capital_restante) || prestamo.monto_aprobado;
     prestamo.interes_porcentaje = Number(prestamo.interes_porcentaje) || 0;
 
-    const pagos = await PagoEspecial.findAllByPrestamoId(prestamo.id);
+    const pagos = await PagoEspecial.findAllByPrestamoId(prestamo.id) || [];
 
-    // Calcular resumen con protección contra NaN
-    const totalPagado = pagos.reduce((sum, pago) => sum + (Number(pago.monto) || 0, 0));
-    const interesPagado = pagos.reduce((sum, pago) => sum + (Number(pago.interes_pagado) || 0, 0));
-    const capitalPagado = pagos.reduce((sum, pago) => sum + (Number(pago.capital_pagado) || 0, 0));
+    // Calcular totales con protección para array vacío
+    const totalPagado = pagos.reduce((sum, pago) => sum + (Number(pago.monto) || 0), 0);
+    const interesPagado = pagos.reduce((sum, pago) => sum + (Number(pago.interes_pagado) || 0), 0);
+    const capitalPagado = pagos.reduce((sum, pago) => sum + (Number(pago.capital_pagado) || 0), 0);
 
     res.render('prestamosEspeciales/show', {
       prestamo: {
@@ -148,13 +148,13 @@ exports.show = async (req, res) => {
       title: 'Detalle del Préstamo Especial',
       messages: req.flash()
     });
+
   } catch (error) {
-    console.error('Error al cargar detalle:', error);
+    console.error('Error detallado:', error.stack);
     req.flash('error', 'Error al mostrar el préstamo especial.');
     res.redirect('/prestamos-especiales');
   }
 };
-
 // Formulario para editar préstamo especial
 exports.editForm = async (req, res) => {
   try {
