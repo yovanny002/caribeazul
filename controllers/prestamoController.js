@@ -604,23 +604,3 @@ exports.imprimir = async (req, res) => {
 };
 
 
-exports.aprobarPrestamoEspecial = async (req, res) => {
-  const id = req.params.id;
-
-  try {
-    const prestamo = await PrestamoEspecial.findById(id);
-    if (!prestamo) {
-      req.flash('error', 'Préstamo especial no encontrado');
-      return res.redirect('/prestamos/pendientes');
-    }
-
-    await PrestamoEspecial.update(id, { estado: 'aprobado' });
-
-    req.flash('success', 'Préstamo especial aprobado correctamente');
-    res.redirect('/prestamos/pendientes');
-  } catch (err) {
-    console.error('❌ Error al aprobar préstamo especial:', err.message);
-    req.flash('error', 'Error al aprobar préstamo especial');
-    res.redirect('/prestamos/pendientes');
-  }
-};
