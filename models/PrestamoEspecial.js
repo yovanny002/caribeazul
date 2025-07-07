@@ -93,3 +93,4 @@ const PrestamoEspecial = {
 };
 
 module.exports = PrestamoEspecial;
+// este es el modelo
