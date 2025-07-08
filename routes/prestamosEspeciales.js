@@ -31,6 +31,6 @@ router.post('/:id/pago', prestamosEspecialesController.procesarPago);
 router.get('/:id/recibo/:pagoId', prestamosEspecialesController.recibo);
 
 // Ruta para aprobar préstamos especiales
-router.post('/:id/aprobar', prestamosEspecialesController.aprobarPrestamoEspecial); // Changed from aprobarPrestamo
+router.post('/:id/aprobar', prestamosEspecialesController.aprobarPrestamoEspecial);
 
 module.exports = router;
