@@ -362,7 +362,7 @@ exports.recibo = async (req, res) => {
     try {
         const pago = await PagoEspecial.findById(pagoId);
 
-        if (!pago || pago.prestamo_especial_id != prestamoId) { // Confirmar que el pago pertenece a este préstamo
+        if (!pago || pago.prestamo_especial_id != prestamoId) {
             req.flash('error', 'Recibo de pago no encontrado o no corresponde al préstamo.');
             return res.redirect(`/prestamos-especiales/${prestamoId}`);
         }
@@ -373,27 +373,33 @@ exports.recibo = async (req, res) => {
             return res.redirect(`/prestamos-especiales`);
         }
 
-        const cliente = await Cliente.findById(prestamo.cliente_id); // Asumiendo Cliente.findById
+        const cliente = await Cliente.findById(prestamo.cliente_id);
         let ruta = null;
         if (cliente && cliente.ruta_id) {
-            ruta = await Ruta.findById(cliente.ruta_id); // Asumiendo Ruta.findById
-        }
-        
-        // Adjuntar cliente y ruta al objeto pago para facilitar el acceso en la vista
-        pago.cliente = cliente;
-        pago.prestamoEspecial = prestamo;
-        if (ruta) {
-            pago.ruta = ruta;
+            ruta = await Ruta.findById(cliente.ruta_id);
         }
 
-        // Formatear la fecha del pago para el recibo
-        pago.fecha_formatted = new Date(pago.fecha).toLocaleString('es-DO', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        pago.cliente = cliente;
+        pago.prestamoEspecial = prestamo;
+        if (ruta) pago.ruta = ruta;
+
+        // Asegurar capital_restante es número
+        if (pago.prestamoEspecial.capital_restante != null) {
+            pago.prestamoEspecial.capital_restante = safeParseFloat(pago.prestamoEspecial.capital_restante);
+        }
+
+        // Formatear fecha del pago
+        if (pago.fecha) {
+            pago.fecha_formatted = new Date(pago.fecha).toLocaleString('es-DO', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } else {
+            pago.fecha_formatted = 'Fecha no disponible';
+        }
 
         res.render('prestamosEspeciales/recibo', { pago, messages: req.flash() });
 
