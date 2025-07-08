@@ -1,3 +1,4 @@
+  const db = require('../models/db');
 const PrestamoEspecial = require('../models/PrestamoEspecial');
 const PagoEspecial = require('../models/PagoEspecial');
 const Cliente = require('../models/Cliente');
@@ -106,44 +107,55 @@ exports.create = async (req, res) => {
 
 // Mostrar detalle del préstamo
 exports.show = async (req, res) => {
-  try {
-    const prestamo = await PrestamoEspecial.findByIdWithClienteYRuta(req.params.id);
-    let pagos = await PagoEspecial.findAllByPrestamoId(prestamo.id);
+    const prestamoId = req.params.id;
 
-    // This check is good, ensures pagos is an array
-    if (!Array.isArray(pagos)) throw new Error('La consulta de pagos no devolvió un arreglo');
+    try {
+        // 1. Fetch the main loan details
+        const prestamoResult = await db.query('SELECT pe.*, c.nombre AS cliente_nombre, c.apellidos AS cliente_apellidos, c.cedula AS cliente_cedula, r.nombre AS ruta_nombre, r.zona AS ruta_zona FROM prestamos_especiales pe JOIN clientes c ON pe.cliente_id = c.id LEFT JOIN rutas r ON c.ruta_id = r.id WHERE pe.id = $1', [prestamoId]);
+        const prestamo = prestamoResult.rows[0];
 
-    // Calculations are correct
-    const totalPagado = pagos.reduce((s, p) => s + (Number(p.monto) || 0), 0);
-    const interesPagado = pagos.reduce((s, p) => s + (Number(p.interes_pagado) || 0), 0);
-    const capitalPagado = pagos.reduce((s, p) => s + (Number(p.capital_pagado) || 0), 0);
+        if (!prestamo) {
+            req.flash('error', 'Préstamo especial no encontrado.');
+            return res.redirect('/prestamos-especiales'); // Or render an error page
+        }
 
-    res.render('prestamosEspeciales/show', {
-      prestamo: {
-        ...prestamo,
-        // Ensure monto_solicitado is correctly passed and formatted if needed
-        // Also ensure created_at is consistent or use fecha_creacion
-        fecha_creacion: moment(prestamo.fecha_creacion).format('DD/MM/YYYY') // Formatting for display
-      },
-      pagos: pagos.map(p => ({
-        ...p,
-        monto: Number(p.monto), // Ensure these are numbers for calculations and formatting
-        interes_pagado: Number(p.interes_pagado),
-        capital_pagado: Number(p.capital_pagado),
-        fecha: moment(p.fecha).format('DD/MM/YYYY HH:mm') // Added time for more detail in payments
-      })),
-      totalPagado,
-      interesPagado,
-      capitalPagado,
-      title: 'Detalle del Préstamo Especial',
-      messages: req.flash(),
-      moment // Passed moment for use in the template if needed
-    });
-  } catch (error) {
-    console.error('Error al mostrar el préstamo:', error);
-    req.flash('error', 'No se pudo mostrar el préstamo');
-    res.redirect('/prestamos-especiales');
-  }
+        // 2. Fetch all payments for this loan
+        const pagosResult = await db.query('SELECT * FROM pagos_prestamos_especiales WHERE prestamo_especial_id = $1 ORDER BY fecha DESC', [prestamoId]);
+        const pagos = pagosResult.rows;
+
+        // 3. Calculate financial summaries from payments
+        let totalPagado = 0;
+        let capitalPagado = 0;
+        let interesPagado = 0;
+
+        if (pagos.length > 0) {
+            pagos.forEach(pago => {
+                totalPagado += parseFloat(pago.monto || 0); // Assuming 'monto' is the total payment amount
+                capitalPagado += parseFloat(pago.capital_pagado || 0);
+                interesPagado += parseFloat(pago.interes_pagado || 0);
+            });
+        }
+
+        // IMPORTANT: Ensure 'capital_restante' is being updated in your database
+        // when payments are processed. If not, you might need to calculate it here too:
+        // let capitalRestante = parseFloat(prestamo.monto_aprobado) - capitalPagado;
+        // prestamo.capital_restante = capitalRestante; // Add this to the prestamo object
+
+        // 4. Render the EJS template, passing all necessary data
+        res.render('prestamosEspeciales/detallePrestamoEspecial', {
+            prestamo,
+            pagos, // This array holds all payment details
+            totalPagado, // Calculated sum of all payment amounts
+            capitalPagado, // Calculated sum of capital paid
+            interesPagado, // Calculated sum of interest paid
+            messages: req.flash()
+        });
+
+    } catch (err) {
+        console.error('Error al obtener el detalle del préstamo especial:', err);
+        req.flash('error', 'Error al cargar el detalle del préstamo especial.');
+        res.redirect('/prestamos-especiales');
+    }
 };
 
 // Formulario para registrar pago
