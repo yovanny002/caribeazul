@@ -1,4 +1,4 @@
-const db = require('../db');
+const db = require('./db');
 const { QueryTypes } = require('sequelize');
 const moment = require('moment'); // Para manejo de fechas
 
