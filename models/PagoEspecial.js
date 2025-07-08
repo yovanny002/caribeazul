@@ -44,7 +44,7 @@ const PagoEspecial = {
 
     create: async (data) => {
         const {
-            prestamo_especial_id,
+            prestamo_id,
             monto,
             capital_pagado,
             interes_pagado,
@@ -61,7 +61,7 @@ const PagoEspecial = {
                 RETURNING id
             `, {
                 replacements: {
-                    prestamo_especial_id,
+                    prestamo_id,
                     monto: safeParseFloat(monto),
                     capital_pagado: safeParseFloat(capital_pagado),
                     interes_pagado: safeParseFloat(interes_pagado),
