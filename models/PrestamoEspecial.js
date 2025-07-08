@@ -23,24 +23,24 @@ const PrestamoEspecial = {
         }
     },
 
-    findAllWithClienteYRuta: async () => {
-        try {
-            const rows = await db.query(`
-                SELECT pe.*, 
-                       c.nombre AS cliente_nombre, 
-                       c.apellidos AS cliente_apellidos, 
-                       r.nombre AS ruta_nombre
-                FROM prestamos_especiales pe
-                JOIN clientes c ON pe.cliente_id = c.id
-                LEFT JOIN rutas r ON c.ruta_id = r.id
-                ORDER BY pe.fecha_creacion DESC
-            `, { type: QueryTypes.SELECT });
-            return rows;
-        } catch (error) {
-            console.error('Error al buscar préstamos con cliente y ruta:', error.message);
-            throw error;
-        }
-    },
+  findAllWithClienteYRuta: async () => {
+    try {
+        const rows = await db.query(`
+            SELECT pe.*, 
+                   c.nombre AS cliente_nombre, 
+                   c.apellidos AS cliente_apellidos, 
+                   r.nombre AS ruta_nombre
+            FROM prestamos_especiales pe
+            JOIN clientes c ON pe.cliente_id = c.id
+            LEFT JOIN rutas r ON pe.ruta_id = r.id
+            ORDER BY pe.fecha_creacion DESC
+        `, { type: QueryTypes.SELECT });
+        return rows;
+    } catch (error) {
+        console.error('Error al buscar préstamos con cliente y ruta:', error.message);
+        throw error;
+    }
+},
 
     findById: async (id) => {
         try {
