@@ -12,7 +12,7 @@ const PagoEspecial = {
     findByPrestamo: async (prestamoId) => {
         try {
             const rows = await db.query(`
-                SELECT * FROM pagos_prestamos_especiales 
+                SELECT * FROM pagos_especiales 
                 WHERE prestamo_especial_id = :prestamoId
                 ORDER BY fecha DESC
             `, {
