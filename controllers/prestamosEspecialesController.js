@@ -120,15 +120,18 @@ exports.show = async (req, res) => {
       return res.redirect('/prestamos-especiales');
     }
 
-    // Convertir valores numéricos
     prestamo.monto_aprobado = Number(prestamo.monto_aprobado) || 0;
     prestamo.capital_restante = Number(prestamo.capital_restante) || prestamo.monto_aprobado;
     prestamo.interes_porcentaje = Number(prestamo.interes_porcentaje) || 0;
 
-    // Obtener pagos ordenados por fecha descendente
-    const pagos = await PagoEspecial.findAllByPrestamoId(prestamo.id) || [];
+    let pagos = await PagoEspecial.findAllByPrestamoId(prestamo.id);
 
-    // Calcular totales
+    // Validación robusta
+    if (!Array.isArray(pagos)) {
+      if (pagos?.rows) pagos = pagos.rows;
+      else pagos = [];
+    }
+
     const totalPagado = pagos.reduce((sum, pago) => sum + (Number(pago.monto) || 0), 0);
     const interesPagado = pagos.reduce((sum, pago) => sum + (Number(pago.interes_pagado) || 0), 0);
     const capitalPagado = pagos.reduce((sum, pago) => sum + (Number(pago.capital_pagado) || 0), 0);
@@ -159,7 +162,6 @@ exports.show = async (req, res) => {
     res.redirect('/prestamos-especiales');
   }
 };
-
 
 
 // Formulario para editar préstamo especial
@@ -268,12 +270,9 @@ exports.procesarPago = async (req, res) => {
       return res.redirect(`/prestamos-especiales/${req.params.id}/pago`);
     }
 
-    // Calcular distribución del pago
-    const interesCalculado = prestamo.capital_restante * (prestamo.interes_porcentaje / 100);
-    const interesPagado = Math.min(monto, interesCalculado);
+    const interesPagado = Math.min(monto, prestamo.monto_aprobado * (prestamo.interes_porcentaje / 100));
     const capitalPagado = monto - interesPagado;
 
-    // Registrar pago
     const pagoData = {
       prestamo_id: prestamo.id,
       monto: monto,
@@ -282,16 +281,14 @@ exports.procesarPago = async (req, res) => {
       metodo: req.body.metodo || 'efectivo',
       referencia: req.body.referencia || '',
       fecha: new Date(),
-      registrado_por: req.user?.id || 'Sistema'
+      registrado_por: (req.user && req.user.id) ? req.user.id : 'Sistema'
+
     };
 
     await PagoEspecial.create(pagoData);
 
-    // Actualizar capital restante solo si se pagó capital
-    if (capitalPagado > 0) {
-      const nuevoCapital = prestamo.capital_restante - capitalPagado;
-      await PrestamoEspecial.updateCapital(prestamo.id, nuevoCapital);
-    }
+    const nuevoCapital = prestamo.capital_restante - capitalPagado;
+    await PrestamoEspecial.updateCapital(prestamo.id, nuevoCapital);
 
     req.flash('success', 'Pago registrado correctamente');
     res.redirect(`/prestamos-especiales/${req.params.id}`);
