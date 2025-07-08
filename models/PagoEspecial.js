@@ -13,7 +13,7 @@ const PagoEspecial = {
         try {
             const rows = await db.query(`
                 SELECT * FROM pagos_especiales 
-                WHERE prestamo_especial_id = :prestamoId
+                WHERE prestamo_id = :prestamoId
                 ORDER BY fecha DESC
             `, {
                 replacements: { prestamoId },
@@ -29,7 +29,7 @@ const PagoEspecial = {
     findById: async (id) => {
         try {
             const rows = await db.query(`
-                SELECT * FROM pagos_prestamos_especiales 
+                SELECT * FROM pagos_especiales 
                 WHERE id = :id
             `, {
                 replacements: { id },
@@ -55,9 +55,9 @@ const PagoEspecial = {
 
         try {
             const result = await db.query(`
-                INSERT INTO pagos_prestamos_especiales
-                (prestamo_especial_id, monto, capital_pagado, interes_pagado, metodo, registrado_por, fecha)
-                VALUES (:prestamo_especial_id, :monto, :capital_pagado, :interes_pagado, :metodo, :registrado_por, :fecha)
+                INSERT INTO pagos_especiales
+                (prestamo_id, monto, capital_pagado, interes_pagado, metodo, registrado_por, fecha)
+                VALUES (:prestamo_id, :monto, :capital_pagado, :interes_pagado, :metodo, :registrado_por, :fecha)
                 RETURNING id
             `, {
                 replacements: {
@@ -90,7 +90,7 @@ const PagoEspecial = {
 
         try {
             await db.query(`
-                UPDATE pagos_prestamos_especiales SET
+                UPDATE pagos_especiales SET
                 monto = :monto,
                 capital_pagado = :capital_pagado,
                 interes_pagado = :interes_pagado,
@@ -118,7 +118,7 @@ const PagoEspecial = {
 
     delete: async (id) => {
         try {
-            await db.query('DELETE FROM pagos_prestamos_especiales WHERE id = :id', {
+            await db.query('DELETE FROM pagos_especiales WHERE id = :id', {
                 replacements: { id },
                 type: QueryTypes.DELETE
             });
