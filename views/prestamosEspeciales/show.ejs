@@ -116,50 +116,51 @@
           </div>
 
           <!-- Sección de Historial de Pagos -->
-          <div class="card border-0 shadow mt-4">
-            <div class="card-header bg-primary text-white py-3">
-              <h5 class="mb-0"><i class="fas fa-history me-2"></i>Historial de Pagos</h5>
-            </div>
-            <div class="card-body p-0">
-              <% if (pagos && pagos.length > 0) { %>
-                <div class="table-responsive">
-                  <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                      <tr>
-                        <th>Fecha</th>
-                        <th>Monto</th>
-                        <th>Interés</th>
-                        <th>Capital</th>
-                        <th>Método</th>
-                        <th>Acciones</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <% pagos.forEach(pago => { %>
-                        <tr>
-                          <td><%= moment(pago.fecha).format('DD/MM/YYYY') %></td>
-                          <td>RD$ <%= pago.monto.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
-                          <td>RD$ <%= pago.interes_pagado.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
-                          <td>RD$ <%= pago.capital_pagado.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
-                          <td><%= pago.metodo.charAt(0).toUpperCase() + pago.metodo.slice(1) %></td>
-                          <td>
-                            <a href="/prestamos-especiales/<%= prestamo.id %>/recibo/<%= pago.id %>" 
-                               class="btn btn-sm btn-outline-primary">
-                              <i class="fas fa-receipt me-1"></i> Recibo
-                            </a>
-                          </td>
-                        </tr>
-                      <% }); %>
-                    </tbody>
-                  </table>
-                </div>
-              <% } else { %>
-                <div class="alert alert-info m-3">
-                  <i class="fas fa-info-circle me-2"></i> No se han registrado pagos para este préstamo.
-                </div>
-              <% } %>
-            </div>
-          </div>
+          <!-- Sección de Historial de Pagos -->
+<div class="card border-0 shadow mt-4">
+  <div class="card-header bg-primary text-white py-3">
+    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Historial de Pagos</h5>
+  </div>
+  <div class="card-body p-0">
+    <% if (pagos && pagos.length > 0) { %>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Fecha</th>
+              <th>Monto Total</th>
+              <th>Interés</th>
+              <th>Capital</th>
+              <th>Método</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% pagos.forEach(pago => { %>
+              <tr>
+                <td><%= moment(pago.fecha).format('DD/MM/YYYY') %></td>
+                <td>RD$ <%= pago.monto.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                <td>RD$ <%= pago.interes_pagado.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                <td>RD$ <%= pago.capital_pagado.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                <td><%= pago.metodo.charAt(0).toUpperCase() + pago.metodo.slice(1) %></td>
+                <td>
+                  <a href="/prestamos-especiales/<%= prestamo.id %>/recibo/<%= pago.id %>" 
+                     class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-receipt me-1"></i> Recibo
+                  </a>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <div class="alert alert-info m-3">
+        <i class="fas fa-info-circle me-2"></i> No se han registrado pagos para este préstamo.
+      </div>
+    <% } %>
+  </div>
+</div>
         </div>
       </div>
     </div>
