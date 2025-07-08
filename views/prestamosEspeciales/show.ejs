@@ -94,7 +94,7 @@
               <div class="card bg-light mb-3">
                 <div class="card-header bg-secondary text-white">Estado de Pagos</div>
                 <div class="card-body">
-                 <div class="d-flex justify-content-between mb-2">
+                  <div class="d-flex justify-content-between mb-2">
                     <span>Total Pagado:</span>
                     <strong>RD$ <%= isNaN(totalPagado) ? '0.00' : totalPagado.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></strong>
                   </div>
@@ -114,11 +114,57 @@
               </div>
             </div>
           </div>
+
+          <!-- Sección de Historial de Pagos -->
+          <div class="card border-0 shadow mt-4">
+            <div class="card-header bg-primary text-white py-3">
+              <h5 class="mb-0"><i class="fas fa-history me-2"></i>Historial de Pagos</h5>
+            </div>
+            <div class="card-body p-0">
+              <% if (pagos && pagos.length > 0) { %>
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Fecha</th>
+                        <th>Monto</th>
+                        <th>Interés</th>
+                        <th>Capital</th>
+                        <th>Método</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% pagos.forEach(pago => { %>
+                        <tr>
+                          <td><%= moment(pago.fecha).format('DD/MM/YYYY') %></td>
+                          <td>RD$ <%= pago.monto.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                          <td>RD$ <%= pago.interes_pagado.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                          <td>RD$ <%= pago.capital_pagado.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                          <td><%= pago.metodo.charAt(0).toUpperCase() + pago.metodo.slice(1) %></td>
+                          <td>
+                            <a href="/prestamos-especiales/<%= prestamo.id %>/recibo/<%= pago.id %>" 
+                               class="btn btn-sm btn-outline-primary">
+                              <i class="fas fa-receipt me-1"></i> Recibo
+                            </a>
+                          </td>
+                        </tr>
+                      <% }); %>
+                    </tbody>
+                  </table>
+                </div>
+              <% } else { %>
+                <div class="alert alert-info m-3">
+                  <i class="fas fa-info-circle me-2"></i> No se han registrado pagos para este préstamo.
+                </div>
+              <% } %>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-     <div class="col-md-4">
+    <div class="col-md-4">
       <div class="card border-0 shadow mb-4">
         <div class="card-header bg-primary text-white py-3">
           <div class="d-flex justify-content-between align-items-center">
@@ -129,11 +175,6 @@
         </div>
         <div class="card-body">
           <% 
-          // Debug: Mostrar valores importantes para diagnóstico
-          console.log('Estado:', prestamo.estado);
-          console.log('Capital Restante:', prestamo.capital_restante);
-          console.log('Es NaN:', isNaN(prestamo.capital_restante));
-          
           const puedePagar = prestamo.estado === 'aprobado' && 
                            !isNaN(parseFloat(prestamo.capital_restante)) && 
                            parseFloat(prestamo.capital_restante) > 0;
@@ -167,7 +208,42 @@
           <% } %>
         </div>
       </div>
+
+      <!-- Último Pago -->
+      <% if (pagos && pagos.length > 0) { %>
+        <div class="card border-0 shadow">
+          <div class="card-header bg-primary text-white py-3">
+            <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Último Pago</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-2">
+              <strong>Fecha:</strong> <%= moment(pagos[0].fecha).format('DD/MM/YYYY') %>
+            </div>
+            <div class="mb-2">
+              <strong>Monto:</strong> RD$ <%= pagos[0].monto.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+            </div>
+            <div class="mb-2">
+              <strong>Método:</strong> <%= pagos[0].metodo.charAt(0).toUpperCase() + pagos[0].metodo.slice(1) %>
+            </div>
+            <a href="/prestamos-especiales/<%= prestamo.id %>/recibo/<%= pagos[0].id %>" 
+               class="btn btn-primary w-100 mt-2">
+              <i class="fas fa-receipt me-2"></i> Ver Recibo
+            </a>
+          </div>
+        </div>
+      <% } %>
+    </div>
   </div>
 </div>
 
 <%- include('../partials/footer') %>
+
+<style>
+  .table-hover tbody tr:hover {
+    background-color: #f8f9fa;
+  }
+  .badge {
+    font-size: 0.85em;
+    padding: 0.35em 0.65em;
+  }
+</style>
