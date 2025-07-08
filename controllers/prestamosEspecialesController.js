@@ -82,6 +82,28 @@ exports.create = async (req, res) => {
 };
 
 // Mostrar detalle de un préstamo especial (CON HISTORIAL DE PAGOS Y ESTADO)
+// Helper para formatear fechas
+formatFecha = (dateString) => {
+    if (!dateString) return '';
+    // Asegurarse de que sea un objeto Date para toLocaleDateString
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-DO', { year: 'numeric', month: '2-digit', day: '2-digit' });
+};
+
+// Helper para formato de moneda
+ formatCurrency = (amount) => {
+    return parseFloat(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+// Helper para parsear valores numéricos de forma segura
+ safeParseFloat = (value, defaultValue = 0) => {
+    const num = parseFloat(value);
+    return isNaN(num) ? defaultValue : num;
+};
+
+
+
+// Mostrar detalle de un préstamo especial (CON HISTORIAL DE PAGOS Y ESTADO)
 exports.show = async (req, res) => {
     const prestamoId = req.params.id;
     try {
@@ -92,6 +114,14 @@ exports.show = async (req, res) => {
             req.flash('error', 'Préstamo especial no encontrado.');
             return res.redirect('/prestamos-especiales');
         }
+
+        // --- INICIO DE CORRECCIÓN ---
+        // Asegurarse de que los montos sean números para usar .toFixed() en la vista
+        prestamo.monto_solicitado = safeParseFloat(prestamo.monto_solicitado);
+        prestamo.monto_aprobado = safeParseFloat(prestamo.monto_aprobado);
+        prestamo.interes_porcentaje = safeParseFloat(prestamo.interes_porcentaje);
+        prestamo.capital_restante = safeParseFloat(prestamo.capital_restante);
+        // --- FIN DE CORRECCIÓN ---
 
         // Obtener los pagos asociados a este préstamo especial
         const pagos = await PagoEspecial.findByPrestamo(prestamoId);
@@ -107,9 +137,14 @@ exports.show = async (req, res) => {
         let interesPagado = 0;
 
         pagos.forEach(pago => {
-            totalPagado += safeParseFloat(pago.monto);
-            capitalPagado += safeParseFloat(pago.capital_pagado);
-            interesPagado += safeParseFloat(pago.interes_pagado);
+            // Asegurarse de que los campos de pago también sean números
+            pago.monto = safeParseFloat(pago.monto);
+            pago.capital_pagado = safeParseFloat(pago.capital_pagado);
+            pago.interes_pagado = safeParseFloat(pago.interes_pagado);
+
+            totalPagado += pago.monto;
+            capitalPagado += pago.capital_pagado;
+            interesPagado += pago.interes_pagado;
             pago.fecha_formatted = new Date(pago.fecha).toLocaleDateString('es-DO', { year: 'numeric', month: '2-digit', day: '2-digit' });
         });
 

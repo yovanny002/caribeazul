@@ -325,8 +325,8 @@
                     <p>Por favor, ingrese el monto final aprobado para este préstamo. El capital restante inicial será este monto.</p>
                     <div class="mb-3">
                         <label for="monto_aprobado" class="form-label">Monto Aprobado (RD$)</label>
-                        <input type="number" step="0.01" class="form-control" id="monto_aprobado" name="monto_aprobado" required
-                               min="0.01" value="<%= (prestamo.monto_solicitado || 0).toFixed(2) %>">
+                       <input type="number" step="0.01" class="form-control" id="monto_aprobado" name="monto_aprobado" required
+min="0.0                1" value="<%= (parseFloat(prestamo.monto_solicitado || 0)).toFixed(2) %>">
                     </div>
                 </div>
                 <div class="modal-footer">
