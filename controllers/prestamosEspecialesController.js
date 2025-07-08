@@ -81,26 +81,6 @@ exports.create = async (req, res) => {
     }
 };
 
-// Mostrar detalle de un préstamo especial (CON HISTORIAL DE PAGOS Y ESTADO)
-// Helper para formatear fechas
-formatFecha = (dateString) => {
-    if (!dateString) return '';
-    // Asegurarse de que sea un objeto Date para toLocaleDateString
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-DO', { year: 'numeric', month: '2-digit', day: '2-digit' });
-};
-
-// Helper para formato de moneda
- formatCurrency = (amount) => {
-    return parseFloat(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
-
-// Helper para parsear valores numéricos de forma segura
- safeParseFloat = (value, defaultValue = 0) => {
-    const num = parseFloat(value);
-    return isNaN(num) ? defaultValue : num;
-};
-
 
 
 // Mostrar detalle de un préstamo especial (CON HISTORIAL DE PAGOS Y ESTADO)
