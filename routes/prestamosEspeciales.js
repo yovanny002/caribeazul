@@ -12,7 +12,7 @@ router.get('/nuevo', prestamosEspecialesController.createForm);
 // Guardar nuevo préstamo especial
 router.post('/crear', prestamosEspecialesController.create);
 
-// Ver detalle de un préstamo especial
+// Ver detalle de un préstamo especial (con historial de pagos)
 router.get('/:id', prestamosEspecialesController.show);
 
 // Formulario para editar préstamo especial
@@ -20,6 +20,9 @@ router.get('/:id/editar', prestamosEspecialesController.editForm);
 
 // Actualizar préstamo especial
 router.post('/:id/actualizar', prestamosEspecialesController.update);
+
+// Ruta para aprobar préstamos especiales
+router.post('/:id/aprobar', prestamosEspecialesController.aprobarPrestamoEspecial);
 
 // Formulario para registrar pago
 router.get('/:id/pago', prestamosEspecialesController.pagoForm);
@@ -30,7 +33,5 @@ router.post('/:id/pago', prestamosEspecialesController.procesarPago);
 // Generar recibo de pago
 router.get('/:id/recibo/:pagoId', prestamosEspecialesController.recibo);
 
-// Ruta para aprobar préstamos especiales
-router.post('/:id/aprobar', prestamosEspecialesController.aprobarPrestamoEspecial);
 
 module.exports = router;
