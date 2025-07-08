@@ -112,26 +112,21 @@ exports.create = async (req, res) => {
 };
 
 
+// En el controlador (controllers/prestamosEspeciales.js)
 exports.show = async (req, res) => {
   try {
     const prestamo = await PrestamoEspecial.findByIdWithClienteYRuta(req.params.id);
-    if (!prestamo) {
-      req.flash('error', 'Préstamo especial no encontrado.');
-      return res.redirect('/prestamos-especiales');
-    }
-
-    prestamo.monto_aprobado = Number(prestamo.monto_aprobado) || 0;
-    prestamo.capital_restante = Number(prestamo.capital_restante) || prestamo.monto_aprobado;
-    prestamo.interes_porcentaje = Number(prestamo.interes_porcentaje) || 0;
-
+    // ...
+    
     let pagos = await PagoEspecial.findAllByPrestamoId(prestamo.id);
 
-    // Validación robusta
+    // Validación robusta - asegurarse que pagos es un array
     if (!Array.isArray(pagos)) {
       if (pagos?.rows) pagos = pagos.rows;
       else pagos = [];
     }
 
+    // Calcular totales
     const totalPagado = pagos.reduce((sum, pago) => sum + (Number(pago.monto) || 0), 0);
     const interesPagado = pagos.reduce((sum, pago) => sum + (Number(pago.interes_pagado) || 0), 0);
     const capitalPagado = pagos.reduce((sum, pago) => sum + (Number(pago.capital_pagado) || 0), 0);
@@ -151,11 +146,8 @@ exports.show = async (req, res) => {
       totalPagado,
       interesPagado,
       capitalPagado,
-      moment,
-      title: 'Detalle del Préstamo Especial',
-      messages: req.flash()
+      // ...
     });
-
   } catch (error) {
     console.error('Error detallado:', error.stack);
     req.flash('error', 'Error al mostrar el préstamo especial.');
@@ -270,8 +262,10 @@ exports.procesarPago = async (req, res) => {
       return res.redirect(`/prestamos-especiales/${req.params.id}/pago`);
     }
 
-    const interesPagado = Math.min(monto, prestamo.monto_aprobado * (prestamo.interes_porcentaje / 100));
-    const capitalPagado = monto - interesPagado;
+    // Calcular distribución del pago
+    const interesCalculado = prestamo.capital_restante * (prestamo.interes_porcentaje / 100);
+    const interesPagado = Math.min(monto, interesCalculado);
+    const capitalPagado = Math.min(monto - interesPagado, prestamo.capital_restante);
 
     const pagoData = {
       prestamo_id: prestamo.id,
@@ -282,11 +276,11 @@ exports.procesarPago = async (req, res) => {
       referencia: req.body.referencia || '',
       fecha: new Date(),
       registrado_por: (req.user && req.user.id) ? req.user.id : 'Sistema'
-
     };
 
     await PagoEspecial.create(pagoData);
 
+    // Actualizar capital restante
     const nuevoCapital = prestamo.capital_restante - capitalPagado;
     await PrestamoEspecial.updateCapital(prestamo.id, nuevoCapital);
 
@@ -298,7 +292,6 @@ exports.procesarPago = async (req, res) => {
     res.redirect(`/prestamos-especiales/${req.params.id}/pago`);
   }
 };
-
 // Generar recibo de pago
 exports.recibo = async (req, res) => {
   try {

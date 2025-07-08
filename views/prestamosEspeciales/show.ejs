@@ -116,7 +116,7 @@
           </div>
 
           <!-- Sección de Historial de Pagos -->
-          <!-- Sección de Historial de Pagos -->
+          <!-- Historial de Pagos -->
 <div class="card border-0 shadow mt-4">
   <div class="card-header bg-primary text-white py-3">
     <h5 class="mb-0"><i class="fas fa-history me-2"></i>Historial de Pagos</h5>
@@ -128,7 +128,7 @@
           <thead class="table-light">
             <tr>
               <th>Fecha</th>
-              <th>Monto Total</th>
+              <th>Monto</th>
               <th>Interés</th>
               <th>Capital</th>
               <th>Método</th>
@@ -138,10 +138,10 @@
           <tbody>
             <% pagos.forEach(pago => { %>
               <tr>
-                <td><%= moment(pago.fecha).format('DD/MM/YYYY') %></td>
-                <td>RD$ <%= pago.monto.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
-                <td>RD$ <%= pago.interes_pagado.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
-                <td>RD$ <%= pago.capital_pagado.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                <td><%= pago.fecha %></td>
+                <td>RD$ <%= pago.monto.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                <td>RD$ <%= pago.interes_pagado.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+                <td>RD$ <%= pago.capital_pagado.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
                 <td><%= pago.metodo.charAt(0).toUpperCase() + pago.metodo.slice(1) %></td>
                 <td>
                   <a href="/prestamos-especiales/<%= prestamo.id %>/recibo/<%= pago.id %>" 
