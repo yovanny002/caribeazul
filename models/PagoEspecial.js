@@ -1,8 +1,7 @@
 const db = require('./db');
 const { QueryTypes } = require('sequelize');
-const moment = require('moment'); // Para manejo de fechas
+const moment = require('moment');
 
-// Helper para parsear valores numéricos de forma segura
 const safeParseFloat = (value, defaultValue = 0) => {
     const num = parseFloat(value);
     return isNaN(num) ? defaultValue : num;
@@ -49,15 +48,16 @@ const PagoEspecial = {
             capital_pagado,
             interes_pagado,
             metodo,
+            referencia = null,
             registrado_por = 'Sistema',
-            fecha = moment().format('YYYY-MM-DD HH:mm:ss') // Usar fecha actual si no se provee
+            fecha = moment().format('YYYY-MM-DD HH:mm:ss')
         } = data;
 
         try {
             const result = await db.query(`
                 INSERT INTO pagos_especiales
-                (prestamo_id, monto, capital_pagado, interes_pagado, metodo, registrado_por, fecha)
-                VALUES (:prestamo_id, :monto, :capital_pagado, :interes_pagado, :metodo, :registrado_por, :fecha)
+                (prestamo_id, monto, capital_pagado, interes_pagado, metodo, referencia, registrado_por, fecha)
+                VALUES (:prestamo_id, :monto, :capital_pagado, :interes_pagado, :metodo, :referencia, :registrado_por, :fecha)
                 RETURNING id
             `, {
                 replacements: {
@@ -66,12 +66,14 @@ const PagoEspecial = {
                     capital_pagado: safeParseFloat(capital_pagado),
                     interes_pagado: safeParseFloat(interes_pagado),
                     metodo,
+                    referencia,
                     registrado_por,
                     fecha
                 },
                 type: QueryTypes.INSERT
             });
-            return result[0].id;
+
+            return result[0]?.id || null;
         } catch (error) {
             console.error('Error al crear pago especial:', error.message);
             throw error;
@@ -84,6 +86,7 @@ const PagoEspecial = {
             capital_pagado,
             interes_pagado,
             metodo,
+            referencia = null,
             registrado_por,
             fecha
         } = data;
@@ -95,6 +98,7 @@ const PagoEspecial = {
                 capital_pagado = :capital_pagado,
                 interes_pagado = :interes_pagado,
                 metodo = :metodo,
+                referencia = :referencia,
                 registrado_por = :registrado_por,
                 fecha = :fecha
                 WHERE id = :id
@@ -105,6 +109,7 @@ const PagoEspecial = {
                     capital_pagado: safeParseFloat(capital_pagado),
                     interes_pagado: safeParseFloat(interes_pagado),
                     metodo,
+                    referencia,
                     registrado_por,
                     fecha
                 },

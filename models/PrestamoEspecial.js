@@ -1,8 +1,7 @@
 const db = require('./db');
 const { QueryTypes } = require('sequelize');
-const moment = require('moment'); // Si necesitas manejo de fechas aquí
+const moment = require('moment');
 
-// Helper para parsear valores numéricos de forma segura
 const safeParseFloat = (value, defaultValue = 0) => {
     const num = parseFloat(value);
     return isNaN(num) ? defaultValue : num;
@@ -52,7 +51,7 @@ const PrestamoEspecial = {
         const {
             cliente_id,
             monto_solicitado,
-            monto_aprobado = 0, // Se puede aprobar más tarde
+            monto_aprobado = 0,
             interes_porcentaje,
             forma_pago,
             estado = 'pendiente',
@@ -63,7 +62,7 @@ const PrestamoEspecial = {
             const result = await db.query(`
                 INSERT INTO prestamos_especiales
                 (cliente_id, monto_solicitado, monto_aprobado, interes_porcentaje, forma_pago, estado, observaciones, fecha_creacion, capital_restante)
-                VALUES (:cliente_id, :monto_solicitado, :monto_aprobado, :interes_porcentaje, :forma_pago, :estado, :observaciones, NOW(), :monto_aprobado)
+                VALUES (:cliente_id, :monto_solicitado, :monto_aprobado, :interes_porcentaje, :forma_pago, :estado, :observaciones, NOW(), :capital_restante)
                 RETURNING id
             `, {
                 replacements: {
@@ -73,13 +72,13 @@ const PrestamoEspecial = {
                     interes_porcentaje: safeParseFloat(interes_porcentaje),
                     forma_pago,
                     estado,
-                    observaciones
+                    observaciones,
+                    capital_restante: safeParseFloat(monto_aprobado)
                 },
                 type: QueryTypes.INSERT
             });
-            // db.query con RETURNING y type: QueryTypes.INSERT en PostgreSQL devuelve un array de objetos
-            // donde cada objeto tiene la propiedad del campo RETURNING.
-            return result[0].id;
+
+            return result[0]?.id || null;
         } catch (error) {
             console.error('Error al crear préstamo especial:', error.message);
             throw error;
@@ -95,7 +94,7 @@ const PrestamoEspecial = {
             estado,
             fecha_aprobacion,
             observaciones,
-            capital_restante // Esto se actualizará con pagos
+            capital_restante
         } = data;
 
         try {
@@ -118,7 +117,7 @@ const PrestamoEspecial = {
                     interes_porcentaje: safeParseFloat(interes_porcentaje),
                     forma_pago,
                     estado,
-                    fecha_aprobacion: fecha_aprobacion || null, // Acepta null si no hay fecha
+                    fecha_aprobacion: fecha_aprobacion || null,
                     observaciones,
                     capital_restante: safeParseFloat(capital_restante)
                 },
