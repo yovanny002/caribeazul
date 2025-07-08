@@ -56,6 +56,7 @@ findAllByPrestamoId: async (prestamoId) => {
     return [];
   }
 },
+
   create: async (pago) => {
     const {
       prestamo_id,

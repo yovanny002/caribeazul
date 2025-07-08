@@ -118,6 +118,7 @@
     <h5 class="mb-0"><i class="fas fa-history me-2"></i>Historial de Pagos</h5>
   </div>
   <div class="card-body p-0">
+    <% console.log('PAGOS:', pagos) %>
     <% if (pagos && pagos.length > 0) { %>
       <div class="table-responsive">
         <table class="table table-hover mb-0">
@@ -214,7 +215,7 @@
           </div>
           <div class="card-body">
             <div class="mb-2">
-              <strong>Fecha:</strong> <%= moment(pagos[0].fecha).format('DD/MM/YYYY') %>
+              <strong>Fecha:</strong> <%= pagos[0].fecha %>
             </div>
             <div class="mb-2">
               <strong>Monto:</strong> RD$ <%= pagos[0].monto.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
