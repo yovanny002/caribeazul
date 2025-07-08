@@ -96,10 +96,10 @@ exports.show = async (req, res) => {
         // Usar el método findById del modelo PrestamoEspecial basado en db.query
         const prestamo = await PrestamoEspecial.findById(prestamoId);
 
-        if (!prestamo) {
-            req.flash('error', 'Préstamo especial no encontrado.');
-            return res.redirect('/prestamos-especiales');
-        }
+      if (!prestamoId || prestamoId === 'null') {
+        req.flash('error', 'ID de préstamo inválido.');
+        return res.redirect('/prestamos-especiales');
+    }
 
         // --- INICIO DE CORRECCIÓN ---
         // Asegurarse de que los montos sean números para usar .toFixed() en la vista
@@ -212,11 +212,10 @@ exports.aprobarPrestamoEspecial = async (req, res) => {
 
     try {
         const prestamo = await PrestamoEspecial.findById(prestamoId);
-        if (!prestamo) {
-            req.flash('error', 'Préstamo no encontrado.');
-            return res.redirect(`/prestamos-especiales/${prestamoId}`);
-        }
-
+        if (!prestamoId || prestamoId === 'null') {
+        req.flash('error', 'ID de préstamo inválido.');
+        return res.redirect('/prestamos-especiales');
+    }
         if (prestamo.estado === 'aprobado') {
             req.flash('info', 'El préstamo ya ha sido aprobado.');
             return res.redirect(`/prestamos-especiales/${prestamoId}`);
