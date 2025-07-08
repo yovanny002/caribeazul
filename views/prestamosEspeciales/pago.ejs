@@ -11,7 +11,8 @@
         <p><strong>Cliente:</strong> <%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></p>
         <% const capRestante = parseFloat(prestamo.capital_restante) || 0; %>
           <p><strong>Préstamo #:</strong> <%= prestamo.id %> | 
-          <strong>Capital Restante:</strong> RD$ <%= capRestante.toFixed(2) %></p>
+          <strong>Capital Restante:</strong> RD$ <%= capitalRestanteDisplay.toFixed(2) %>
+
 
         <p><strong>Interés Actual:</strong> <%= prestamo.interes_porcentaje %> %</p>
         <p><strong>Forma de Pago:</strong> <%= prestamo.forma_pago %></p>

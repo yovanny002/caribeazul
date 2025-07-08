@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('./db');
-const Ruta = require('./Ruta'); // Asegúrate de que este modelo exista
+const sequelize = require('./db'); // Ajusta si tu conexión no está en config/db.js
 
 const Cobrador = sequelize.define('Cobrador', {
   nombre: {
@@ -71,8 +70,5 @@ const Cobrador = sequelize.define('Cobrador', {
   tableName: 'cobradores',
   timestamps: false
 });
-
-// Relación con Ruta
-Cobrador.belongsTo(Ruta, { foreignKey: 'ruta_id', as: 'ruta' });
 
 module.exports = Cobrador;
