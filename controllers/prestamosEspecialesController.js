@@ -58,6 +58,7 @@ exports.create = async (req, res) => {
         const nuevoPrestamoId = await PrestamoEspecial.create({
             cliente_id,
             monto_solicitado: safeParseFloat(monto_solicitado),
+            monto_aprobado: safeParseFloat(monto_solicitado),
             interes_porcentaje: safeParseFloat(interes_porcentaje),
             forma_pago,
             observaciones
