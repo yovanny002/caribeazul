@@ -11,11 +11,8 @@ const PrestamoEspecial = {
     findAll: async () => {
         try {
             const rows = await db.query(`
-                SELECT pe.*, 
-                c.nombre AS cliente_nombre,
-                 c.apellidos AS cliente_apellidos,
-                 c.cedula AS cliente_cedula,
-,                FROM prestamos_especiales pe
+                SELECT pe.*, c.nombre AS cliente_nombre, c.apellidos AS cliente_apellidos,
+                FROM prestamos_especiales pe
                 JOIN clientes c ON pe.cliente_id = c.id
                 ORDER BY pe.fecha_creacion DESC
             `, { type: QueryTypes.SELECT });

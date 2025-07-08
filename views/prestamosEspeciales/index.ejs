@@ -42,7 +42,8 @@
                             <tr>
                                 <th scope="col">ID</th>
                                 <th scope="col">Cliente</th>
-                                <th scope="col">Cédula</th>
+                                <!-- <th scope="col">Cédula</th>
+                                <th scope="col">Ruta/Zona</th> -->
                                 <th scope="col">Monto Solicitado</th>
                                 <th scope="col">Monto Aprobado</th>
                                 <th scope="col">Capital Restante</th>
@@ -56,8 +57,8 @@
                                 <tr>
                                     <td><span class="badge bg-secondary fw-normal"><%= prestamo.id %></span></td>
                                     <td><%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></td>
-                                    <td><%= prestamo.cliente_cedula %></td>
-                                    <td><%= prestamo.ruta_nombre && prestamo.ruta_zona ? `${prestamo.ruta_zona} - ${prestamo.ruta_nombre}` : 'N/A' %></td>
+                                    <!-- <td><%= prestamo.cliente_cedula %></td>
+                                    <td><%= prestamo.ruta_nombre && prestamo.ruta_zona ? `${prestamo.ruta_zona} - ${prestamo.ruta_nombre}` : 'N/A' %></td> -->
                                     <td>RD$ <%= parseFloat(prestamo.monto_solicitado || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
                                     <td>RD$ <%= parseFloat(prestamo.monto_aprobado || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
                                     <td>RD$ <%= parseFloat(prestamo.capital_restante || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
