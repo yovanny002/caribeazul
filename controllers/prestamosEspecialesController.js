@@ -110,8 +110,10 @@ exports.show = async (req, res) => {
     const prestamo = await PrestamoEspecial.findByIdWithClienteYRuta(req.params.id);
     let pagos = await PagoEspecial.findAllByPrestamoId(prestamo.id);
 
+    // This check is good, ensures pagos is an array
     if (!Array.isArray(pagos)) throw new Error('La consulta de pagos no devolvió un arreglo');
 
+    // Calculations are correct
     const totalPagado = pagos.reduce((s, p) => s + (Number(p.monto) || 0), 0);
     const interesPagado = pagos.reduce((s, p) => s + (Number(p.interes_pagado) || 0), 0);
     const capitalPagado = pagos.reduce((s, p) => s + (Number(p.capital_pagado) || 0), 0);
@@ -119,21 +121,23 @@ exports.show = async (req, res) => {
     res.render('prestamosEspeciales/show', {
       prestamo: {
         ...prestamo,
-        fecha_creacion: moment(prestamo.fecha_creacion).format('DD/MM/YYYY')
+        // Ensure monto_solicitado is correctly passed and formatted if needed
+        // Also ensure created_at is consistent or use fecha_creacion
+        fecha_creacion: moment(prestamo.fecha_creacion).format('DD/MM/YYYY') // Formatting for display
       },
       pagos: pagos.map(p => ({
         ...p,
-        monto: Number(p.monto),
+        monto: Number(p.monto), // Ensure these are numbers for calculations and formatting
         interes_pagado: Number(p.interes_pagado),
         capital_pagado: Number(p.capital_pagado),
-        fecha: moment(p.fecha).format('DD/MM/YYYY')
+        fecha: moment(p.fecha).format('DD/MM/YYYY HH:mm') // Added time for more detail in payments
       })),
       totalPagado,
       interesPagado,
       capitalPagado,
       title: 'Detalle del Préstamo Especial',
       messages: req.flash(),
-      moment
+      moment // Passed moment for use in the template if needed
     });
   } catch (error) {
     console.error('Error al mostrar el préstamo:', error);
