@@ -9,7 +9,10 @@
 
       <div class="mb-3">
         <p><strong>Cliente:</strong> <%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></p>
-        <p><strong>Préstamo #:</strong> <%= prestamo.id %> | <strong>Capital Restante:</strong> RD$ <%= prestamo.capital_restante.toFixed(2) %></p>
+        <% const capRestante = parseFloat(prestamo.capital_restante) || 0; %>
+          <p><strong>Préstamo #:</strong> <%= prestamo.id %> | 
+          <strong>Capital Restante:</strong> RD$ <%= capRestante.toFixed(2) %></p>
+
         <p><strong>Interés Actual:</strong> <%= prestamo.interes_porcentaje %> %</p>
         <p><strong>Forma de Pago:</strong> <%= prestamo.forma_pago %></p>
       </div>

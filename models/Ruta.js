@@ -1,45 +1,21 @@
-  const { DataTypes } = require('sequelize');
-  const sequelize = require('./db');
+// models/Ruta.js
+const db = require('./db');
+const { QueryTypes } = require('sequelize');
 
-  const Ruta = sequelize.define('Ruta', {
-    nombre: {
-      type: DataTypes.STRING(100),
-      allowNull: false
+const Ruta = {
+    findAll: async () => {
+        const rows = await db.query(`
+            SELECT id, nombre, zona FROM rutas WHERE activo = true ORDER BY zona, nombre
+        `, { type: QueryTypes.SELECT });
+        return rows;
     },
-    codigo: {
-      type: DataTypes.STRING(20),
-      unique: true
-    },
-    descripcion: {
-      type: DataTypes.STRING(255)
-    },
-    zona: {
-      type: DataTypes.STRING(100)
-    },
-    tipo_ruta: {
-      type: DataTypes.ENUM('urbana', 'rural', 'mixta')
-    },
-    color_mapa: {
-      type: DataTypes.STRING(7),
-      defaultValue: '#007bff'
-    },
-    coordenadas: {
-      type: DataTypes.TEXT
-    },
-    usuario_creacion: {
-      type: DataTypes.STRING(50)
-    },
-    activo: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: true
-    },
-    fecha_creacion: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW
+    findById: async (id) => {
+        const [ruta] = await db.query(`SELECT * FROM rutas WHERE id = :id`, {
+            replacements: { id },
+            type: QueryTypes.SELECT
+        });
+        return ruta || null;
     }
-  }, {
-    tableName: 'rutas',
-    timestamps: false
-  });
+};
 
-  module.exports = Ruta;
+module.exports = Ruta;

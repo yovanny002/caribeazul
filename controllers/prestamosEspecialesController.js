@@ -50,15 +50,21 @@ exports.index = async (req, res) => {
 // Mostrar formulario para crear un nuevo préstamo
 exports.createForm = async (req, res) => {
     try {
-        // Asumiendo que Cliente.findAll() existe y devuelve los clientes correctamente
         const clientes = await Cliente.findAll();
-        res.render('prestamosEspeciales/create', { clientes, messages: req.flash() });
+        const rutas = await Ruta.findAll(); // ← Ya devuelve objetos planos
+        res.render('prestamosEspeciales/create', {
+            clientes,
+            rutas,
+            messages: req.flash()
+        });
     } catch (err) {
         console.error('Error al cargar formulario de creación de préstamo:', err);
         req.flash('error', 'Error al cargar el formulario de nuevo préstamo.');
         res.redirect('/prestamos-especiales');
     }
 };
+
+
 
 // Crear un nuevo préstamo especial
 exports.create = async (req, res) => {
