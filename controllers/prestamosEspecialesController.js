@@ -131,7 +131,7 @@ exports.show = async (req, res) => {
     const interesPagado = pagos.reduce((sum, pago) => sum + (Number(pago.interes_pagado) || 0), 0);
     const capitalPagado = pagos.reduce((sum, pago) => sum + (Number(pago.capital_pagado) || 0), 0);
 
-    res.render('prestamosEspeciales/show', {
+     res.render('prestamosEspeciales/show', {
       prestamo: {
         ...prestamo,
         fecha_creacion: moment(prestamo.fecha_creacion).format('DD/MM/YYYY')
@@ -146,8 +146,11 @@ exports.show = async (req, res) => {
       totalPagado,
       interesPagado,
       capitalPagado,
-      // ...
+      moment,
+      title: 'Detalle del Préstamo Especial',
+      messages: req.flash() // Asegúrate de incluir esta línea
     });
+
   } catch (error) {
     console.error('Error detallado:', error.stack);
     req.flash('error', 'Error al mostrar el préstamo especial.');
