@@ -89,7 +89,7 @@ app.use('/prestamos', authMiddleware.ensureAuthenticated, prestamosRoutes);
 app.use('/reportes', authMiddleware.ensureAuthenticated, reportesRoutes);
 app.use('/cobradores', authMiddleware.ensureAuthenticated, cobradoresRoutes);
 app.use('/rutas', authMiddleware.ensureAuthenticated, rutasRoutes);
-app.use('/approval', approvalRoutes);
+app.use('/pendientes', approvalRoutes);
 // Ruta para subir documentos
 app.use('/documentos', authMiddleware.ensureAuthenticated, documentosRoutes);
 app.use('/prestamos-especiales',authMiddleware.ensureAuthenticated, prestamosEspecialesRoutes);

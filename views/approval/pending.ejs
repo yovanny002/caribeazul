@@ -1,113 +1,367 @@
-<div class="container">
-  <h2 class="my-4">
-    <i class="fas fa-clock"></i> Solicitudes Pendientes
-  </h2>
-  
-  <div class="table-responsive">
-    <table class="table table-hover">
-      <thead class="thead-dark">
-        <tr>
-          <th>Tipo</th>
-          <th>Solicitante</th>
-          <th>Monto</th>
-          <th>Fecha</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% loans.forEach(loan => { %>
-          <tr>
-            <td>
-              <i class="fas <%= loan.icon %>"></i>
-              <%= loan.displayType %>
-            </td>
-            <td>
-              <%= loan.cliente_nombre %> <%= loan.cliente_apellidos %>
-              <br>
-              <small class="text-muted"><%= loan.cliente_cedula %></small>
-            </td>
-            <td>
-              <%- helpers.formatCurrency(loan.monto_solicitado) %>
-            </td>
-            <td>
-              <%- helpers.formatDate(loan.fecha_creacion) %>
-            </td>
-            <td>
-              <div class="btn-group">
-                <button class="btn btn-sm btn-success approve-btn" 
-                        data-type="<%= loan.loanType %>"
-                        data-id="<%= loan.id %>">
-                  <i class="fas fa-check"></i> Aprobar
-                </button>
-                <button class="btn btn-sm btn-danger reject-btn"
-                        data-type="<%= loan.loanType %>"
-                        data-id="<%= loan.id %>">
-                  <i class="fas fa-times"></i> Rechazar
-                </button>
-              </div>
-            </td>
-          </tr>
-        <% }); %>
-      </tbody>
-    </table>
+<%- include('../partials/header', { title: title }) %>
+
+<div class="container-fluid px-4 py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="mt-4 mb-0 fw-bold text-gradient-primary">Solicitudes Pendientes</h1>
+      <p class="text-muted mb-0">Revisa y gestiona las solicitudes de préstamos</p>
+    </div>
+    <div>
+      <a href="/dashboard" class="btn btn-light rounded-pill px-4 border">
+        <i class="fas fa-arrow-left me-2"></i> Volver
+      </a>
+    </div>
   </div>
+
+  <% if (prestamos.length === 0) { %>
+    <div class="empty-state">
+      <div class="empty-state-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h3>¡Todo al día!</h3>
+      <p class="text-muted">No hay solicitudes pendientes de aprobación en este momento.</p>
+      <a href="/prestamos/nuevo" class="btn btn-primary rounded-pill px-4">
+        <i class="fas fa-plus me-2"></i> Crear nuevo préstamo
+      </a>
+    </div>
+  <% } else { %>
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+      <div class="card-header bg-white border-bottom py-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 fw-semibold"><i class="fas fa-list-check me-2 text-primary"></i> Solicitudes recientes</h5>
+          <div class="d-flex">
+            <div class="input-group input-group-sm rounded-pill border" style="width: 250px;">
+              <span class="input-group-text bg-transparent border-0"><i class="fas fa-search"></i></span>
+              <input type="text" class="form-control border-0 shadow-none" placeholder="Buscar préstamo...">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4">Cliente</th>
+                <th>Tipo</th>
+                <th>Monto</th>
+                <th>Detalles</th>
+                <th class="text-end pe-4">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% prestamos.forEach(p => { %>
+                <tr class="loan-item">
+                  <td class="ps-4">
+                    <div class="d-flex align-items-center">
+                      <div class="avatar avatar-sm me-3">
+                        <span class="avatar-text bg-primary">
+                          <%= p.cliente_nombre.charAt(0) %><%= p.cliente_apellidos.charAt(0) %>
+                        </span>
+                      </div>
+                      <div>
+                        <h6 class="mb-0"><%= p.cliente_nombre %> <%= p.cliente_apellidos %></h6>
+                        <small class="text-muted"><%= p.cliente_cedula %></small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge <%= p.tipo === 'especial' ? 'bg-purple-light text-purple' : 'bg-blue-light text-blue' %>">
+                      <i class="fas <%= p.tipo === 'especial' ? 'fa-star' : 'fa-file-invoice' %> me-1"></i>
+                      <%= p.tipo === 'especial' ? 'Especial' : 'Normal' %>
+                    </span>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span class="fw-semibold">RD$ <%= Number(p.monto_solicitado).toLocaleString('es-DO') %></span>
+                      <small class="text-muted">Solicitado</small>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="loan-details">
+                      <div class="detail-item">
+                        <i class="fas fa-calendar-day text-muted me-1"></i>
+                        <small><%= new Date(p.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) %></small>
+                      </div>
+                      <% if (p.cuotas) { %>
+                        <div class="detail-item">
+                          <i class="fas fa-list-ol text-muted me-1"></i>
+                          <small><%= p.cuotas %> cuotas</small>
+                        </div>
+                      <% } %>
+                    </div>
+                  </td>
+                  <td class="text-end pe-4">
+                    <div class="btn-group" role="group">
+                      <button class="btn btn-sm btn-outline-success rounded-start-pill px-3 approve-btn" 
+                              data-id="<%= p.id %>" 
+                              data-type="<%= p.tipo %>">
+                        <i class="fas fa-check me-1"></i> Aprobar
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger rounded-end-pill px-3 reject-btn"
+                              data-id="<%= p.id %>"
+                              data-type="<%= p.tipo %>">
+                        <i class="fas fa-times me-1"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer bg-white border-top py-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="text-muted">
+            Mostrando <span class="fw-semibold"><%= prestamos.length %></span> de <span class="fw-semibold"><%= prestamos.length %></span> resultados
+          </div>
+          <nav aria-label="Page navigation">
+            <ul class="pagination pagination-sm mb-0">
+              <li class="page-item disabled">
+                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Anterior</a>
+              </li>
+              <li class="page-item active"><a class="page-link" href="#">1</a></li>
+              <li class="page-item">
+                <a class="page-link" href="#">Siguiente</a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </div>
+    </div>
+  <% } %>
 </div>
 
-<!-- Modal Dinámico -->
-<div class="modal fade" id="actionModal" tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
+<!-- Modal de Aprobación -->
+<div class="modal fade" id="approvalModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="modalTitle"></h5>
-        <button type="button" class="close" data-dismiss="modal">
-          <span>&times;</span>
-        </button>
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title">Aprobar Préstamo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <form id="actionForm">
-        <div class="modal-body" id="modalBody"></div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Confirmar</button>
+      <form id="approvalForm" method="POST">
+        <div class="modal-body pt-0">
+          <div class="mb-3">
+            <label for="approvedAmount" class="form-label">Monto a aprobar</label>
+            <div class="input-group">
+              <span class="input-group-text">RD$</span>
+              <input type="number" class="form-control" id="approvedAmount" name="approved_amount" required step="0.01">
+            </div>
+          </div>
+          <div id="interestRateField" class="mb-3">
+            <label for="interestRate" class="form-label">Tasa de interés (%)</label>
+            <input type="number" class="form-control" id="interestRate" name="interest_rate" value="20">
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary rounded-pill px-4">Confirmar aprobación</button>
         </div>
       </form>
     </div>
   </div>
 </div>
 
+<!-- Modal de Rechazo -->
+<div class="modal fade" id="rejectionModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title">Rechazar Préstamo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="rejectionForm" method="POST">
+        <div class="modal-body pt-0">
+          <div class="mb-3">
+            <label for="rejectionReason" class="form-label">Motivo del rechazo</label>
+            <textarea class="form-control" id="rejectionReason" name="rejection_reason" rows="3" required></textarea>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-danger rounded-pill px-4">Confirmar rechazo</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<style>
+  :root {
+    --primary-color: #4361ee;
+    --secondary-color: #3f37c9;
+    --success-color: #4cc9f0;
+    --danger-color: #f72585;
+    --light-color: #f8f9fa;
+    --dark-color: #212529;
+    --purple: #7209b7;
+    --blue: #4895ef;
+  }
+
+  body {
+    background-color: #f8fafc;
+  }
+
+  .text-gradient-primary {
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+  }
+
+  .empty-state-icon {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+  }
+
+  .empty-state h3 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .avatar-sm {
+    width: 36px;
+    height: 36px;
+    font-size: 0.875rem;
+  }
+
+  .avatar-text {
+    color: white;
+    font-weight: 600;
+  }
+
+  .bg-purple-light {
+    background-color: rgba(114, 9, 183, 0.1);
+  }
+
+  .text-purple {
+    color: var(--purple);
+  }
+
+  .bg-blue-light {
+    background-color: rgba(72, 149, 239, 0.1);
+  }
+
+  .text-blue {
+    color: var(--blue);
+  }
+
+  .loan-item:hover {
+    background-color: rgba(67, 97, 238, 0.05);
+  }
+
+  .loan-details {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .detail-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.825rem;
+  }
+
+  .table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    color: #6c757d;
+  }
+
+  .btn-light {
+    background-color: white;
+    border: 1px solid #dee2e6;
+  }
+
+  .btn-light:hover {
+    background-color: #f8f9fa;
+  }
+
+  .form-control:focus, .form-select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+  }
+
+  .input-group-text {
+    background-color: #f8f9fa;
+  }
+</style>
+
 <script>
-$(document).ready(function() {
-  // Configuración dinámica de modales
-  $('.approve-btn, .reject-btn').click(function() {
-    const isApproval = $(this).hasClass('approve-btn');
-    const loanType = $(this).data('type');
-    const loanId = $(this).data('id');
-    
-    $('#modalTitle').text(isApproval ? 'Aprobar Préstamo' : 'Rechazar Préstamo');
-    $('#actionForm').attr('action', `/${loanType}-loans/${isApproval ? 'approve' : 'reject'}/${loanId}`);
-    
-    // Contenido dinámico según tipo
-    if (isApproval) {
-      $('#modalBody').html(`
-        <div class="form-group">
-          <label>Monto Aprobado</label>
-          <input type="number" class="form-control" name="approved_amount" required>
-        </div>
-        ${loanType === 'normal' ? `
-        <div class="form-group">
-          <label>Tasa de Interés (%)</label>
-          <input type="number" class="form-control" name="interest_rate" value="20" required>
-        </div>` : ''}
-      `);
-    } else {
-      $('#modalBody').html(`
-        <div class="form-group">
-          <label>Motivo del Rechazo</label>
-          <textarea class="form-control" name="rejection_reason" required></textarea>
-        </div>
-      `);
+document.addEventListener('DOMContentLoaded', function() {
+  const approvalModal = new bootstrap.Modal(document.getElementById('approvalModal'));
+  const rejectionModal = new bootstrap.Modal(document.getElementById('rejectionModal'));
+  const approvalForm = document.getElementById('approvalForm');
+  const rejectionForm = document.getElementById('rejectionForm');
+  const interestRateField = document.getElementById('interestRateField');
+
+  // Manejar clic en botones de aprobar
+  document.querySelectorAll('.approve-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const loanId = this.getAttribute('data-id');
+      const loanType = this.getAttribute('data-type');
+      
+      // Configurar el formulario según el tipo de préstamo
+      if (loanType === 'normal') {
+        interestRateField.style.display = 'block';
+      } else {
+        interestRateField.style.display = 'none';
+      }
+      
+      approvalForm.action = `/${loanType === 'normal' ? 'prestamos' : 'prestamos-especiales'}/${loanId}/aprobar`;
+      approvalModal.show();
+    });
+  });
+
+  // Manejar clic en botones de rechazar
+  document.querySelectorAll('.reject-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const loanId = this.getAttribute('data-id');
+      const loanType = this.getAttribute('data-type');
+      
+      rejectionForm.action = `/${loanType === 'normal' ? 'prestamos' : 'prestamos-especiales'}/${loanId}/rechazar`;
+      rejectionModal.show();
+    });
+  });
+
+  // Validación del formulario de aprobación
+  approvalForm.addEventListener('submit', function(e) {
+    const amount = document.getElementById('approvedAmount').value;
+    if (!amount || parseFloat(amount) <= 0) {
+      e.preventDefault();
+      alert('Por favor ingrese un monto válido mayor a cero');
     }
-    
-    $('#actionModal').modal('show');
+  });
+
+  // Validación del formulario de rechazo
+  rejectionForm.addEventListener('submit', function(e) {
+    const reason = document.getElementById('rejectionReason').value;
+    if (!reason.trim()) {
+      e.preventDefault();
+      alert('Por favor ingrese un motivo de rechazo');
+    }
   });
 });
 </script>

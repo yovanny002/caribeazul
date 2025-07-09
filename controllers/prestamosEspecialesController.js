@@ -4,423 +4,400 @@ const Cliente = require('../models/Cliente');
 const Ruta = require('../models/Ruta');
 const moment = require('moment');
 
-// Helper functions
-const formatFecha = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-DO', { year: 'numeric', month: '2-digit', day: '2-digit' });
-};
+// Helpers reutilizables
+const formatHelpers = {
+  fecha: (dateString) => dateString 
+    ? new Date(dateString).toLocaleDateString('es-DO', { year: 'numeric', month: '2-digit', day: '2-digit' })
+    : '',
 
-const formatCurrency = (amount) => {
-    return parseFloat(amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-};
+  currency: (amount) => parseFloat(amount || 0).toLocaleString('en-US', { 
+    minimumFractionDigits: 2, 
+    maximumFractionDigits: 2 
+  }),
 
-const safeParseFloat = (value, defaultValue = 0) => {
+  safeFloat: (value, defaultValue = 0) => {
     const num = parseFloat(value);
     return isNaN(num) ? defaultValue : num;
-};
+  },
 
-// Controller methods
-exports.index = async (req, res) => {
-    try {
-        const prestamos = await PrestamoEspecial.findAll();
-        const prestamosFormatted = prestamos.map(p => ({
-            ...p,
-            fecha_creacion_formatted: formatFecha(p.fecha_creacion)
-        }));
-        res.render('prestamosEspeciales/index', { prestamos: prestamosFormatted, messages: req.flash() });
-    } catch (err) {
-        console.error('Error al obtener préstamos especiales:', err);
-        req.flash('error', 'Error al cargar los préstamos especiales.');
-        res.redirect('/');
-    }
-};
-
-exports.createForm = async (req, res) => {
-    try {
-        const clientes = await Cliente.findAll();
-        const rutas = await Ruta.findAll();
-        res.render('prestamosEspeciales/create', {
-            clientes,
-            rutas,
-            messages: req.flash()
-        });
-    } catch (err) {
-        console.error('Error al cargar formulario de creación de préstamo:', err);
-        req.flash('error', 'Error al cargar el formulario de nuevo préstamo.');
-        res.redirect('/prestamos-especiales');
-    }
-};
-
-exports.create = async (req, res) => {
-    const { cliente_id, monto_solicitado, monto_aprobado, interes_porcentaje, forma_pago, observaciones } = req.body;
-    try {
-        const nuevoPrestamoId = await PrestamoEspecial.create({
-            cliente_id,
-            monto_solicitado: safeParseFloat(monto_solicitado),
-            monto_aprobado: safeParseFloat(monto_aprobado),
-            interes_porcentaje: safeParseFloat(interes_porcentaje),
-            forma_pago,
-            observaciones
-        });
-        req.flash('success', 'Préstamo especial creado exitosamente. Ahora debe ser aprobado.');
-        res.redirect(`/prestamos-especiales/${nuevoPrestamoId}`);
-    } catch (err) {
-        console.error('Error al crear préstamo especial:', err);
-        req.flash('error', 'Error al crear el préstamo especial: ' + err.message);
-        res.redirect('/prestamos-especiales/nuevo');
-    }
-};
-
-exports.show = async (req, res) => {
-    const prestamoId = parseInt(req.params.id);
-    
-    if (isNaN(prestamoId)) {
-        req.flash('error', 'ID de préstamo inválido.');
-        return res.redirect('/prestamos-especiales');
-    }
-
-    try {
-        const prestamo = await PrestamoEspecial.findById(prestamoId);
-        
-        if (!prestamo) {
-            req.flash('error', 'Préstamo especial no encontrado.');
-            return res.redirect('/prestamos-especiales');
-        }
-
-        // Parse numeric fields
-        prestamo.monto_solicitado = safeParseFloat(prestamo.monto_solicitado);
-        prestamo.monto_aprobado = safeParseFloat(prestamo.monto_aprobado);
-        prestamo.interes_porcentaje = safeParseFloat(prestamo.interes_porcentaje);
-        prestamo.capital_restante = safeParseFloat(prestamo.capital_restante);
-
-        const pagos = await PagoEspecial.findByPrestamo(prestamoId);
-        
-        // Format dates
-        prestamo.fecha_creacion_formatted = formatFecha(prestamo.fecha_creacion);
-        prestamo.fecha_aprobacion_formatted = formatFecha(prestamo.fecha_aprobacion);
-
-        // Calculate payment status
-        let totalPagado = 0;
-        let capitalPagado = 0;
-        let interesPagado = 0;
-
-        pagos.forEach(pago => {
-            pago.monto = safeParseFloat(pago.monto);
-            pago.capital_pagado = safeParseFloat(pago.capital_pagado);
-            pago.interes_pagado = safeParseFloat(pago.interes_pagado);
-
-            totalPagado += pago.monto;
-            capitalPagado += pago.capital_pagado;
-            interesPagado += pago.interes_pagado;
-            pago.fecha_formatted = new Date(pago.fecha).toLocaleDateString('es-DO', { 
-                year: 'numeric', 
-                month: '2-digit', 
-                day: '2-digit' 
-            });
-        });
-
-        res.render('prestamosEspeciales/show', {
-            prestamo,
-            pagos,
-            totalPagado,
-            capitalPagado,
-            interesPagado,
-            messages: req.flash()
-        });
-
-    } catch (err) {
-        console.error('Error al obtener el detalle del préstamo especial:', err);
-        req.flash('error', 'Error al cargar el detalle del préstamo especial.');
-        res.redirect('/prestamos-especiales');
-    }
-};
-
-// ... (rest of the controller methods remain the same, just add the parseInt check at the beginning of each method that uses req.params.id)
-
-exports.editForm = async (req, res) => {
-    const prestamoId = parseInt(req.params.id);
-    
-    if (isNaN(prestamoId)) {
-        req.flash('error', 'ID de préstamo inválido.');
-        return res.redirect('/prestamos-especiales');
-    }
-
-    try {
-        const prestamo = await PrestamoEspecial.findById(prestamoId);
-        if (!prestamo) {
-            req.flash('error', 'Préstamo especial no encontrado para editar.');
-            return res.redirect('/prestamos-especiales');
-        }
-        const clientes = await Cliente.findAll();
-        res.render('prestamosEspeciales/edit', { prestamo, clientes, messages: req.flash() });
-    } catch (err) {
-        console.error('Error al cargar formulario de edición:', err);
-        req.flash('error', 'Error al cargar el formulario de edición.');
-        res.redirect(`/prestamos-especiales/${prestamoId}`);
-    }
-};
-
-exports.update = async (req, res) => {
-    const prestamoId = parseInt(req.params.id);
-    
-    if (isNaN(prestamoId)) {
-        req.flash('error', 'ID de préstamo inválido.');
-        return res.redirect('/prestamos-especiales');
-    }
-
-    const { monto_solicitado, interes_porcentaje, forma_pago, observaciones } = req.body;
-    try {
-        const prestamo = await PrestamoEspecial.findById(prestamoId);
-        if (!prestamo) {
-            req.flash('error', 'Préstamo no encontrado para actualizar.');
-            return res.redirect(`/prestamos-especiales/${prestamoId}`);
-        }
-        
-        const updateData = {
-            monto_solicitado,
-            monto_aprobado: prestamo.monto_aprobado,
-            interes_porcentaje,
-            forma_pago,
-            estado: prestamo.estado,
-            fecha_aprobacion: prestamo.fecha_aprobacion,
-            observaciones,
-            capital_restante: prestamo.capital_restante
-        };
-
-        await PrestamoEspecial.update(prestamoId, updateData);
-
-        req.flash('success', 'Préstamo especial actualizado exitosamente.');
-        res.redirect(`/prestamos-especiales/${prestamoId}`);
-    } catch (err) {
-        console.error('Error al actualizar préstamo especial:', err);
-        req.flash('error', 'Error al actualizar el préstamo especial: ' + err.message);
-        res.redirect(`/prestamos-especiales/${prestamoId}/editar`);
-    }
-};
-
-exports.aprobarPrestamoEspecial = async (req, res) => {
-    const { id } = req.params;
-    const { monto_aprobado } = req.body;
-
-    try {
-        // Validación básica del ID
-        if (!id || isNaN(parseInt(id))) {
-            req.flash('error', 'ID de préstamo inválido');
-            return res.redirect('/prestamos-especiales/pendientes');
-        }
-
-        const prestamo = await PrestamoEspecial.findById(id);
-        
-        if (!prestamo) {
-            req.flash('error', 'Préstamo no encontrado');
-            return res.redirect('/prestamos-especiales/pendientes');
-        }
-
-        // Validación del monto
-        const montoAprobado = parseFloat(monto_aprobado);
-        if (isNaN(montoAprobado)) {
-            req.flash('error', 'El monto aprobado debe ser un número válido');
-            return res.redirect(`/prestamos-especiales`);
-        }
-
-        if (montoAprobado <= 0) {
-            req.flash('error', 'El monto aprobado debe ser mayor que cero');
-            return res.redirect(`/prestamos-especiales`);
-        }
-
-        // Actualización del préstamo
-        await PrestamoEspecial.update(id, {
-            estado: 'aprobado',
-            monto_aprobado: montoAprobado,
-            capital_restante: montoAprobado,
-            fecha_aprobacion: new Date()
-        });
-
-        req.flash('success', `Préstamo #${id} aprobado por RD$ ${montoAprobado.toLocaleString('es-DO')}`);
-        res.redirect('/prestamos-especiales'); // Redirige al listado general
-
-    } catch (error) {
-        console.error(`Error aprobando préstamo especial #${id}:`, error);
-        req.flash('error', `Error al aprobar el préstamo: ${error.message}`);
-        res.redirect('/prestamos-especiales/pendientes'); // En error, vuelve a pendientes
-    }
-};
-
-// NUEVO: Formulario para registrar un pago
-exports.pagoForm = async (req, res) => {
-    const prestamoId = parseInt(req.params.id);
-    try {
-        const prestamo = await PrestamoEspecial.findById(prestamoId);
-        if (!prestamo) {
-            req.flash('error', 'Préstamo especial no encontrado.');
-            return res.redirect('/prestamos-especiales');
-        }
-        if (prestamo.estado !== 'aprobado' && prestamo.estado !== 'pendiente') {
-            req.flash('error', 'Solo se pueden registrar pagos para préstamos aprobados o pendientes.');
-            return res.redirect(`/prestamos-especiales/${prestamoId}`);
-        }
-
-        const pagos = await PagoEspecial.findByPrestamo(prestamoId);
-
-        const montoAprobado = safeParseFloat(prestamo.monto_aprobado);
-        const interesPorcentaje = safeParseFloat(prestamo.interes_porcentaje);
-        const interesTotal = montoAprobado * (interesPorcentaje / 100);
-
-        const interesPagado = pagos.reduce((sum, p) => sum + safeParseFloat(p.interes_pagado), 0);
-        const capitalRestante = safeParseFloat(prestamo.capital_restante);
-
-        const interesPendienteDePago = Math.max(0, interesTotal - interesPagado);
-
-        res.render('prestamosEspeciales/pago', {
-            prestamo,
-            interesPendienteDePago,
-            capitalRestanteDisplay: capitalRestante,
-            messages: req.flash()
-        });
-    } catch (err) {
-        console.error('Error al cargar formulario de pago:', err);
-        req.flash('error', 'Error al cargar el formulario de pago.');
-        res.redirect(`/prestamos-especiales/${prestamoId}`);
-    }
-};
-
-// NUEVO: Procesar pago
-exports.procesarPago = async (req, res) => {
-    const prestamoId = parseInt(req.params.id);
-    const { monto_pago, metodo_pago, registrado_por } = req.body;
-
-    try {
-        const prestamo = await PrestamoEspecial.findById(prestamoId);
-        if (!prestamo || prestamo.estado !== 'aprobado') {
-            req.flash('error', 'Préstamo no válido o no aprobado.');
-            return res.redirect(`/prestamos-especiales/${prestamoId}`);
-        }
-
-        const montoPago = safeParseFloat(monto_pago);
-        if (montoPago <= 0) {
-            req.flash('error', 'Monto de pago inválido.');
-            return res.redirect(`/prestamos-especiales/${prestamoId}/pago`);
-        }
-
-        const montoAprobado = safeParseFloat(prestamo.monto_aprobado);
-        const interesPorcentaje = safeParseFloat(prestamo.interes_porcentaje);
-        const interesTotal = montoAprobado * (interesPorcentaje / 100);
-
-        const pagosPrevios = await PagoEspecial.findByPrestamo(prestamoId);
-        const interesPagadoAcumulado = pagosPrevios.reduce((sum, p) => sum + safeParseFloat(p.interes_pagado), 0);
-
-        let interesPendiente = Math.max(0, interesTotal - interesPagadoAcumulado);
-        let capitalRestante = safeParseFloat(prestamo.capital_restante);
-
-        let interesPagado = 0;
-        let capitalPagado = 0;
-        let restante = montoPago;
-
-        if (interesPendiente > 0) {
-            interesPagado = Math.min(restante, interesPendiente);
-            restante -= interesPagado;
-        }
-
-        if (restante > 0 && capitalRestante > 0) {
-            capitalPagado = Math.min(restante, capitalRestante);
-            restante -= capitalPagado;
-        }
-
-        const nuevoCapitalRestante = capitalRestante - capitalPagado;
-
-        const nuevoPagoId = await PagoEspecial.create({
-            prestamo_especial_id: prestamoId,
-            monto: montoPago,
-            capital_pagado: capitalPagado,
-            interes_pagado: interesPagado,
-            metodo: metodo_pago,
-            registrado_por: registrado_por || 'Sistema'
-        });
-
-        await PrestamoEspecial.update(prestamoId, {
-            ...prestamo,
-            capital_restante: nuevoCapitalRestante,
-            estado: (nuevoCapitalRestante <= 0.01 ? 'pagado' : prestamo.estado)
-        });
-
-        req.flash('success', `Pago de RD$ ${formatCurrency(montoPago)} registrado. Capital restante: RD$ ${formatCurrency(nuevoCapitalRestante)}`);
-        res.redirect(`/prestamos-especiales/${prestamoId}/recibo/${nuevoPagoId}`);
-    } catch (err) {
-        console.error('Error al procesar el pago:', err);
-        req.flash('error', 'Error al procesar el pago: ' + err.message);
-        res.redirect(`/prestamos-especiales/${prestamoId}/pago`);
-    }
-};
-
-exports.recibo = async (req, res) => {
-    const prestamoId = parseInt(req.params.id);
-    const pagoId = parseInt(req.params.pagoId);
-    
-    if (isNaN(prestamoId) || isNaN(pagoId)) {
-        req.flash('error', 'ID de préstamo o pago inválido.');
-        return res.redirect('/prestamos-especiales');
-    }
-
-    try {
-        const pago = await PagoEspecial.findById(pagoId);
-
-        if (!pago || pago.prestamo_especial_id != prestamoId) {
-            req.flash('error', 'Recibo de pago no encontrado o no corresponde al préstamo.');
-            return res.redirect(`/prestamos-especiales/${prestamoId}`);
-        }
-
-        const prestamo = await PrestamoEspecial.findById(prestamoId);
-        if (!prestamo) {
-            req.flash('error', 'Préstamo asociado al pago no encontrado.');
-            return res.redirect(`/prestamos-especiales`);
-        }
-
-        const cliente = await Cliente.findById(prestamo.cliente_id);
-        let ruta = null;
-        if (cliente && cliente.ruta_id) {
-            ruta = await Ruta.findById(cliente.ruta_id);
-        }
-
-        pago.cliente = cliente;
-        pago.prestamoEspecial = prestamo;
-        if (ruta) pago.ruta = ruta;
-
-        if (pago.prestamoEspecial.capital_restante != null) {
-            pago.prestamoEspecial.capital_restante = safeParseFloat(pago.prestamoEspecial.capital_restante);
-        }
-
-        if (pago.fecha) {
-            pago.fecha_formatted = new Date(pago.fecha).toLocaleString('es-DO', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } else {
-            pago.fecha_formatted = 'Fecha no disponible';
-        }
-
-        res.render('prestamosEspeciales/recibo', { pago, messages: req.flash() });
-
-    } catch (err) {
-        console.error('Error al generar recibo:', err);
-        req.flash('error', 'Error al generar el recibo.');
-        res.redirect(`/prestamos-especiales/${prestamoId}`);
-    }
-};
-
-// Rechazar préstamo especial
-exports.rechazarPrestamoEspecial = async (req, res) => {
-  const { id } = req.params;
-  try {
-    await PrestamoEspecial.update(id, { estado: 'rechazado' });
-    req.flash('success', 'Préstamo especial rechazado correctamente.');
-    res.redirect('/prestamos/pendientes');
-  } catch (error) {
-    console.error(`❌ Error al rechazar préstamo especial (${id}):`, error.message);
-    req.flash('error', 'No se pudo rechazar el préstamo especial. Intenta nuevamente.');
-    res.redirect('/prestamos/pendientes');
+  parseId: (id) => {
+    const parsed = parseInt(id);
+    return isNaN(parsed) ? null : parsed;
   }
+};
+
+// Middleware de validación de ID
+const validatePrestamoId = (req, res, next) => {
+  const prestamoId = formatHelpers.parseId(req.params.id);
+  if (!prestamoId) {
+    req.flash('error', 'ID de préstamo inválido');
+    return res.redirect('/prestamos-especiales');
+  }
+  req.prestamoId = prestamoId;
+  next();
+};
+
+// Controlador principal
+module.exports = {
+  // Listar todos los préstamos
+  async index(req, res) {
+    try {
+      const prestamos = await PrestamoEspecial.findAll();
+      const formatted = prestamos.map(p => ({
+        ...p,
+        fecha_creacion_formatted: formatHelpers.fecha(p.fecha_creacion),
+        monto_solicitado: formatHelpers.currency(p.monto_solicitado)
+      }));
+      
+      res.render('prestamosEspeciales/index', { 
+        prestamos: formatted, 
+        messages: req.flash() 
+      });
+    } catch (error) {
+      console.error('Error al obtener préstamos especiales:', error);
+      req.flash('error', 'Error al cargar los préstamos');
+      res.redirect('/');
+    }
+  },
+
+  // Formulario de creación
+  async createForm(req, res) {
+    try {
+      const [clientes, rutas] = await Promise.all([
+        Cliente.findAll(),
+        Ruta.findAll()
+      ]);
+      
+      res.render('prestamosEspeciales/create', {
+        clientes,
+        rutas,
+        messages: req.flash()
+      });
+    } catch (error) {
+      console.error('Error al cargar formulario:', error);
+      req.flash('error', 'Error al cargar formulario');
+      res.redirect('/prestamos-especiales');
+    }
+  },
+
+  // Crear nuevo préstamo
+  async create(req, res) {
+    try {
+      const { cliente_id, monto_solicitado, interes_porcentaje, forma_pago, observaciones } = req.body;
+      
+      const prestamoId = await PrestamoEspecial.create({
+        cliente_id,
+        monto_solicitado: formatHelpers.safeFloat(monto_solicitado),
+        monto_aprobado: 0, // Se establece en aprobación
+        interes_porcentaje: formatHelpers.safeFloat(interes_porcentaje),
+        forma_pago,
+        observaciones,
+        estado: 'pendiente'
+      });
+
+      req.flash('success', 'Préstamo especial creado exitosamente');
+      res.redirect(`/prestamos-especiales/${prestamoId}`);
+    } catch (error) {
+      console.error('Error al crear préstamo:', error);
+      req.flash('error', `Error al crear préstamo: ${error.message}`);
+      res.redirect('/prestamos-especiales/nuevo');
+    }
+  },
+
+  // Mostrar detalles
+  async show(req, res) {
+    try {
+      const prestamo = await PrestamoEspecial.findById(req.prestamoId);
+      if (!prestamo) {
+        req.flash('error', 'Préstamo no encontrado');
+        return res.redirect('/prestamos-especiales');
+      }
+
+      // Formatear montos
+      prestamo.monto_solicitado = formatHelpers.safeFloat(prestamo.monto_solicitado);
+      prestamo.monto_aprobado = formatHelpers.safeFloat(prestamo.monto_aprobado);
+      prestamo.interes_porcentaje = formatHelpers.safeFloat(prestamo.interes_porcentaje);
+      prestamo.capital_restante = formatHelpers.safeFloat(prestamo.capital_restante);
+
+      // Obtener y formatear pagos
+      const pagos = await PagoEspecial.findByPrestamo(req.prestamoId);
+      let totalPagado = 0, capitalPagado = 0, interesPagado = 0;
+
+      const pagosFormatted = pagos.map(pago => {
+        pago.monto = formatHelpers.safeFloat(pago.monto);
+        pago.capital_pagado = formatHelpers.safeFloat(pago.capital_pagado);
+        pago.interes_pagado = formatHelpers.safeFloat(pago.interes_pagado);
+        pago.fecha_formatted = formatHelpers.fecha(pago.fecha);
+
+        totalPagado += pago.monto;
+        capitalPagado += pago.capital_pagado;
+        interesPagado += pago.interes_pagado;
+
+        return pago;
+      });
+
+      res.render('prestamosEspeciales/show', {
+        prestamo: {
+          ...prestamo,
+          fecha_creacion_formatted: formatHelpers.fecha(prestamo.fecha_creacion),
+          fecha_aprobacion_formatted: formatHelpers.fecha(prestamo.fecha_aprobacion)
+        },
+        pagos: pagosFormatted,
+        totalPagado,
+        capitalPagado,
+        interesPagado,
+        messages: req.flash()
+      });
+    } catch (error) {
+      console.error('Error al mostrar préstamo:', error);
+      req.flash('error', 'Error al cargar detalles');
+      res.redirect('/prestamos-especiales');
+    }
+  },
+
+  // Formulario de edición
+  async editForm(req, res) {
+    try {
+      const [prestamo, clientes] = await Promise.all([
+        PrestamoEspecial.findById(req.prestamoId),
+        Cliente.findAll()
+      ]);
+
+      if (!prestamo) {
+        req.flash('error', 'Préstamo no encontrado');
+        return res.redirect('/prestamos-especiales');
+      }
+
+      res.render('prestamosEspeciales/edit', { 
+        prestamo, 
+        clientes,
+        messages: req.flash() 
+      });
+    } catch (error) {
+      console.error('Error al cargar formulario:', error);
+      req.flash('error', 'Error al cargar formulario');
+      res.redirect(`/prestamos-especiales/${req.prestamoId}`);
+    }
+  },
+
+  // Actualizar préstamo
+  async update(req, res) {
+    try {
+      const { monto_solicitado, interes_porcentaje, forma_pago, observaciones } = req.body;
+      
+      await PrestamoEspecial.update(req.prestamoId, {
+        monto_solicitado: formatHelpers.safeFloat(monto_solicitado),
+        interes_porcentaje: formatHelpers.safeFloat(interes_porcentaje),
+        forma_pago,
+        observaciones
+      });
+
+      req.flash('success', 'Préstamo actualizado exitosamente');
+      res.redirect(`/prestamos-especiales/${req.prestamoId}`);
+    } catch (error) {
+      console.error('Error al actualizar:', error);
+      req.flash('error', `Error al actualizar: ${error.message}`);
+      res.redirect(`/prestamos-especiales/${req.prestamoId}/editar`);
+    }
+  },
+
+  // Aprobar préstamo
+  async aprobar(req, res) {
+    try {
+      const { monto_aprobado } = req.body;
+      const monto = formatHelpers.safeFloat(monto_aprobado);
+
+      if (monto <= 0) {
+        req.flash('error', 'El monto aprobado debe ser positivo');
+        return res.redirect('/prestamos-especiales/pendientes');
+      }
+
+      await PrestamoEspecial.update(req.prestamoId, {
+        estado: 'aprobado',
+        monto_aprobado: monto,
+        capital_restante: monto,
+        fecha_aprobacion: new Date()
+      });
+
+      req.flash('success', `Préstamo #${req.prestamoId} aprobado por RD$ ${formatHelpers.currency(monto)}`);
+      res.redirect('/prestamos-especiales');
+    } catch (error) {
+      console.error('Error al aprobar:', error);
+      req.flash('error', 'Error al aprobar préstamo');
+      res.redirect('/prestamos-especiales/pendientes');
+    }
+  },
+
+  // Rechazar préstamo
+  async rechazar(req, res) {
+    try {
+      await PrestamoEspecial.update(req.prestamoId, { 
+        estado: 'rechazado',
+        fecha_rechazo: new Date()
+      });
+      
+      req.flash('success', 'Préstamo rechazado correctamente');
+      res.redirect('/prestamos-especiales/pendientes');
+    } catch (error) {
+      console.error('Error al rechazar:', error);
+      req.flash('error', 'Error al rechazar préstamo');
+      res.redirect('/prestamos-especiales/pendientes');
+    }
+  },
+
+  // Formulario de pago
+  async pagoForm(req, res) {
+    try {
+      const prestamo = await PrestamoEspecial.findById(req.prestamoId);
+      if (!prestamo || !['aprobado', 'pendiente'].includes(prestamo.estado)) {
+        req.flash('error', 'No se pueden registrar pagos para este préstamo');
+        return res.redirect(`/prestamos-especiales/${req.prestamoId}`);
+      }
+
+      const pagos = await PagoEspecial.findByPrestamo(req.prestamoId);
+      const montoAprobado = formatHelpers.safeFloat(prestamo.monto_aprobado);
+      const interesTotal = montoAprobado * (formatHelpers.safeFloat(prestamo.interes_porcentaje) / 100);
+      const interesPagado = pagos.reduce((sum, p) => sum + formatHelpers.safeFloat(p.interes_pagado), 0);
+
+      res.render('prestamosEspeciales/pago', {
+        prestamo,
+        interesPendienteDePago: Math.max(0, interesTotal - interesPagado),
+        capitalRestanteDisplay: formatHelpers.safeFloat(prestamo.capital_restante),
+        messages: req.flash()
+      });
+    } catch (error) {
+      console.error('Error al cargar formulario:', error);
+      req.flash('error', 'Error al cargar formulario de pago');
+      res.redirect(`/prestamos-especiales/${req.prestamoId}`);
+    }
+  },
+
+  // Procesar pago
+  async procesarPago(req, res) {
+    try {
+      const { monto_pago, metodo_pago } = req.body;
+      const montoPago = formatHelpers.safeFloat(monto_pago);
+
+      if (montoPago <= 0) {
+        req.flash('error', 'Monto de pago inválido');
+        return res.redirect(`/prestamos-especiales/${req.prestamoId}/pago`);
+      }
+
+      const [prestamo, pagosPrevios] = await Promise.all([
+        PrestamoEspecial.findById(req.prestamoId),
+        PagoEspecial.findByPrestamo(req.prestamoId)
+      ]);
+
+      if (!prestamo || prestamo.estado !== 'aprobado') {
+        req.flash('error', 'Préstamo no válido para pago');
+        return res.redirect(`/prestamos-especiales/${req.prestamoId}`);
+      }
+
+      // Cálculo de distribución del pago
+      const resultadoPago = this._calcularDistribucionPago(
+        prestamo, 
+        pagosPrevios, 
+        montoPago
+      );
+
+      // Registrar pago
+      const pagoId = await PagoEspecial.create({
+        prestamo_especial_id: req.prestamoId,
+        monto: montoPago,
+        capital_pagado: resultadoPago.capitalPagado,
+        interes_pagado: resultadoPago.interesPagado,
+        metodo: metodo_pago,
+        registrado_por: req.user?.nombre || 'Sistema'
+      });
+
+      // Actualizar préstamo
+      await PrestamoEspecial.update(req.prestamoId, {
+        capital_restante: resultadoPago.nuevoCapitalRestante,
+        estado: resultadoPago.nuevoEstado
+      });
+
+      req.flash('success', `Pago de RD$ ${formatHelpers.currency(montoPago)} registrado`);
+      res.redirect(`/prestamos-especiales/${req.prestamoId}/recibo/${pagoId}`);
+    } catch (error) {
+      console.error('Error al procesar pago:', error);
+      req.flash('error', `Error al procesar pago: ${error.message}`);
+      res.redirect(`/prestamos-especiales/${req.prestamoId}/pago`);
+    }
+  },
+
+  // Recibo de pago
+  async recibo(req, res) {
+    try {
+      const pagoId = formatHelpers.parseId(req.params.pagoId);
+      if (!pagoId) {
+        req.flash('error', 'ID de pago inválido');
+        return res.redirect(`/prestamos-especiales/${req.prestamoId}`);
+      }
+
+      const [pago, prestamo] = await Promise.all([
+        PagoEspecial.findById(pagoId),
+        PrestamoEspecial.findById(req.prestamoId)
+      ]);
+
+      if (!pago || pago.prestamo_especial_id !== req.prestamoId || !prestamo) {
+        req.flash('error', 'Recibo no encontrado');
+        return res.redirect(`/prestamos-especiales/${req.prestamoId}`);
+      }
+
+      // Obtener datos adicionales
+      const [cliente, ruta] = await Promise.all([
+        Cliente.findById(prestamo.cliente_id),
+        prestamo.cliente_id ? Ruta.findById(prestamo.cliente_id) : Promise.resolve(null)
+      ]);
+
+      res.render('prestamosEspeciales/recibo', {
+        pago: {
+          ...pago,
+          cliente,
+          ruta,
+          prestamoEspecial: {
+            ...prestamo,
+            capital_restante: formatHelpers.safeFloat(prestamo.capital_restante)
+          },
+          fecha_formatted: pago.fecha 
+            ? new Date(pago.fecha).toLocaleString('es-DO')
+            : 'Fecha no disponible'
+        },
+        messages: req.flash()
+      });
+    } catch (error) {
+      console.error('Error al generar recibo:', error);
+      req.flash('error', 'Error al generar recibo');
+      res.redirect(`/prestamos-especiales/${req.prestamoId}`);
+    }
+  },
+
+  // Método auxiliar para cálculo de distribución de pago
+  _calcularDistribucionPago(prestamo, pagosPrevios, montoPago) {
+    const montoAprobado = formatHelpers.safeFloat(prestamo.monto_aprobado);
+    const interesTotal = montoAprobado * (formatHelpers.safeFloat(prestamo.interes_porcentaje) / 100);
+    const interesPagado = pagosPrevios.reduce((sum, p) => sum + formatHelpers.safeFloat(p.interes_pagado), 0);
+    
+    let interesPendiente = Math.max(0, interesTotal - interesPagado);
+    let capitalRestante = formatHelpers.safeFloat(prestamo.capital_restante);
+    let restante = montoPago;
+    
+    // Primero aplicar a interés pendiente
+    const interesPagadoNow = Math.min(restante, interesPendiente);
+    restante -= interesPagadoNow;
+    
+    // Luego aplicar a capital
+    const capitalPagado = Math.min(restante, capitalRestante);
+    const nuevoCapitalRestante = capitalRestante - capitalPagado;
+    
+    return {
+      interesPagado: interesPagadoNow,
+      capitalPagado,
+      nuevoCapitalRestante,
+      nuevoEstado: nuevoCapitalRestante <= 0.01 ? 'pagado' : prestamo.estado
+    };
+  },
+
+  // Middleware de validación
+  validatePrestamoId
 };

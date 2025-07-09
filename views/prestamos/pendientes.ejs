@@ -1,325 +1,224 @@
 <%- include('../partials/header', { title: title }) %>
 
-  <style>
-    .table-responsive {
-      max-height: 70vh;
-      overflow-y: auto;
-    }
-    .table th {
-      position: sticky;
-      top: 0;
-      background-color: #f8f9fa;
-      z-index: 10;
-    }
-    .badge {
-      font-size: 0.85em;
-    }
-    .btn-group .btn {
-      margin-right: 5px;
-    }
-    .btn-group .btn:last-child {
-      margin-right: 0;
-    }
-    .modal-body strong {
-      color: #007bff;
-    }
-    .badge.bg-warning {
-      color: #212529;
-    }
-  </style>
-</head>
-<body>
+<div class="container-fluid px-4 py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mt-4 mb-0 fw-bold text-primary">Préstamos Pendientes de Aprobación</h1>
+    <a href="/dashboard" class="btn btn-outline-secondary rounded-pill px-4">
+      <i class="fas fa-arrow-left me-2"></i> Volver al Dashboard
+    </a>
+  </div>
 
-
-  <div class="container-fluid mt-3">
-    <div class="row">
-      <div class="col-md-12">
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title">Préstamos Pendientes de Aprobación</h3>
-            <div class="card-tools">
-              <div class="input-group input-group-sm">
-                <input type="text" class="form-control" placeholder="Buscar..." id="searchInput">
-                <div class="input-group-append">
-                  <button class="btn btn-primary">
-                    <i class="fas fa-search"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="card-body table-responsive p-0">
-            <table class="table table-hover text-nowrap">
-              <thead>
+  <% if (prestamos.length === 0) { %>
+    <div class="alert alert-info d-flex align-items-center p-4 rounded-3 shadow-sm" role="alert">
+      <i class="fas fa-info-circle me-3 fa-2x"></i>
+      <div>
+        <h4 class="alert-heading mb-1">¡Todo en orden!</h4>
+        <p class="mb-0">No hay préstamos pendientes de aprobación en este momento. Puede crear uno nuevo o revisar el estado de los préstamos existentes.</p>
+      </div>
+    </div>
+  <% } else { %>
+    <div class="card border-0 shadow-lg rounded-4">
+      <div class="card-header bg-primary bg-gradient text-white py-3 rounded-top-4">
+        <h5 class="mb-0 fw-bold"><i class="fas fa-list-alt me-2"></i> Listado de Solicitudes Pendientes</h5>
+      </div>
+      <div class="card-body p-4">
+        <div class="table-responsive">
+          <table class="table table-hover table-striped mb-0 align-middle">
+            <thead class="table-dark">
+              <tr>
+                <th scope="col">Cliente</th>
+                <th scope="col">Monto Solicitado</th>
+                <th scope="col">Monto Aprobado</th>
+                <th scope="col">Cuotas</th>
+                <th scope="col">Fecha Solicitud</th>
+                <th scope="col" class="text-center">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% prestamos.forEach(p => { %>
                 <tr>
-                  <th>ID</th>
-                  <th>Cliente</th>
-                  <th>Tipo</th>
-                  <th>Monto Solicitado</th>
-                  <th>Fecha Solicitud</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="bg-light p-2 rounded-circle me-2">
+                        <i class="fas fa-user text-muted"></i>
+                      </div>
+                      <span class="fw-medium text-dark"><%= p.cliente_nombre %> <%= p.cliente_apellidos %></span>
+                    </div>
+                  </td>
+                  <td><span class="badge bg-info-subtle text-info fs-6 py-2 px-3">RD$ <%= Number(p.monto_solicitado).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span></td>
+                  <td><span class="badge bg-primary-subtle text-primary fs-6 py-2 px-3">RD$ <%= Number(p.monto_aprobado).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span></td>
+                  <td><span class="badge bg-secondary text-white py-2 px-3"><%= p.cuotas %></span></td>
+                  <td><span class="text-muted"><%= new Date(p.created_at).toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' }) %></span></td>
+                  <td class="text-center">
+                    <form method="POST" action="/prestamos/<%= p.id %>/aprobar" class="d-inline-block">
+                     <button 
+                        class="btn btn-success btn-lg rounded-pill px-4 shadow-sm aprobar-btn" data-id="<%= p.id %>">
+                        <i class="fas fa-check-circle me-2"></i> Aprobar
+                      </button>
+                    </form>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                <% if (prestamos.length > 0) { %>
-                  <% prestamos.forEach(prestamo => { %>
-                    <tr>
-                      <td><%= prestamo.id %></td>
-                      <td>
-                        <% if (prestamo.cliente_nombre) { %>
-                          <%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %>
-                        <% } else { %>
-                          Cliente no encontrado
-                        <% } %>
-                      </td>
-                      <td>
-                        <% if (prestamo.tipo === 'especial') { %>
-                          <span class="badge bg-info">Especial</span>
-                        <% } else { %>
-                          <span class="badge bg-primary">Normal</span>
-                        <% } %>
-                      </td>
-                      <td>RD$ <%= formatCurrency(prestamo.monto_solicitado) %></td>
-                      <td><%= formatFecha(prestamo.fecha_creacion) %></td>
-                      <td>
-                        <span class="badge bg-warning">Pendiente</span>
-                      </td>
-                      <td>
-                        <div class="btn-group">
-                          <% if (prestamo.tipo === 'especial') { %>
-                            <button class="btn btn-sm btn-success" data-toggle="modal" data-target="#aprobarModalEspecial" 
-                                    data-id="<%= prestamo.id %>" data-nombre="<%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %>">
-                              <i class="fas fa-check"></i> Aprobar
-                            </button>
-                            <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#rechazarModalEspecial" 
-                                    data-id="<%= prestamo.id %>" data-nombre="<%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %>">
-                              <i class="fas fa-times"></i> Rechazar
-                            </button>
-                          <% } else { %>
-                            <button class="btn btn-sm btn-success" data-toggle="modal" data-target="#aprobarModalNormal" 
-                                    data-id="<%= prestamo.id %>" data-nombre="<%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %>">
-                              <i class="fas fa-check"></i> Aprobar
-                            </button>
-                            <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#rechazarModalNormal" 
-                                    data-id="<%= prestamo.id %>" data-nombre="<%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %>">
-                              <i class="fas fa-times"></i> Rechazar
-                            </button>
-                          <% } %>
-                          <a href="/prestamos/<%= prestamo.id %>" class="btn btn-sm btn-info">
-                            <i class="fas fa-eye"></i> Ver
-                          </a>
-                        </div>
-                      </td>
-                    </tr>
-                  <% }); %>
-                <% } else { %>
-                  <tr>
-                    <td colspan="7" class="text-center">No hay préstamos pendientes de aprobación</td>
-                  </tr>
-                <% } %>
-              </tbody>
-            </table>
-          </div>
-          <div class="card-footer clearfix">
-            <ul class="pagination pagination-sm m-0 float-right">
-              <li class="page-item"><a class="page-link" href="#">«</a></li>
-              <li class="page-item active"><a class="page-link" href="#">1</a></li>
-              <li class="page-item"><a class="page-link" href="#">»</a></li>
-            </ul>
-          </div>
+              <% }) %>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
-  </div>
+  <% } %>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const aprobarBtns = document.querySelectorAll('.aprobar-btn');
 
-  <!-- Modal para aprobar préstamo especial -->
-  <div class="modal fade" id="aprobarModalEspecial" tabindex="-1" role="dialog" aria-labelledby="aprobarModalEspecialLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="aprobarModalEspecialLabel">Aprobar Préstamo Especial</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <form action="/prestamos-especiales/aprobar/:id" method="POST" id="aprobarEspecialForm">
-          <div class="modal-body">
-            <p>Estás a punto de aprobar el préstamo especial para <strong id="clienteNombreEspecial"></strong></p>
-            <div class="form-group">
-              <label for="montoAprobadoEspecial">Monto a aprobar (RD$)</label>
-              <input type="number" step="0.01" min="0" class="form-control" id="montoAprobadoEspecial" name="monto_aprobado" required>
-            </div>
-            <div class="form-group">
-              <label for="observacionesEspecial">Observaciones (opcional)</label>
-              <textarea class="form-control" id="observacionesEspecial" name="observaciones" rows="3"></textarea>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-success">Confirmar Aprobación</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+    aprobarBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const prestamoId = btn.getAttribute('data-id');
 
-  <!-- Modal para rechazar préstamo especial -->
-  <div class="modal fade" id="rechazarModalEspecial" tabindex="-1" role="dialog" aria-labelledby="rechazarModalEspecialLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="rechazarModalEspecialLabel">Rechazar Préstamo Especial</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <form action="/prestamos-especiales/rechazar/:id" method="POST" id="rechazarEspecialForm">
-          <div class="modal-body">
-            <p>Estás a punto de rechazar el préstamo especial para <strong id="clienteNombreRechazoEspecial"></strong></p>
-            <div class="form-group">
-              <label for="motivoRechazoEspecial">Motivo del rechazo</label>
-              <textarea class="form-control" id="motivoRechazoEspecial" name="motivo" rows="3" required></textarea>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-danger">Confirmar Rechazo</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal para aprobar préstamo normal -->
-  <div class="modal fade" id="aprobarModalNormal" tabindex="-1" role="dialog" aria-labelledby="aprobarModalNormalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="aprobarModalNormalLabel">Aprobar Préstamo Normal</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <form action="/prestamos/aprobar/:id" method="POST" id="aprobarNormalForm">
-          <div class="modal-body">
-            <p>Estás a punto de aprobar el préstamo normal para <strong id="clienteNombreNormal"></strong></p>
-            <div class="form-group">
-              <label for="montoAprobadoNormal">Monto a aprobar (RD$)</label>
-              <input type="number" step="0.01" min="0" class="form-control" id="montoAprobadoNormal" name="monto_aprobado" required>
-            </div>
-            <div class="form-group">
-              <label for="interesNormal">Tasa de interés (%)</label>
-              <input type="number" step="0.01" min="0" class="form-control" id="interesNormal" name="interes_porcentaje" value="43" required>
-            </div>
-            <div class="form-group">
-              <label for="cuotasNormal">Número de cuotas</label>
-              <input type="number" min="1" class="form-control" id="cuotasNormal" name="cuotas" value="12" required>
-            </div>
-            <div class="form-group">
-              <label for="formaPagoNormal">Forma de pago</label>
-              <select class="form-control" id="formaPagoNormal" name="forma_pago" required>
-                <option value="diario">Diario</option>
-                <option value="semanal">Semanal</option>
-                <option value="quincenal">Quincenal</option>
-                <option value="mensual" selected>Mensual</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label for="observacionesNormal">Observaciones (opcional)</label>
-              <textarea class="form-control" id="observacionesNormal" name="observaciones" rows="3"></textarea>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-success">Confirmar Aprobación</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal para rechazar préstamo normal -->
-  <div class="modal fade" id="rechazarModalNormal" tabindex="-1" role="dialog" aria-labelledby="rechazarModalNormalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="rechazarModalNormalLabel">Rechazar Préstamo Normal</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <form action="/prestamos/rechazar/:id" method="POST" id="rechazarNormalForm">
-          <div class="modal-body">
-            <p>Estás a punto de rechazar el préstamo normal para <strong id="clienteNombreRechazoNormal"></strong></p>
-            <div class="form-group">
-              <label for="motivoRechazoNormal">Motivo del rechazo</label>
-              <textarea class="form-control" id="motivoRechazoNormal" name="motivo" rows="3" required></textarea>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-danger">Confirmar Rechazo</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-
-  <!-- jQuery, Popper.js, Bootstrap JS -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
-
-  <script>
-  $(document).ready(function() {
-    // Configurar modales para préstamos especiales
-    $('#aprobarModalEspecial').on('show.bs.modal', function(event) {
-      const button = $(event.relatedTarget);
-      const id = button.data('id');
-      const nombre = button.data('nombre');
-      const modal = $(this);
-      modal.find('#clienteNombreEspecial').text(nombre);
-      modal.find('form').attr('action', `/prestamos-especiales/aprobar/${id}`);
-    });
-
-    $('#rechazarModalEspecial').on('show.bs.modal', function(event) {
-      const button = $(event.relatedTarget);
-      const id = button.data('id');
-      const nombre = button.data('nombre');
-      const modal = $(this);
-      modal.find('#clienteNombreRechazoEspecial').text(nombre);
-      modal.find('form').attr('action', `/prestamos-especiales/rechazar/${id}`);
-    });
-
-    // Configurar modales para préstamos normales
-    $('#aprobarModalNormal').on('show.bs.modal', function(event) {
-      const button = $(event.relatedTarget);
-      const id = button.data('id');
-      const nombre = button.data('nombre');
-      const modal = $(this);
-      modal.find('#clienteNombreNormal').text(nombre);
-      modal.find('form').attr('action', `/prestamos/aprobar/${id}`);
-    });
-
-    $('#rechazarModalNormal').on('show.bs.modal', function(event) {
-      const button = $(event.relatedTarget);
-      const id = button.data('id');
-      const nombre = button.data('nombre');
-      const modal = $(this);
-      modal.find('#clienteNombreRechazoNormal').text(nombre);
-      modal.find('form').attr('action', `/prestamos/rechazar/${id}`);
-    });
-
-    // Búsqueda en la tabla
-    $('#searchInput').keyup(function() {
-      const value = $(this).val().toLowerCase();
-      $('table tbody tr').filter(function() {
-        $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+        Swal.fire({
+          title: '¿Aprobar préstamo?',
+          text: 'Esta acción no se puede deshacer.',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Sí, aprobar',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/prestamos/${prestamoId}/aprobar`;
+            document.body.appendChild(form);
+            form.submit();
+          }
+        });
       });
     });
   });
-  </script>
-</body>
-</html>
+</script>
+
+
 <%- include('../partials/footer') %>
+
+<style>
+  body {
+    background-color: #f5f7fa; /* Matches main layout's background */
+    color: #3c4043;
+  }
+
+  .container-fluid {
+    padding-top: 20px; /* Adjust if header includes margin-top */
+  }
+
+  .text-primary {
+    color: #1a73e8 !important; /* Ensure consistent primary color */
+  }
+
+  .btn-outline-secondary {
+    border-color: #6c757d;
+    color: #6c757d;
+  }
+
+  .btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: #fff;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+
+  .alert-info {
+    background-color: #e0f7fa; /* Light blue background */
+    border-color: #b3e5fc; /* Slightly darker border */
+    color: #01579b; /* Darker blue text */
+  }
+
+  .alert-info .alert-heading {
+    color: #01579b; /* Darker blue for heading */
+  }
+
+  .alert-info i {
+    color: #039be5; /* Accent blue for icon */
+  }
+
+  .card {
+    border-radius: 0.75rem; /* Matches main layout's rounded cards */
+    overflow: hidden;
+  }
+
+  .card-header {
+    background: linear-gradient(90deg, #1a73e8, #0d47a1); /* Gradient from primary to a darker blue */
+    color: white;
+    padding: 1.5rem 2rem;
+    border-bottom: none;
+  }
+
+  .card-header h5 {
+    font-weight: 700;
+    font-size: 1.3rem;
+  }
+
+  .table-responsive {
+    border-radius: 0.75rem; /* Match card radius */
+    overflow: hidden; /* Ensure rounded corners are respected */
+  }
+
+  .table {
+    border-collapse: separate; /* Required for border-radius on cells */
+    border-spacing: 0;
+  }
+
+  .table thead th {
+    background-color: #212529; /* Darker header */
+    color: #fff;
+    font-weight: 600;
+    padding: 1rem 1.25rem;
+    vertical-align: middle;
+  }
+
+  .table tbody td {
+    padding: 1rem 1.25rem;
+    vertical-align: middle;
+    color: #495057;
+  }
+
+  .table-hover tbody tr:hover {
+    background-color: #f2f2f2; /* Light hover effect */
+  }
+
+  /* Custom badges to match overall theme */
+  .badge {
+    font-size: 0.95em; /* Slightly larger font for better readability */
+    padding: 0.5em 0.8em;
+    border-radius: 0.5rem; /* More rounded */
+    font-weight: 600;
+  }
+
+  .bg-primary-subtle {
+    background-color: #e0f2f7 !important;
+    color: #1a73e8 !important;
+  }
+
+  .bg-info-subtle {
+    background-color: #dbeeff !important;
+    color: #007bff !important;
+  }
+
+  .btn-success {
+    background-color: #34a853; /* Using secondary-color from root variables */
+    border-color: #34a853;
+  }
+
+  .btn-success:hover {
+    background-color: #2e8b4e;
+    border-color: #2e8b4e;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+
+  .btn-lg {
+    font-size: 1.05rem; /* Larger button text */
+    padding: 0.6rem 1.2rem;
+  }
+
+  .rounded-pill {
+    border-radius: 50rem !important; /* Full pill shape */
+  }
+</style>

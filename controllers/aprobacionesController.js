@@ -1,3 +1,6 @@
+// File: controllers/aprovacionesController.js
+// Controlador para manejar la aprobación de préstamos normales y especiales
+
 const Prestamo = require('../models/Prestamo');
 const PrestamoEspecial = require('../models/PrestamoEspecial');
 const moment = require('moment');
@@ -58,12 +61,52 @@ class ApprovalController {
         dateString ? moment(dateString).format('DD/MM/YYYY') : 'Sin fecha'
     };
   }
+static async approveNormal(req, res) {
+  try {
+    const { id } = req.params;
+    const { approved_amount, interest_rate } = req.body;
+    
+    await Prestamo.aprobar(id, {
+      monto_aprobado: approved_amount,
+      interes_porcentaje: interest_rate,
+      estado: 'aprobado'
+    });
+    
+    req.flash('success', 'Préstamo normal aprobado');
+    res.redirect('/pendientes');
+  } catch (error) {
+    this._handleError(req, res, error);
+  }
+}
 
+static async approveSpecial(req, res) {
+  try {
+    const { id } = req.params;
+    const { approved_amount } = req.body;
+    
+    await PrestamoEspecial.update(id, {
+      monto_aprobado: approved_amount,
+      estado: 'aprobado',
+      fecha_aprobacion: new Date()
+    });
+    
+    req.flash('success', 'Préstamo especial aprobado');
+    res.redirect('/pendientes');
+  } catch (error) {
+    this._handleError(req, res, error);
+  }
+}
+
+// Métodos similares para rejectNormal y rejectSpecial
   static _handleError(req, res, error) {
     console.error('[ApprovalController] Error:', error);
     req.flash('error', 'Error al procesar solicitud');
     res.redirect('/dashboard');
   }
+
+  
 }
+
+
 
 module.exports = ApprovalController;
