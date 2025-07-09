@@ -221,12 +221,12 @@ exports.aprobarPrestamoEspecial = async (req, res) => {
         const montoAprobado = parseFloat(monto_aprobado);
         if (isNaN(montoAprobado)) {
             req.flash('error', 'El monto aprobado debe ser un número válido');
-            return res.redirect(`/prestamos-especiales/${id}/aprobar`);
+            return res.redirect(`/prestamos-especiales`);
         }
 
         if (montoAprobado <= 0) {
             req.flash('error', 'El monto aprobado debe ser mayor que cero');
-            return res.redirect(`/prestamos-especiales/${id}/aprobar`);
+            return res.redirect(`/prestamos-especiales`);
         }
 
         // Actualización del préstamo
