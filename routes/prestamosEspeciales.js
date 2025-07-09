@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { checkRole } = require('../middlewares/roles');
-const controller = require('../controllers/prestamoEspecialController');
+const controller = require('../controllers/prestamosEspecialesController');
 
 // Middleware de validación de ID
 const validateId = (req, res, next) => {
