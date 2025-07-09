@@ -3,6 +3,7 @@ const Prestamo = require('../models/Prestamo');
 const Cliente = require('../models/Cliente');
 const Cuota = require('../models/Cuota');
 const Pago = require('../models/Pago');
+const Ruta = require('../models/Ruta');
 const moment = require('moment');
 const { imprimirTicket } = require('../utils/impresora');
 
@@ -36,9 +37,14 @@ exports.index = async (req, res) => {
 
 exports.createForm = async (req, res) => {
   try {
-    const clientes = await Cliente.findAll();
+    const [clientes, rutas] = await Promise.all([
+      Cliente.findAll(),
+      Ruta.findAll()
+    ]);
+
     res.render('prestamos/create', {
       clientes,
+      rutas,
       messages: req.flash()
     });
   } catch (error) {
