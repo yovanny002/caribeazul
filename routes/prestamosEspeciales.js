@@ -19,7 +19,6 @@ router.get('/create', checkRole(['administrador', 'supervisor']), controller.cre
 router.post('/create', checkRole(['administrador', 'supervisor']), controller.create);
 
 
-
 // Rutas para un préstamo específico
 router.route('/:id')
   .all(validateId)

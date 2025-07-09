@@ -19,7 +19,7 @@ router.get('/', checkRole(['administrador', 'supervisor', 'servicio']), prestamo
 router.get('/create', checkRole(['administrador', 'supervisor']), prestamoController.createForm);
 router.post('/create', checkRole(['administrador', 'supervisor']), prestamoController.create);
 
-router.get('/pendientes', checkRole(['administrador']), prestamoController.pendientes);
+
 
 // Rutas para un préstamo específico
 router.route('/:id')
