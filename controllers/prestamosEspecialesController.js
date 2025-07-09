@@ -208,7 +208,7 @@ exports.aprobarPrestamoEspecial = async (req, res) => {
         
         if (!prestamo) {
             req.flash('error', 'Préstamo no encontrado');
-            return res.redirect('/prestamos-especiales/pendientes');
+            return res.redirect('/prestamos-especiales/index');
         }
 
         const montoAprobado = parseFloat(monto_aprobado);
