@@ -7,25 +7,26 @@ const moment = require('moment');
 
 class ApprovalController {
   // Método unificado para listar pendientes
-  static async listPending(req, res) {
-    try {
-      const [normalLoans, specialLoans] = await Promise.all([
-        this._getNormalLoans(),
-        this._getSpecialLoans()
-      ]);
+static async listPending(req, res) {
+  try {
+    const [normalLoans, specialLoans] = await Promise.all([
+      this._getNormalLoans(),
+      this._getSpecialLoans()
+    ]);
 
-      const allLoans = [...normalLoans, ...specialLoans]
-        .sort((a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion));
+    const allLoans = [...normalLoans, ...specialLoans]
+      .sort((a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion));
 
-      res.render('approval/pending', {
-        loans: allLoans,
-        helpers: this._getTemplateHelpers(),
-        messages: req.flash()
-      });
-    } catch (error) {
-      this._handleError(req, res, error);
-    }
+    res.render('approval/pending', {
+      loans: allLoans,
+      helpers: this._getTemplateHelpers(),
+      messages: req.flash()
+    });
+  } catch (error) {
+    ApprovalController._handleError(req, res, error); // <-- FIXED
   }
+}
+
 
   // Métodos privados
   static async _getNormalLoans() {
