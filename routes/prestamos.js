@@ -30,8 +30,8 @@ router.route('/:id')
 router.get('/:id/edit', validateId, checkRole(['administrador', 'supervisor']), prestamoController.editForm);
 
 // Aprobación/rechazo
-router.post('/:id/aprobar', validateId, checkRole(['administrador']), prestamoController.aprobar);
-router.post('/:id/rechazar', validateId, checkRole(['administrador']), prestamoController.rechazar);
+router.post('/:id/aprobar', validateId, checkRole(['administrador']), prestamoController.aprobarPrestamo);
+router.post('/:id/rechazar', validateId, checkRole(['administrador']), prestamoController.rechazarPrestamo);
 
 // Pagos
 router.post('/:id/pagar', validateId, checkRole(['administrador', 'supervisor']), prestamoController.pagar);
