@@ -103,6 +103,63 @@ static async approveSpecial(req, res) {
     req.flash('error', 'Error al procesar solicitud');
     res.redirect('/dashboard');
   }
+static async approveLoan(req, res) {
+  if (req.params.type === 'normal') {
+    return this.approveNormal(req, res);
+  } else if (req.params.type === 'special') {
+    return this.approveSpecial(req, res);
+  } else {
+    req.flash('error', 'Tipo de préstamo inválido');
+    return res.redirect('/pendientes');
+  }
+}
+
+static async rejectLoan(req, res) {
+  if (req.params.type === 'normal') {
+    // Aquí deberías tener una función `rejectNormal` implementada
+    return this.rejectNormal(req, res);
+  } else if (req.params.type === 'special') {
+    // Aquí deberías tener una función `rejectSpecial` implementada
+    return this.rejectSpecial(req, res);
+  } else {
+    req.flash('error', 'Tipo de préstamo inválido');
+    return res.redirect('/pendientes');
+  }
+}
+static async rejectNormal(req, res) {
+  try {
+    const { id } = req.params;
+    const { rejection_reason } = req.body;
+
+    await Prestamo.rechazar(id, {
+      estado: 'rechazado',
+      motivo_rechazo: rejection_reason || 'Sin motivo especificado'
+    });
+
+    req.flash('success', 'Préstamo normal rechazado');
+    res.redirect('/pendientes');
+  } catch (error) {
+    this._handleError(req, res, error);
+  }
+}
+
+static async rejectSpecial(req, res) {
+  try {
+    const { id } = req.params;
+    const { rejection_reason } = req.body;
+
+    await PrestamoEspecial.update(id, {
+      estado: 'rechazado',
+      motivo_rechazo: rejection_reason || 'Sin motivo especificado',
+      fecha_aprobacion: null
+    });
+
+    req.flash('success', 'Préstamo especial rechazado');
+    res.redirect('/pendientes');
+  } catch (error) {
+    this._handleError(req, res, error);
+  }
+}
 
   
 }

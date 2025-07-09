@@ -323,6 +323,21 @@ generateCuotas: async (prestamoId, montoTotal, numeroCuotas, formaPago = 'mensua
       fecha_display: pago.fecha ? moment(pago.fecha).format('DD/MM/YYYY') : 'Sin fecha'
     }));
   },
+  rechazar: async (id, data) => {
+  await db.query(`
+    UPDATE solicitudes_prestamos
+    SET estado = :estado,
+        motivo_rechazo = :motivo_rechazo
+    WHERE id = :id
+  `, {
+    replacements: {
+      id,
+      estado: data.estado || 'rechazado',
+      motivo_rechazo: data.motivo_rechazo || 'Sin motivo especificado'
+    },
+    type: QueryTypes.UPDATE
+  });
+},
 
  // En el método registrarPago del modelo
 // En el método registrarPago
