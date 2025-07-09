@@ -208,13 +208,13 @@ exports.aprobarPrestamoEspecial = async (req, res) => {
         
         if (!prestamo) {
             req.flash('error', 'Préstamo no encontrado');
-            return res.redirect('/prestamos-especiales/index');
+            return res.redirect('/prestamos/pendientes');
         }
 
         const montoAprobado = parseFloat(monto_aprobado);
         if (isNaN(montoAprobado) || montoAprobado <= 0) {
             req.flash('error', 'Monto aprobado inválido');
-            return res.redirect(`/prestamos-especiales/${id}/aprobar`);
+            return res.redirect(`//prestamos/${id}/aprobar`);
         }
 
         await PrestamoEspecial.update(id, {
