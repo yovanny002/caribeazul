@@ -75,15 +75,25 @@
                   </td>
                   <td class="text-center">
                     <% if (p.tipo === 'normal') { %>
-                      <form method="POST" action="/prestamos/<%= p.id %>/aprobar" class="d-inline-block">
-                        <button class="btn btn-success btn-lg rounded-pill px-4 shadow-sm aprobar-btn" data-id="<%= p.id %>">
-                          <i class="fas fa-check-circle me-2"></i> Aprobar
+                      <form method="POST" action="/prestamos/<%= p.id %>/aprobar" class="d-inline-block me-2">
+                        <button class="btn btn-success btn-sm rounded-pill shadow-sm aprobar-btn" data-id="<%= p.id %>">
+                          <i class="fas fa-check-circle me-1"></i> Aprobar
+                        </button>
+                      </form>
+                      <form method="POST" action="/prestamos/<%= p.id %>/rechazar" class="d-inline-block">
+                        <button class="btn btn-danger btn-sm rounded-pill shadow-sm rechazar-btn" data-id="<%= p.id %>">
+                          <i class="fas fa-times-circle me-1"></i> Rechazar
                         </button>
                       </form>
                     <% } else { %>
-                      <form method="POST" action="/prestamos-especiales/<%= p.id %>/aprobar" class="d-inline-block">
-                        <button class="btn btn-warning btn-lg rounded-pill px-4 shadow-sm aprobar-btn" data-id="<%= p.id %>">
-                          <i class="fas fa-check-circle me-2"></i> Aprobar
+                      <form method="POST" action="/prestamos/especiales/<%= p.id %>/aprobar" class="d-inline-block me-2">
+                        <button class="btn btn-warning btn-sm rounded-pill shadow-sm aprobar-btn" data-id="<%= p.id %>">
+                          <i class="fas fa-check-circle me-1"></i> Aprobar
+                        </button>
+                      </form>
+                      <form method="POST" action="/prestamos/especiales/<%= p.id %>/rechazar" class="d-inline-block">
+                        <button class="btn btn-outline-danger btn-sm rounded-pill shadow-sm rechazar-btn" data-id="<%= p.id %>">
+                          <i class="fas fa-times-circle me-1"></i> Rechazar
                         </button>
                       </form>
                     <% } %>
@@ -101,20 +111,41 @@
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const aprobarBtns = document.querySelectorAll('.aprobar-btn');
+    const rechazarBtns = document.querySelectorAll('.rechazar-btn');
 
     aprobarBtns.forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         const form = btn.closest('form');
-
         Swal.fire({
           title: '¿Aprobar préstamo?',
-          text: 'Esta acción no se puede deshacer.',
+          text: 'Esta acción aprobará la solicitud.',
           icon: 'warning',
           showCancelButton: true,
-          confirmButtonColor: '#3085d6',
-          cancelButtonColor: '#d33',
+          confirmButtonColor: '#28a745',
+          cancelButtonColor: '#6c757d',
           confirmButtonText: 'Sí, aprobar',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            form.submit();
+          }
+        });
+      });
+    });
+
+    rechazarBtns.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const form = btn.closest('form');
+        Swal.fire({
+          title: '¿Rechazar préstamo?',
+          text: 'Esta acción marcará la solicitud como rechazada.',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#dc3545',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: 'Sí, rechazar',
           cancelButtonText: 'Cancelar'
         }).then((result) => {
           if (result.isConfirmed) {
@@ -127,125 +158,3 @@
 </script>
 
 <%- include('../partials/footer') %>
-
-<style>
-  body {
-    background-color: #f5f7fa;
-    color: #3c4043;
-  }
-
-  .container-fluid {
-    padding-top: 20px;
-  }
-
-  .text-primary {
-    color: #1a73e8 !important;
-  }
-
-  .btn-outline-secondary {
-    border-color: #6c757d;
-    color: #6c757d;
-  }
-
-  .btn-outline-secondary:hover {
-    background-color: #6c757d;
-    color: #fff;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  }
-
-  .alert-info {
-    background-color: #e0f7fa;
-    border-color: #b3e5fc;
-    color: #01579b;
-  }
-
-  .alert-info .alert-heading {
-    color: #01579b;
-  }
-
-  .alert-info i {
-    color: #039be5;
-  }
-
-  .card {
-    border-radius: 0.75rem;
-    overflow: hidden;
-  }
-
-  .card-header {
-    background: linear-gradient(90deg, #1a73e8, #0d47a1);
-    color: white;
-    padding: 1.5rem 2rem;
-    border-bottom: none;
-  }
-
-  .card-header h5 {
-    font-weight: 700;
-    font-size: 1.3rem;
-  }
-
-  .table-responsive {
-    border-radius: 0.75rem;
-    overflow: hidden;
-  }
-
-  .table {
-    border-collapse: separate;
-    border-spacing: 0;
-  }
-
-  .table thead th {
-    background-color: #212529;
-    color: #fff;
-    font-weight: 600;
-    padding: 1rem 1.25rem;
-    vertical-align: middle;
-  }
-
-  .table tbody td {
-    padding: 1rem 1.25rem;
-    vertical-align: middle;
-    color: #495057;
-  }
-
-  .table-hover tbody tr:hover {
-    background-color: #f2f2f2;
-  }
-
-  .badge {
-    font-size: 0.95em;
-    padding: 0.5em 0.8em;
-    border-radius: 0.5rem;
-    font-weight: 600;
-  }
-
-  .bg-primary-subtle {
-    background-color: #e0f2f7 !important;
-    color: #1a73e8 !important;
-  }
-
-  .bg-info-subtle {
-    background-color: #dbeeff !important;
-    color: #007bff !important;
-  }
-
-  .btn-success {
-    background-color: #34a853;
-    border-color: #34a853;
-  }
-
-  .btn-success:hover {
-    background-color: #2e8b4e;
-    border-color: #2e8b4e;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  }
-
-  .btn-lg {
-    font-size: 1.05rem;
-    padding: 0.6rem 1.2rem;
-  }
-
-  .rounded-pill {
-    border-radius: 50rem !important;
-  }
-</style>

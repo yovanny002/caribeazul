@@ -410,3 +410,17 @@ exports.recibo = async (req, res) => {
         res.redirect(`/prestamos-especiales/${prestamoId}`);
     }
 };
+
+// Rechazar préstamo especial
+exports.rechazarPrestamoEspecial = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await PrestamoEspecial.update(id, { estado: 'rechazado' });
+    req.flash('success', 'Préstamo especial rechazado correctamente.');
+    res.redirect('/prestamos/pendientes');
+  } catch (error) {
+    console.error(`❌ Error al rechazar préstamo especial (${id}):`, error.message);
+    req.flash('error', 'No se pudo rechazar el préstamo especial. Intenta nuevamente.');
+    res.redirect('/prestamos/pendientes');
+  }
+};

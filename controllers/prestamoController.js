@@ -602,3 +602,16 @@ exports.imprimir = async (req, res) => {
 };
 
 
+// Rechazar préstamo normal
+exports.rechazarPrestamo = async (req, res) => {
+  const { id } = req.params;
+  try {
+    await Prestamo.updateEstado(id, 'rechazado');
+    req.flash('success', 'Préstamo normal rechazado correctamente.');
+    res.redirect('/prestamos/pendientes');
+  } catch (error) {
+    console.error(`❌ Error al rechazar préstamo normal (${id}):`, error.message);
+    req.flash('error', 'No se pudo rechazar el préstamo. Intenta nuevamente.');
+    res.redirect('/prestamos/pendientes');
+  }
+};

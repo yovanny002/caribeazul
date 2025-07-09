@@ -158,7 +158,23 @@ const PrestamoEspecial = {
             console.error(`Error al eliminar préstamo especial (${id}):`, error.message);
             throw error;
         }
-    }
+    },
+    updateEstado: async (id, estado) => {
+  try {
+    await db.query(`
+      UPDATE prestamos_especiales
+      SET estado = :estado
+      WHERE id = :id
+    `, {
+      replacements: { estado, id },
+      type: QueryTypes.UPDATE
+    });
+  } catch (error) {
+    console.error(`Error al cambiar estado préstamo especial (${id}):`, error.message);
+    throw error;
+  }
+},
+
 };
 
 module.exports = PrestamoEspecial;
