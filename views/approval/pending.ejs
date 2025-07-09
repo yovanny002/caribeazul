@@ -1,0 +1,113 @@
+<div class="container">
+  <h2 class="my-4">
+    <i class="fas fa-clock"></i> Solicitudes Pendientes
+  </h2>
+  
+  <div class="table-responsive">
+    <table class="table table-hover">
+      <thead class="thead-dark">
+        <tr>
+          <th>Tipo</th>
+          <th>Solicitante</th>
+          <th>Monto</th>
+          <th>Fecha</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% loans.forEach(loan => { %>
+          <tr>
+            <td>
+              <i class="fas <%= loan.icon %>"></i>
+              <%= loan.displayType %>
+            </td>
+            <td>
+              <%= loan.cliente_nombre %> <%= loan.cliente_apellidos %>
+              <br>
+              <small class="text-muted"><%= loan.cliente_cedula %></small>
+            </td>
+            <td>
+              <%- helpers.formatCurrency(loan.monto_solicitado) %>
+            </td>
+            <td>
+              <%- helpers.formatDate(loan.fecha_creacion) %>
+            </td>
+            <td>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-success approve-btn" 
+                        data-type="<%= loan.loanType %>"
+                        data-id="<%= loan.id %>">
+                  <i class="fas fa-check"></i> Aprobar
+                </button>
+                <button class="btn btn-sm btn-danger reject-btn"
+                        data-type="<%= loan.loanType %>"
+                        data-id="<%= loan.id %>">
+                  <i class="fas fa-times"></i> Rechazar
+                </button>
+              </div>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Dinámico -->
+<div class="modal fade" id="actionModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle"></h5>
+        <button type="button" class="close" data-dismiss="modal">
+          <span>&times;</span>
+        </button>
+      </div>
+      <form id="actionForm">
+        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Confirmar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+  // Configuración dinámica de modales
+  $('.approve-btn, .reject-btn').click(function() {
+    const isApproval = $(this).hasClass('approve-btn');
+    const loanType = $(this).data('type');
+    const loanId = $(this).data('id');
+    
+    $('#modalTitle').text(isApproval ? 'Aprobar Préstamo' : 'Rechazar Préstamo');
+    $('#actionForm').attr('action', `/${loanType}-loans/${isApproval ? 'approve' : 'reject'}/${loanId}`);
+    
+    // Contenido dinámico según tipo
+    if (isApproval) {
+      $('#modalBody').html(`
+        <div class="form-group">
+          <label>Monto Aprobado</label>
+          <input type="number" class="form-control" name="approved_amount" required>
+        </div>
+        ${loanType === 'normal' ? `
+        <div class="form-group">
+          <label>Tasa de Interés (%)</label>
+          <input type="number" class="form-control" name="interest_rate" value="20" required>
+        </div>` : ''}
+      `);
+    } else {
+      $('#modalBody').html(`
+        <div class="form-group">
+          <label>Motivo del Rechazo</label>
+          <textarea class="form-control" name="rejection_reason" required></textarea>
+        </div>
+      `);
+    }
+    
+    $('#actionModal').modal('show');
+  });
+});
+</script>
