@@ -204,19 +204,32 @@ exports.aprobarPrestamoEspecial = async (req, res) => {
     const { monto_aprobado } = req.body;
 
     try {
+        // Validación básica del ID
+        if (!id || isNaN(parseInt(id))) {
+            req.flash('error', 'ID de préstamo inválido');
+            return res.redirect('/prestamos-especiales/pendientes');
+        }
+
         const prestamo = await PrestamoEspecial.findById(id);
         
         if (!prestamo) {
             req.flash('error', 'Préstamo no encontrado');
-            return res.redirect('/prestamos/pendientes');
+            return res.redirect('/prestamos-especiales/pendientes');
         }
 
+        // Validación del monto
         const montoAprobado = parseFloat(monto_aprobado);
-        if (isNaN(montoAprobado) || montoAprobado <= 0) {
-            req.flash('error', 'Monto aprobado inválido');
-            return res.redirect(`//prestamos/${id}/aprobar`);
+        if (isNaN(montoAprobado)) {
+            req.flash('error', 'El monto aprobado debe ser un número válido');
+            return res.redirect(`/prestamos-especiales/${id}/aprobar`);
         }
 
+        if (montoAprobado <= 0) {
+            req.flash('error', 'El monto aprobado debe ser mayor que cero');
+            return res.redirect(`/prestamos-especiales/${id}/aprobar`);
+        }
+
+        // Actualización del préstamo
         await PrestamoEspecial.update(id, {
             estado: 'aprobado',
             monto_aprobado: montoAprobado,
@@ -224,12 +237,13 @@ exports.aprobarPrestamoEspecial = async (req, res) => {
             fecha_aprobacion: new Date()
         });
 
-        req.flash('success', 'Préstamo aprobado correctamente');
-        res.redirect('/prestamos-especiales');
+        req.flash('success', `Préstamo #${id} aprobado por RD$ ${montoAprobado.toLocaleString('es-DO')}`);
+        res.redirect('/prestamos-especiales'); // Redirige al listado general
+
     } catch (error) {
-        console.error('Error al aprobar préstamo especial:', error);
-        req.flash('error', 'Error al aprobar el préstamo');
-        res.redirect('/prestamos-especiales/pendientes');
+        console.error(`Error aprobando préstamo especial #${id}:`, error);
+        req.flash('error', `Error al aprobar el préstamo: ${error.message}`);
+        res.redirect('/prestamos-especiales/pendientes'); // En error, vuelve a pendientes
     }
 };
 
