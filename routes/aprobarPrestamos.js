@@ -6,7 +6,7 @@ const { checkRole } = require('../middlewares/roles');
 
 
 // Ruta para listar todos los préstamos pendientes (unificada)
-router.get('/pendientes', checkRole(['administrador', 'supervisor']), ApprovalController.listPending);
+router.get('/', checkRole(['administrador', 'supervisor']), ApprovalController.listPending);
 
 // Rutas para acciones de aprobación/rechazo (unificadas)
 router.post('/aprobar/:type/:id', 
