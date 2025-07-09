@@ -1,4 +1,4 @@
-// File: controllers/aprovacionesController.js
+// File: controllers/aprobacionesController.js
 // Controlador para manejar la aprobación de préstamos normales y especiales
 
 const Prestamo = require('../models/Prestamo');
@@ -7,26 +7,25 @@ const moment = require('moment');
 
 class ApprovalController {
   // Método unificado para listar pendientes
-static async listPending(req, res) {
-  try {
-    const [normalLoans, specialLoans] = await Promise.all([
-      this._getNormalLoans(),
-      this._getSpecialLoans()
-    ]);
+  static async listPending(req, res) {
+    try {
+      const [normalLoans, specialLoans] = await Promise.all([
+        ApprovalController._getNormalLoans(),
+        ApprovalController._getSpecialLoans()
+      ]);
 
-    const allLoans = [...normalLoans, ...specialLoans]
-      .sort((a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion));
+      const allLoans = [...normalLoans, ...specialLoans]
+        .sort((a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion));
 
-    res.render('approval/pending', {
-      loans: allLoans,
-      helpers: this._getTemplateHelpers(),
-      messages: req.flash()
-    });
-  } catch (error) {
-    ApprovalController._handleError(req, res, error); // <-- FIXED
+      res.render('approval/pending', {
+        loans: allLoans,
+        helpers: ApprovalController._getTemplateHelpers(),
+        messages: req.flash()
+      });
+    } catch (error) {
+      ApprovalController._handleError(req, res, error);
+    }
   }
-}
-
 
   // Métodos privados
   static async _getNormalLoans() {
@@ -57,114 +56,110 @@ static async listPending(req, res) {
         style: 'currency',
         currency: 'DOP'
       }).format(amount || 0),
-      
-      formatDate: (dateString) => 
+
+      formatDate: (dateString) =>
         dateString ? moment(dateString).format('DD/MM/YYYY') : 'Sin fecha'
     };
   }
-static async approveNormal(req, res) {
-  try {
-    const { id } = req.params;
-    const { approved_amount, interest_rate } = req.body;
-    
-    await Prestamo.aprobar(id, {
-      monto_aprobado: approved_amount,
-      interes_porcentaje: interest_rate,
-      estado: 'aprobado'
-    });
-    
-    req.flash('success', 'Préstamo normal aprobado');
-    res.redirect('/pendientes');
-  } catch (error) {
-    this._handleError(req, res, error);
-  }
-}
 
-static async approveSpecial(req, res) {
-  try {
-    const { id } = req.params;
-    const { approved_amount } = req.body;
-    
-    await PrestamoEspecial.update(id, {
-      monto_aprobado: approved_amount,
-      estado: 'aprobado',
-      fecha_aprobacion: new Date()
-    });
-    
-    req.flash('success', 'Préstamo especial aprobado');
-    res.redirect('/pendientes');
-  } catch (error) {
-    this._handleError(req, res, error);
-  }
-}
+  static async approveNormal(req, res) {
+    try {
+      const { id } = req.params;
+      const { approved_amount, interest_rate } = req.body;
 
-// Métodos similares para rejectNormal y rejectSpecial
+      await Prestamo.aprobar(id, {
+        monto_aprobado: approved_amount,
+        interes_porcentaje: interest_rate,
+        estado: 'aprobado'
+      });
+
+      req.flash('success', 'Préstamo normal aprobado');
+      res.redirect('/pendientes');
+    } catch (error) {
+      ApprovalController._handleError(req, res, error);
+    }
+  }
+
+  static async approveSpecial(req, res) {
+    try {
+      const { id } = req.params;
+      const { approved_amount } = req.body;
+
+      await PrestamoEspecial.update(id, {
+        monto_aprobado: approved_amount,
+        estado: 'aprobado',
+        fecha_aprobacion: new Date()
+      });
+
+      req.flash('success', 'Préstamo especial aprobado');
+      res.redirect('/pendientes');
+    } catch (error) {
+      ApprovalController._handleError(req, res, error);
+    }
+  }
+
+  static async approveLoan(req, res) {
+    if (req.params.type === 'normal') {
+      return ApprovalController.approveNormal(req, res);
+    } else if (req.params.type === 'special') {
+      return ApprovalController.approveSpecial(req, res);
+    } else {
+      req.flash('error', 'Tipo de préstamo inválido');
+      return res.redirect('/pendientes');
+    }
+  }
+
+  static async rejectLoan(req, res) {
+    if (req.params.type === 'normal') {
+      return ApprovalController.rejectNormal(req, res);
+    } else if (req.params.type === 'special') {
+      return ApprovalController.rejectSpecial(req, res);
+    } else {
+      req.flash('error', 'Tipo de préstamo inválido');
+      return res.redirect('/pendientes');
+    }
+  }
+
+  static async rejectNormal(req, res) {
+    try {
+      const { id } = req.params;
+      const { rejection_reason } = req.body;
+
+      await Prestamo.rechazar(id, {
+        estado: 'rechazado',
+        motivo_rechazo: rejection_reason || 'Sin motivo especificado'
+      });
+
+      req.flash('success', 'Préstamo normal rechazado');
+      res.redirect('/pendientes');
+    } catch (error) {
+      ApprovalController._handleError(req, res, error);
+    }
+  }
+
+  static async rejectSpecial(req, res) {
+    try {
+      const { id } = req.params;
+      const { rejection_reason } = req.body;
+
+      await PrestamoEspecial.update(id, {
+        estado: 'rechazado',
+        motivo_rechazo: rejection_reason || 'Sin motivo especificado',
+        fecha_aprobacion: null
+      });
+
+      req.flash('success', 'Préstamo especial rechazado');
+      res.redirect('/pendientes');
+    } catch (error) {
+      ApprovalController._handleError(req, res, error);
+    }
+  }
+
   static _handleError(req, res, error) {
     console.error('[ApprovalController] Error:', error);
     req.flash('error', 'Error al procesar solicitud');
     res.redirect('/dashboard');
   }
-static async approveLoan(req, res) {
-  if (req.params.type === 'normal') {
-    return this.approveNormal(req, res);
-  } else if (req.params.type === 'special') {
-    return this.approveSpecial(req, res);
-  } else {
-    req.flash('error', 'Tipo de préstamo inválido');
-    return res.redirect('/pendientes');
-  }
 }
-
-static async rejectLoan(req, res) {
-  if (req.params.type === 'normal') {
-    // Aquí deberías tener una función `rejectNormal` implementada
-    return this.rejectNormal(req, res);
-  } else if (req.params.type === 'special') {
-    // Aquí deberías tener una función `rejectSpecial` implementada
-    return this.rejectSpecial(req, res);
-  } else {
-    req.flash('error', 'Tipo de préstamo inválido');
-    return res.redirect('/pendientes');
-  }
-}
-static async rejectNormal(req, res) {
-  try {
-    const { id } = req.params;
-    const { rejection_reason } = req.body;
-
-    await Prestamo.rechazar(id, {
-      estado: 'rechazado',
-      motivo_rechazo: rejection_reason || 'Sin motivo especificado'
-    });
-
-    req.flash('success', 'Préstamo normal rechazado');
-    res.redirect('/pendientes');
-  } catch (error) {
-    this._handleError(req, res, error);
-  }
-}
-
-static async rejectSpecial(req, res) {
-  try {
-    const { id } = req.params;
-    const { rejection_reason } = req.body;
-
-    await PrestamoEspecial.update(id, {
-      estado: 'rechazado',
-      motivo_rechazo: rejection_reason || 'Sin motivo especificado',
-      fecha_aprobacion: null
-    });
-
-    req.flash('success', 'Préstamo especial rechazado');
-    res.redirect('/pendientes');
-  } catch (error) {
-    this._handleError(req, res, error);
-  }
-}
-
-  
-}
-
-
 
 module.exports = ApprovalController;
