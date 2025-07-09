@@ -20,8 +20,10 @@ router.get('/create', checkRole(['administrador', 'supervisor']), prestamoContro
 router.post('/create', checkRole(['administrador', 'supervisor']), prestamoController.create);
 
 
+router.get('/', checkRole(['administrador', 'supervisor', 'servicio']), prestamoController.index);
+router.get('/create', checkRole(['administrador', 'supervisor']), prestamoController.createForm);
+router.post('/create', checkRole(['administrador', 'supervisor']), prestamoController.create);
 
-// Rutas para un préstamo específico
 router.route('/:id')
   .all(validateId)
   .get(checkRole(['administrador', 'supervisor', 'servicio']), prestamoController.show)
@@ -29,20 +31,12 @@ router.route('/:id')
 
 router.get('/:id/edit', validateId, checkRole(['administrador', 'supervisor']), prestamoController.editForm);
 
-// Aprobación/rechazo
 router.post('/:id/aprobar', validateId, checkRole(['administrador']), prestamoController.aprobarPrestamo);
 router.post('/:id/rechazar', validateId, checkRole(['administrador']), prestamoController.rechazarPrestamo);
 
-// Pagos
 router.post('/:id/pagar', validateId, checkRole(['administrador', 'supervisor']), prestamoController.pagar);
-router.post('/:id/pagar-cuota', validateId, checkRole(['administrador', 'supervisor']), prestamoController.pagarCuota);
 
-// Impresión y recibos
 router.get('/:id/recibo', validateId, prestamoController.recibo);
-router.get('/:id/imprimir', validateId, prestamoController.imprimir);
-router.get('/:id/imprimir-ticket', validateId, prestamoController.imprimirTicket);
 
-// API para impresión
-router.post('/api/imprimir-ticket', prestamoController.imprimirTicketApi);
 
 module.exports = router;
