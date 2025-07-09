@@ -53,12 +53,12 @@ exports.createForm = async (req, res) => {
 };
 
 exports.create = async (req, res) => {
-    const { cliente_id, monto_solicitado, interes_porcentaje, forma_pago, observaciones } = req.body;
+    const { cliente_id, monto_solicitado, monto_aprobado, interes_porcentaje, forma_pago, observaciones } = req.body;
     try {
         const nuevoPrestamoId = await PrestamoEspecial.create({
             cliente_id,
             monto_solicitado: safeParseFloat(monto_solicitado),
-            monto_aprobado: safeParseFloat(monto_solicitado),
+            monto_aprobado: safeParseFloat(monto_aprobado),
             interes_porcentaje: safeParseFloat(interes_porcentaje),
             forma_pago,
             observaciones
@@ -200,48 +200,36 @@ exports.update = async (req, res) => {
 };
 
 exports.aprobarPrestamoEspecial = async (req, res) => {
-    const prestamoId = parseInt(req.params.id);
-    
-    if (isNaN(prestamoId)) {
-        req.flash('error', 'ID de préstamo inválido.');
-        return res.redirect('/prestamos-especiales');
-    }
-
+    const { id } = req.params;
     const { monto_aprobado } = req.body;
 
     try {
-        const prestamo = await PrestamoEspecial.findById(prestamoId);
+        const prestamo = await PrestamoEspecial.findById(id);
+        
         if (!prestamo) {
-            req.flash('error', 'Préstamo no encontrado.');
-            return res.redirect('/prestamos-especiales');
+            req.flash('error', 'Préstamo no encontrado');
+            return res.redirect('/prestamos-especiales/pendientes');
         }
 
-        if (prestamo.estado === 'aprobado') {
-            req.flash('info', 'El préstamo ya ha sido aprobado.');
-            return res.redirect(`/prestamos-especiales/${prestamoId}`);
+        const montoAprobado = parseFloat(monto_aprobado);
+        if (isNaN(montoAprobado) || montoAprobado <= 0) {
+            req.flash('error', 'Monto aprobado inválido');
+            return res.redirect(`/prestamos-especiales/${id}/aprobar`);
         }
 
-        const montoAprobadoNum = safeParseFloat(monto_aprobado);
-        if (montoAprobadoNum <= 0) {
-            req.flash('error', 'Monto aprobado inválido.');
-            return res.redirect(`/prestamos-especiales/${prestamoId}`);
-        }
-
-        await PrestamoEspecial.update(prestamoId, {
-            ...prestamo,
+        await PrestamoEspecial.update(id, {
             estado: 'aprobado',
-            monto_aprobado: montoAprobadoNum,
-            capital_restante: montoAprobadoNum,
-            fecha_aprobacion: moment().format('YYYY-MM-DD')
+            monto_aprobado: montoAprobado,
+            capital_restante: montoAprobado,
+            fecha_aprobacion: new Date()
         });
 
-        req.flash('success', `Préstamo ${prestamoId} aprobado con un monto de RD$ ${formatCurrency(montoAprobadoNum)}.`);
-        res.redirect(`/prestamos-especiales/${prestamoId}`);
-
-    } catch (err) {
-        console.error('Error al aprobar préstamo especial:', err);
-        req.flash('error', 'Error al aprobar el préstamo especial: ' + err.message);
-        res.redirect(`/prestamos-especiales/${prestamoId}`);
+        req.flash('success', 'Préstamo aprobado correctamente');
+        res.redirect('/prestamos-especiales');
+    } catch (error) {
+        console.error('Error al aprobar préstamo especial:', error);
+        req.flash('error', 'Error al aprobar el préstamo');
+        res.redirect('/prestamos-especiales/pendientes');
     }
 };
 
