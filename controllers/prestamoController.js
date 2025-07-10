@@ -1,4 +1,3 @@
-const { QueryTypes } = require('sequelize');
   const db = require('../models/db');
   const Prestamo = require('../models/Prestamo');
   const Cliente = require('../models/Cliente');
@@ -10,6 +9,7 @@ const { QueryTypes } = require('sequelize');
   const { imprimirTicket } = require('../utils/impresora'); // crearás esto luego
   const PDFDocument = require('pdfkit'); // Asegúrate de tener esta dependencia
   const fs = require('fs');
+
 
   // Mostrar todos los préstamos
   exports.index = async (req, res) => {
@@ -24,19 +24,14 @@ const { QueryTypes } = require('sequelize');
   };
 
   // Mostrar formulario para crear préstamo
-// Modificar el método createForm para incluir tipo de préstamo
 exports.createForm = async (req, res) => {
   try {
     const clientes = await Cliente.findAll();
-    const rutas = await Ruta.findAll();
+    const rutas = await Ruta.findAll(); // <-- Asegúrate de que devuelve [{ id, zona, nombre }, ...]
 
     res.render('prestamos/create', {
       clientes,
-      rutas,
-      tiposPrestamo: [
-        { value: 'cerrado', label: 'Préstamo Cerrado (Cuotas fijas)' },
-        { value: 'abierto', label: 'Préstamo Abierto (Interés sobre saldo)' }
-      ]
+      rutas
     });
   } catch (error) {
     console.error('❌ Error cargando formulario de préstamo:', error.message);
@@ -139,216 +134,41 @@ exports.aprobarPrestamo = async (req, res) => {
 
   // En tu controlador (prestamoController.js)
 // En el método show, asegurarnos de pasar moment a la vista
-// Modificar el método show para mostrar información de préstamos abiertos
-
 exports.show = async (req, res) => {
-  const { id: prestamoId } = req.params;
-  
   try {
-    // Validación básica del ID
-    if (!prestamoId || isNaN(prestamoId)) {
-      req.flash('error', 'ID de préstamo no válido');
-      return res.redirect('/prestamos');
-    }
-
-    // Obtener información del préstamo con transacción
+    const prestamoId = req.params.id;
     const prestamo = await Prestamo.findById(prestamoId);
-    
+
     if (!prestamo) {
       req.flash('error', 'Préstamo no encontrado');
       return res.redirect('/prestamos');
     }
 
-    // Procesamiento paralelo para mejor rendimiento
-    const [cuotas, historialPagos] = await Promise.all([
-      prestamo.tipo_prestamo === 'cerrado' 
-        ? Prestamo.findCuotasByPrestamo(prestamoId) 
-        : Promise.resolve([]),
-      
-      prestamo.tipo_prestamo === 'abierto'
-        ? db.query(`
-            SELECT 
-              p.id,
-              p.monto,
-              p.interes,
-              p.capital,
-              p.moras,
-              p.metodo,
-              p.notas,
-              p.referencia,
-              p.registrado_por,
-              DATE_FORMAT(p.fecha, '%d/%m/%Y %H:%i') as fecha_display,
-              CONCAT('RD$ ', FORMAT(p.monto, 2)) as monto_formatted,
-              CONCAT('RD$ ', FORMAT(p.interes, 2)) as interes_formatted,
-              CONCAT('RD$ ', FORMAT(p.capital, 2)) as capital_formatted
-            FROM pagos p
-            WHERE p.prestamo_id = :prestamoId
-            ORDER BY p.fecha DESC
-            LIMIT 100`, {
-            replacements: { prestamoId },
-            type: QueryTypes.SELECT
-          })
-        : Prestamo.getHistorialPagos(prestamoId)
-    ]);
+    const cuotas = await Prestamo.findCuotasByPrestamo(prestamoId);
+    const historialPagos = await Prestamo.getHistorialPagos(prestamoId);
 
-    // Calcular resumen para préstamos abiertos
-    let resumen = null;
-    if (prestamo.tipo_prestamo === 'abierto') {
-      const [totales] = await db.query(`
-        SELECT 
-          SUM(interes) as total_interes,
-          SUM(capital) as total_capital,
-          SUM(moras) as total_moras,
-          COUNT(id) as total_pagos
-        FROM pagos
-        WHERE prestamo_id = :prestamoId`, {
-        replacements: { prestamoId },
-        type: QueryTypes.SELECT
-      });
+    // Calcular mora pendiente para cada cuota vencida
+    const cuotasConMora = await Promise.all(cuotas.map(async cuota => {
+      const esVencida = new Date(cuota.fecha_vencimiento) < new Date() && cuota.estado !== 'pagada';
+      if (esVencida) {
+        const diasAtraso = Math.max(0, Math.floor((new Date() - new Date(cuota.fecha_vencimiento)) / (1000 * 60 * 60 * 24)) - 2);
+        cuota.mora = diasAtraso > 0 ? cuota.monto * 0.05 * diasAtraso : 0;
+      } else {
+        cuota.mora = 0;
+      }
+      return cuota;
+    }));
 
-      resumen = {
-        total_interes: totales.total_interes || 0,
-        total_capital: totales.total_capital || 0,
-        total_moras: totales.total_moras || 0,
-        total_pagos: totales.total_pagos || 0,
-        saldo_actual: prestamo.monto_aprobado - (totales.total_capital || 0)
-      };
-    }
-
-    // Formatear datos para la vista
-    const datosVista = {
-      prestamo: {
-        ...prestamo,
-        monto_aprobado_formatted: `RD$ ${Number(prestamo.monto_aprobado).toFixed(2)}`,
-        interes_porcentaje_formatted: `${Number(prestamo.interes_porcentaje).toFixed(2)}%`,
-        fecha_creacion: moment(prestamo.created_at).format('DD/MM/YYYY')
-      },
-      cuotas: cuotas.map(cuota => ({
-        ...cuota,
-        monto_formatted: `RD$ ${Number(cuota.monto).toFixed(2)}`,
-        fecha_vencimiento_display: moment(cuota.fecha_vencimiento).format('DD/MM/YYYY'),
-        estado_class: cuota.estado === 'pagada' ? 'success' : 
-                     moment().isAfter(moment(cuota.fecha_vencimiento)) ? 'danger' : 'warning'
-      })),
+    res.render('prestamos/show', {
+      prestamo,
+      cuotas: cuotasConMora,
       historialPagos,
-      resumen,
-      moment,
-      esAbierto: prestamo.tipo_prestamo === 'abierto',
-      esCerrado: prestamo.tipo_prestamo === 'cerrado'
-    };
-
-    res.render('prestamos/show', datosVista);
-
-  } catch (error) {
-    logger.error(`Error en prestamoController.show - ID: ${prestamoId}: ${error.message}`, {
-      error,
-      prestamoId,
-      stack: error.stack
+      moment
     });
-
-    req.flash('error', 'Ocurrió un error al cargar el préstamo');
+  } catch (error) {
+    console.error('Error al mostrar préstamo:', error);
+    req.flash('error', 'Error al cargar detalles del préstamo');
     res.redirect('/prestamos');
-  }
-};
-// Nuevo método para calcular interés acumulado
-exports.calcularInteres = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const interesDiario = await Prestamo.calcularInteresDiario(id);
-    
-    res.json({
-      success: true,
-      interesDiario,
-      message: 'Interés calculado correctamente'
-    });
-  } catch (error) {
-    console.error('Error calculando interés:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error calculando interés'
-    });
-  }
-};
-// Nuevo método para registrar pagos en préstamos abiertos
-exports.registrarPagoAbierto = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { monto, metodo } = req.body;
-    const registrado_por = req.user?.nombre || 'Sistema';
-
-    // Obtener el préstamo
-    const prestamo = await Prestamo.findById(id);
-    if (!prestamo || prestamo.tipo_prestamo !== 'abierto') {
-      return res.status(400).json({ success: false, message: 'Préstamo no válido' });
-    }
-
-    // Calcular interés acumulado
-    const ultimoPago = await db.query(
-      `SELECT fecha FROM pagos WHERE prestamo_id = ? ORDER BY fecha DESC LIMIT 1`,
-      { replacements: [id], type: QueryTypes.SELECT }
-    );
-
-    const fechaInicio = ultimoPago.length > 0 ? 
-      new Date(ultimoPago[0].fecha) : 
-      new Date(prestamo.created_at);
-    
-    const dias = Math.max(1, Math.floor((new Date() - fechaInicio) / (1000 * 60 * 60 * 24)));
-    const interesDiario = (prestamo.saldo_actual * (prestamo.interes_porcentaje / 100)) / 30;
-    const interesAcumulado = parseFloat((interesDiario * dias).toFixed(2));
-
-    // Distribuir el pago
-    let pagoInteres = 0;
-    let pagoCapital = 0;
-
-    if (monto >= interesAcumulado) {
-      pagoInteres = interesAcumulado;
-      pagoCapital = parseFloat((monto - interesAcumulado).toFixed(2));
-    } else {
-      pagoInteres = monto;
-      pagoCapital = 0;
-    }
-
-    // Registrar el pago
-    await db.query(
-      `INSERT INTO pagos (prestamo_id, monto, interes, capital, metodo, registrado_por, fecha)
-       VALUES (?, ?, ?, ?, ?, ?, NOW())`,
-      {
-        replacements: [
-          id,
-          monto,
-          pagoInteres,
-          pagoCapital,
-          metodo,
-          registrado_por
-        ],
-        type: QueryTypes.INSERT
-      }
-    );
-
-    // Actualizar saldo del préstamo
-    const nuevoSaldo = parseFloat((prestamo.saldo_actual - pagoCapital).toFixed(2));
-    
-    await db.query(
-      `UPDATE solicitudes_prestamos 
-       SET saldo_actual = ?, total_pagado = total_pagado + ?
-       WHERE id = ?`,
-      {
-        replacements: [nuevoSaldo, monto, id],
-        type: QueryTypes.UPDATE
-      }
-    );
-
-    res.json({ 
-      success: true,
-      message: 'Pago registrado correctamente',
-      nuevoSaldo,
-      pagoInteres,
-      pagoCapital
-    });
-
-  } catch (error) {
-    console.error('Error en registrarPagoAbierto:', error);
-    res.status(500).json({ success: false, message: 'Error interno del servidor' });
   }
 };
   exports.pagarCuota = async (req, res) => {

@@ -17,8 +17,8 @@ router.get('/:id/edit', prestamoController.editForm);
 router.put('/:id', prestamoController.update);
 router.get('/:id', prestamoController.show);
 // Agregar en routes/prestamos.js
-router.post('/:id/pagar-abierto', prestamoController.registrarPagoAbierto);
-router.get('/:id/calcular-interes', prestamoController.calcularInteres);
+// router.post('/:id/pagar-abierto', prestamoController.registrarPagoAbierto);
+// router.get('/:id/calcular-interes', prestamoController.calcularInteres);
 
 // Rutas de pagos y otras
 router.post('/:id/pagar', prestamoController.pagar);
