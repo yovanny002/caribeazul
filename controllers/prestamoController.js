@@ -1,3 +1,4 @@
+const { QueryTypes } = require('sequelize');
   const db = require('../models/db');
   const Prestamo = require('../models/Prestamo');
   const Cliente = require('../models/Cliente');
@@ -9,7 +10,6 @@
   const { imprimirTicket } = require('../utils/impresora'); // crearás esto luego
   const PDFDocument = require('pdfkit'); // Asegúrate de tener esta dependencia
   const fs = require('fs');
-
 
   // Mostrar todos los préstamos
   exports.index = async (req, res) => {
@@ -140,44 +140,113 @@ exports.aprobarPrestamo = async (req, res) => {
   // En tu controlador (prestamoController.js)
 // En el método show, asegurarnos de pasar moment a la vista
 // Modificar el método show para mostrar información de préstamos abiertos
-exports.show = async (req, res) => {
-  try {
-    const prestamoId = req.params.id;
-    const prestamo = await Prestamo.findById(prestamoId);
 
+exports.show = async (req, res) => {
+  const { id: prestamoId } = req.params;
+  
+  try {
+    // Validación básica del ID
+    if (!prestamoId || isNaN(prestamoId)) {
+      req.flash('error', 'ID de préstamo no válido');
+      return res.redirect('/prestamos');
+    }
+
+    // Obtener información del préstamo con transacción
+    const prestamo = await Prestamo.findById(prestamoId);
+    
     if (!prestamo) {
       req.flash('error', 'Préstamo no encontrado');
       return res.redirect('/prestamos');
     }
 
-    let cuotas = [];
-    let historialPagos = [];
-    
-    if (prestamo.tipo_prestamo === 'cerrado') {
-      cuotas = await Prestamo.findCuotasByPrestamo(prestamoId);
-      historialPagos = await Prestamo.getHistorialPagos(prestamoId);
-    } else {
-      // Para préstamos abiertos, obtener historial de pagos con detalles de interés/capital
-      historialPagos = await db.query(`
-        SELECT p.*, 
-               DATE_FORMAT(p.fecha, '%d/%m/%Y') as fecha_display,
-               p.monto as monto_formatted
-        FROM pagos p
-        WHERE p.prestamo_id = ?
-        ORDER BY p.fecha DESC
-      `, { replacements: [prestamoId], type: QueryTypes.SELECT });
+    // Procesamiento paralelo para mejor rendimiento
+    const [cuotas, historialPagos] = await Promise.all([
+      prestamo.tipo_prestamo === 'cerrado' 
+        ? Prestamo.findCuotasByPrestamo(prestamoId) 
+        : Promise.resolve([]),
+      
+      prestamo.tipo_prestamo === 'abierto'
+        ? db.query(`
+            SELECT 
+              p.id,
+              p.monto,
+              p.interes,
+              p.capital,
+              p.moras,
+              p.metodo,
+              p.notas,
+              p.referencia,
+              p.registrado_por,
+              DATE_FORMAT(p.fecha, '%d/%m/%Y %H:%i') as fecha_display,
+              CONCAT('RD$ ', FORMAT(p.monto, 2)) as monto_formatted,
+              CONCAT('RD$ ', FORMAT(p.interes, 2)) as interes_formatted,
+              CONCAT('RD$ ', FORMAT(p.capital, 2)) as capital_formatted
+            FROM pagos p
+            WHERE p.prestamo_id = :prestamoId
+            ORDER BY p.fecha DESC
+            LIMIT 100`, {
+            replacements: { prestamoId },
+            type: QueryTypes.SELECT
+          })
+        : Prestamo.getHistorialPagos(prestamoId)
+    ]);
+
+    // Calcular resumen para préstamos abiertos
+    let resumen = null;
+    if (prestamo.tipo_prestamo === 'abierto') {
+      const [totales] = await db.query(`
+        SELECT 
+          SUM(interes) as total_interes,
+          SUM(capital) as total_capital,
+          SUM(moras) as total_moras,
+          COUNT(id) as total_pagos
+        FROM pagos
+        WHERE prestamo_id = :prestamoId`, {
+        replacements: { prestamoId },
+        type: QueryTypes.SELECT
+      });
+
+      resumen = {
+        total_interes: totales.total_interes || 0,
+        total_capital: totales.total_capital || 0,
+        total_moras: totales.total_moras || 0,
+        total_pagos: totales.total_pagos || 0,
+        saldo_actual: prestamo.monto_aprobado - (totales.total_capital || 0)
+      };
     }
 
-    res.render('prestamos/show', {
-      prestamo,
-      cuotas,
+    // Formatear datos para la vista
+    const datosVista = {
+      prestamo: {
+        ...prestamo,
+        monto_aprobado_formatted: `RD$ ${Number(prestamo.monto_aprobado).toFixed(2)}`,
+        interes_porcentaje_formatted: `${Number(prestamo.interes_porcentaje).toFixed(2)}%`,
+        fecha_creacion: moment(prestamo.created_at).format('DD/MM/YYYY')
+      },
+      cuotas: cuotas.map(cuota => ({
+        ...cuota,
+        monto_formatted: `RD$ ${Number(cuota.monto).toFixed(2)}`,
+        fecha_vencimiento_display: moment(cuota.fecha_vencimiento).format('DD/MM/YYYY'),
+        estado_class: cuota.estado === 'pagada' ? 'success' : 
+                     moment().isAfter(moment(cuota.fecha_vencimiento)) ? 'danger' : 'warning'
+      })),
       historialPagos,
+      resumen,
       moment,
-      esAbierto: prestamo.tipo_prestamo === 'abierto'
-    });
+      esAbierto: prestamo.tipo_prestamo === 'abierto',
+      esCerrado: prestamo.tipo_prestamo === 'cerrado'
+    };
+
+    res.render('prestamos/show', datosVista);
+
   } catch (error) {
-    console.error('Error al mostrar préstamo:', error);
-    req.flash('error', 'Error al cargar detalles del préstamo');
+    logger.error(`Error en prestamoController.show - ID: ${prestamoId}: ${error.message}`, {
+      error,
+      prestamoId,
+      stack: error.stack
+    });
+
+    req.flash('error', 'Ocurrió un error al cargar el préstamo');
     res.redirect('/prestamos');
   }
 };
