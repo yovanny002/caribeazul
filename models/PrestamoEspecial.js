@@ -23,37 +23,36 @@ const PrestamoEspecial = {
         }
     },
 
+// PrestamoEspecial.js
+// En PrestamoEspecial.js
 findAllWithClienteYRuta: async (estado = null) => {
-  try {
-    let query = `
-      SELECT pe.*, 
-             c.nombre AS cliente_nombre, 
-             c.apellidos AS cliente_apellidos, 
-             r.nombre AS ruta_nombre
-      FROM prestamos_especiales pe
-      JOIN clientes c ON pe.cliente_id = c.id
-      LEFT JOIN rutas r ON pe.ruta_id = r.id
-    `;
+  let query = `
+    SELECT pe.*, 
+           c.nombre AS cliente_nombre, 
+           c.apellidos AS cliente_apellidos, 
+           r.nombre AS ruta_nombre
+    FROM prestamos_especiales pe
+    JOIN clientes c ON pe.cliente_id = c.id
+    LEFT JOIN rutas r ON pe.ruta_id = r.id
+  `;
 
-    const values = [];
-
-    if (estado) {
-      query += ` WHERE pe.estado = ?`;
-      values.push(estado);
-    }
-
-    query += ` ORDER BY pe.fecha_creacion DESC`;
-
-    const rows = await db.query(query, {
-      replacements: values,
-      type: QueryTypes.SELECT
-    });
-
-    return rows;
-  } catch (error) {
-    console.error('Error al buscar préstamos con cliente y ruta:', error.message);
-    throw error;
+  const values = [];
+  if (estado) {
+    query += ' WHERE pe.estado = ?';
+    values.push(estado);
   }
+
+  const rows = await db.query(query, { replacements: values, type: QueryTypes.SELECT });
+
+  console.log('📌 Préstamos especiales encontrados:', rows.length);
+
+  return rows.map(row => {
+    row.monto_aprobado = safeParseFloat(row.monto_aprobado);
+    row.interes_porcentaje = safeParseFloat(row.interes_porcentaje, 10); // Tasa diferente
+    row.monto_interes = row.monto_aprobado * (row.interes_porcentaje / 100);
+    row.monto_total = row.monto_aprobado + row.monto_interes;
+    return row;
+  });
 },
     findById: async (id) => {
         try {

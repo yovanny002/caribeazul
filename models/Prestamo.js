@@ -109,33 +109,36 @@ findCuotasByPrestamo: async (prestamoId) => {
   });
 },
 
-  findAllWithClientes: async (estado = null) => {
-    let query = `
-      SELECT p.*, 
-             c.nombre AS cliente_nombre, 
-             c.apellidos AS cliente_apellidos,
-             c.profesion AS cliente_profesion
-      FROM solicitudes_prestamos p
-      JOIN clientes c ON p.cliente_id = c.id
-    `;
+// Prestamo.js
+findAllWithClientes: async (estado = null) => {
+  let query = `
+    SELECT p.*, 
+           c.nombre AS cliente_nombre, 
+           c.apellidos AS cliente_apellidos,
+           c.profesion AS cliente_profesion
+    FROM solicitudes_prestamos p
+    JOIN clientes c ON p.cliente_id = c.id
+  `;
 
-    const values = [];
-    if (estado) {
-      query += ' WHERE p.estado = ?';
-      values.push(estado);
-    }
+  const values = [];
+  if (estado) {
+    query += ' WHERE p.estado = ?';
+    values.push(estado);
+  }
 
-    const rows = await db.query(query, { replacements: values, type: QueryTypes.SELECT });
+  const rows = await db.query(query, { replacements: values, type: QueryTypes.SELECT });
 
-    return rows.map(row => {
-      row.monto_aprobado = safeParseFloat(row.monto_aprobado);
-      row.interes_porcentaje = safeParseFloat(row.interes_porcentaje, 43);
-      row.monto_interes = row.monto_aprobado * (row.interes_porcentaje / 100);
-      row.monto_total = row.monto_aprobado + row.monto_interes;
-      row.moras = safeParseFloat(row.moras, 0);
-      return row;
-    });
-  },
+  console.log('📌 Préstamos normales encontrados:', rows.length); // <= Agrega esto
+
+  return rows.map(row => {
+    row.monto_aprobado = safeParseFloat(row.monto_aprobado);
+    row.interes_porcentaje = safeParseFloat(row.interes_porcentaje, 43);
+    row.monto_interes = row.monto_aprobado * (row.interes_porcentaje / 100);
+    row.monto_total = row.monto_aprobado + row.monto_interes;
+    row.moras = safeParseFloat(row.moras, 0);
+    return row;
+  });
+},
 
 create: async (data) => {
   const {

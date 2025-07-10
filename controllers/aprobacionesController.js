@@ -38,16 +38,15 @@ class ApprovalController {
     }));
   }
 
-  static async _getSpecialLoans() {
-    const loans = await PrestamoEspecial.findAllWithClienteYRuta('pendiente');
-    return loans.map(loan => ({
-      ...loan,
-      loanType: 'special',
-      displayType: 'Préstamo Especial',
-      icon: 'fa-star'
-    }));
-  }
-
+static async _getSpecialLoans() {
+  const loans = await PrestamoEspecial.findAllWithClienteYRuta('pendiente'); // ✅ correcto
+  return loans.map(loan => ({
+    ...loan,
+    loanType: 'special',
+    displayType: 'Préstamo Especial',
+    icon: 'fa-star'
+  }));
+}
   static _getTemplateHelpers() {
     return {
       formatCurrency: (amount) => new Intl.NumberFormat('es-DO', {
