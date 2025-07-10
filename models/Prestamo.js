@@ -24,59 +24,30 @@ const Prestamo = {
     );
     return rows[0];
   },
-
-// En el método findById, agregar cálculo de mora
-findById: async (id) => {
-  try {
-    const rows = await db.query(`
-      SELECT p.*, 
-             c.nombre AS cliente_nombre, 
-             c.apellidos AS cliente_apellidos,
-             c.cedula AS cliente_cedula,
-             c.profesion AS cliente_profesion,
-             r.nombre AS ruta_nombre,
-             r.zona AS ruta_zona
-      FROM solicitudes_prestamos p
-      JOIN clientes c ON p.cliente_id = c.id
-      LEFT JOIN rutas r ON p.ruta_id = r.id
-      WHERE p.id = :id
+ findCuotasByPrestamo: async (prestamoId) => {
+    const cuotas = await db.query(`
+      SELECT * FROM cuotas 
+      WHERE prestamo_id = ?
+      ORDER BY numero_cuota ASC
     `, {
-      replacements: { id },
+      replacements: [prestamoId],
       type: QueryTypes.SELECT
     });
 
-    if (!rows || rows.length === 0) return null;
-
-    const prestamo = rows[0];
-    prestamo.monto_aprobado = safeParseFloat(prestamo.monto_aprobado);
-    prestamo.interes_porcentaje = safeParseFloat(prestamo.interes_porcentaje, 43);
-    prestamo.monto_interes = prestamo.monto_aprobado * (prestamo.interes_porcentaje / 100);
-    prestamo.monto_total = prestamo.monto_aprobado + prestamo.monto_interes;
-    
-    // Calcular moras pendientes
-    const cuotas = await Prestamo.findCuotasByPrestamo(id);
-    let morasPendientes = 0;
-    
-    cuotas.forEach(cuota => {
-      if (cuota.estado === 'pendiente' && moment(cuota.fecha_vencimiento).add(3, 'days').isBefore(moment())) {
-        const mora = cuota.monto * 0.05; // 5% de mora
-        morasPendientes += mora;
-      }
+    return cuotas.map(cuota => {
+      // Calcular mora si la cuota está vencida
+      const esVencida = cuota.estado === 'pendiente' && 
+        moment(cuota.fecha_vencimiento).add(3, 'days').isBefore(moment());
+      
+      return {
+        ...cuota,
+        monto: safeParseFloat(cuota.monto),
+        mora: esVencida ? safeParseFloat(cuota.monto) * 0.05 : 0,
+        total_a_pagar: safeParseFloat(cuota.monto) + (esVencida ? safeParseFloat(cuota.monto) * 0.05 : 0)
+      };
     });
-    
-    prestamo.moras = safeParseFloat(prestamo.moras, 0) + morasPendientes;
-
-    const pagos = await Pago.findByPrestamo(id) || [];
-    const total_pagado = pagos.reduce((sum, pago) => sum + safeParseFloat(pago.monto), 0);
-    prestamo.total_pagado = total_pagado;
-    prestamo.saldo_actual = Math.max(0, prestamo.monto_total + prestamo.moras - total_pagado);
-
-    return prestamo;
-  } catch (error) {
-    console.error(`❌ Error en findById(${id}):`, error.message);
-    throw error;
-  }
-},
+  },
+// En el método findById, agregar cálculo de mora
 
 
 // En el método findCuotasByPrestamo, agregar cálculo de mora por cuota
@@ -138,117 +109,216 @@ findCuotasByPrestamo: async (prestamoId) => {
   },
 
 // En el método create
-create: async (data) => {
-  const {
-    cliente_id,
-    ingresos_mensuales,
-    monto_solicitado,
-    monto_aprobado,
-    interes_porcentaje,
-    cuotas,
-    forma_pago,
-    estado,
-    moras,
-    ruta_id,
-    tipo_prestamo, // 'abierto' o 'cerrado' (cuotas)
-    interes_manual // Solo para préstamos abiertos
-  } = data;
-
-  const montoAprobadoVal = safeParseFloat(monto_aprobado || monto_solicitado);
-  const interes = safeParseFloat(interes_porcentaje, 43);
-  
-  // Calcular montos según tipo de préstamo
-  let montoInteres, montoTotal;
-  
-  if (tipo_prestamo === 'abierto') {
-    // Para préstamo abierto, el interés manual es el total a cobrar
-    montoInteres = safeParseFloat(interes_manual);
-    montoTotal = montoAprobadoVal + montoInteres;
-  } else {
-    // Para préstamo cerrado (cuotas), cálculo normal
-    montoInteres = montoAprobadoVal * (interes / 100);
-    montoTotal = montoAprobadoVal + montoInteres;
-  }
-
-  // Insertar préstamo
-  const [result] = await db.query(`
-    INSERT INTO solicitudes_prestamos 
-    (cliente_id, ingresos_mensuales, monto_solicitado, monto_aprobado, 
-     interes_porcentaje, cuotas, monto_por_cuota, forma_pago, estado, moras, ruta_id, tipo_prestamo, monto_interes)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    RETURNING id
-  `, {
-    replacements: [
+ create: async (data) => {
+    const {
       cliente_id,
       ingresos_mensuales,
       monto_solicitado,
-      montoAprobadoVal,
-      interes,
-      tipo_prestamo === 'abierto' ? 1 : cuotas, // Para abierto solo 1 "cuota"
-      tipo_prestamo === 'abierto' ? montoTotal : (montoTotal / cuotas), // Para abierto el monto total
+      monto_aprobado,
+      interes_porcentaje,
+      interes_manual,
+      cuotas,
       forma_pago,
-      estado || 'pendiente',
-      safeParseFloat(moras, 0),
+      estado,
+      moras,
       ruta_id,
-      tipo_prestamo,
-      montoInteres
-    ],
-    type: QueryTypes.INSERT
-  });
+      tipo_prestamo
+    } = data;
 
-  const prestamoId = result[0].id;
+    // Validaciones básicas
+    if (tipo_prestamo === 'abierto' && (!interes_manual || isNaN(interes_manual))) {
+      throw new Error('Para préstamos abiertos debe especificar el interés manual');
+    }
 
-  // Generar cuotas solo si no es abierto
-  if (tipo_prestamo !== 'abierto') {
-    await Prestamo.generateCuotas(prestamoId, montoTotal, cuotas, forma_pago);
-  }
+    const montoAprobadoVal = safeParseFloat(monto_aprobado || monto_solicitado);
+    let montoInteres, montoTotal, montoPorCuota;
 
-  return prestamoId;
-},
+    if (tipo_prestamo === 'abierto') {
+      // Lógica para préstamos abiertos
+      montoInteres = safeParseFloat(interes_manual);
+      montoTotal = montoAprobadoVal + montoInteres;
+      montoPorCuota = montoTotal; // Para abierto, el monto por "cuota" es el total
+    } else {
+      // Lógica para préstamos cerrados (por cuotas)
+      const interes = safeParseFloat(interes_porcentaje, 43);
+      montoInteres = montoAprobadoVal * (interes / 100);
+      montoTotal = montoAprobadoVal + montoInteres;
+      montoPorCuota = parseFloat((montoTotal / cuotas).toFixed(2));
+    }
+
+    // Insertar el préstamo en la base de datos
+    const [result] = await db.query(`
+      INSERT INTO solicitudes_prestamos (
+        cliente_id, ingresos_mensuales, monto_solicitado, monto_aprobado,
+        interes_porcentaje, monto_interes, monto_total, cuotas, monto_por_cuota,
+        forma_pago, estado, moras, ruta_id, tipo_prestamo, saldo_actual
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      RETURNING id
+    `, {
+      replacements: [
+        cliente_id,
+        ingresos_mensuales,
+        monto_solicitado,
+        montoAprobadoVal,
+        tipo_prestamo === 'abierto' ? null : interes_porcentaje,
+        montoInteres,
+        montoTotal,
+        tipo_prestamo === 'abierto' ? 1 : cuotas,
+        montoPorCuota,
+        forma_pago,
+        estado || 'pendiente',
+        safeParseFloat(moras, 0),
+        ruta_id,
+        tipo_prestamo,
+        montoTotal // Saldo inicial igual al monto total
+      ],
+      type: QueryTypes.INSERT
+    });
+
+    const prestamoId = result[0].id;
+
+    // Generar cuotas solo para préstamos cerrados
+    if (tipo_prestamo !== 'abierto') {
+      await Prestamo.generateCuotas(prestamoId, montoTotal, cuotas, forma_pago);
+    }
+
+    return prestamoId;
+  },
 
 // Nuevo método para registrar pagos de préstamos abiertos
-registrarPagoAbierto: async (prestamoId, montoPago) => {
-  const prestamo = await Prestamo.findById(prestamoId);
-  
-  if (!prestamo || prestamo.tipo_prestamo !== 'abierto') {
-    throw new Error('Préstamo no encontrado o no es de tipo abierto');
-  }
+ registrarPagoAbierto: async (prestamoId, montoPago) => {
+    const prestamo = await Prestamo.findById(prestamoId);
+    
+    if (!prestamo || prestamo.tipo_prestamo !== 'abierto') {
+      throw new Error('Préstamo no encontrado o no es de tipo abierto');
+    }
 
-  // Calcular interés actual (10% del capital actual)
-  const interesActual = prestamo.saldo_actual * 0.10;
-  const capitalPagado = Math.max(0, montoPago - interesActual);
-  
-  // Registrar el pago
-  const [result] = await db.query(`
-    INSERT INTO pagos_abiertos 
-    (prestamo_id, monto, interes, capital, saldo_anterior, saldo_posterior)
-    VALUES (?, ?, ?, ?, ?, ?)
-    RETURNING id
-  `, {
-    replacements: [
-      prestamoId,
-      montoPago,
-      interesActual,
-      capitalPagado,
-      prestamo.saldo_actual,
-      prestamo.saldo_actual - capitalPagado
-    ],
-    type: QueryTypes.INSERT
-  });
+    // Calcular distribución del pago
+    const interesPendiente = prestamo.monto_interes - (prestamo.interes_pagado || 0);
+    const pagoInteres = Math.min(montoPago, interesPendiente);
+    const pagoCapital = montoPago - pagoInteres;
+    const nuevoSaldo = prestamo.saldo_actual - pagoCapital;
 
-  // Actualizar saldo del préstamo
-  await db.query(`
-    UPDATE solicitudes_prestamos 
-    SET saldo_actual = saldo_actual - ?
-    WHERE id = ?
-  `, {
-    replacements: [capitalPagado, prestamoId],
-    type: QueryTypes.UPDATE
-  });
+    // Iniciar transacción para asegurar consistencia
+    const transaction = await db.transaction();
 
-  return result[0].id;
-},
+    try {
+      // Registrar el pago
+      const [pagoResult] = await db.query(`
+        INSERT INTO pagos_abiertos (
+          prestamo_id, monto, interes, capital, 
+          saldo_anterior, saldo_posterior, fecha
+        ) VALUES (?, ?, ?, ?, ?, ?, NOW())
+        RETURNING id
+      `, {
+        replacements: [
+          prestamoId,
+          montoPago,
+          pagoInteres,
+          pagoCapital,
+          prestamo.saldo_actual,
+          nuevoSaldo
+        ],
+        type: QueryTypes.INSERT,
+        transaction
+      });
 
+      // Actualizar el préstamo
+      await db.query(`
+        UPDATE solicitudes_prestamos 
+        SET 
+          interes_pagado = COALESCE(interes_pagado, 0) + ?,
+          saldo_actual = ?,
+          total_pagado = COALESCE(total_pagado, 0) + ?
+        WHERE id = ?
+      `, {
+        replacements: [pagoInteres, nuevoSaldo, montoPago, prestamoId],
+        type: QueryTypes.UPDATE,
+        transaction
+      });
+
+      await transaction.commit();
+      return pagoResult[0].id;
+
+    } catch (error) {
+      await transaction.rollback();
+      console.error('Error en registrarPagoAbierto:', error);
+      throw error;
+    }
+  },
+findById: async (id) => {
+    try {
+      const [prestamo] = await db.query(`
+        SELECT 
+          p.*,
+          c.nombre AS cliente_nombre,
+          c.apellidos AS cliente_apellidos,
+          c.cedula AS cliente_cedula,
+          c.profesion AS cliente_profesion,
+          r.nombre AS ruta_nombre,
+          r.zona AS ruta_zona,
+          COALESCE(
+            (SELECT SUM(monto) FROM pagos WHERE prestamo_id = p.id), 0
+          ) AS total_pagado_cerrado,
+          COALESCE(
+            (SELECT SUM(monto) FROM pagos_abiertos WHERE prestamo_id = p.id), 0
+          ) AS total_pagado_abierto
+        FROM solicitudes_prestamos p
+        JOIN clientes c ON p.cliente_id = c.id
+        LEFT JOIN rutas r ON p.ruta_id = r.id
+        WHERE p.id = ?
+        LIMIT 1
+      `, {
+        replacements: [id],
+        type: QueryTypes.SELECT
+      });
+
+      if (!prestamo) return null;
+
+      // Procesar valores numéricos
+      prestamo.monto_aprobado = safeParseFloat(prestamo.monto_aprobado);
+      prestamo.monto_interes = safeParseFloat(prestamo.monto_interes);
+      prestamo.monto_total = safeParseFloat(prestamo.monto_total);
+      prestamo.moras = safeParseFloat(prestamo.moras, 0);
+      
+      // Calcular valores según tipo de préstamo
+      if (prestamo.tipo_prestamo === 'abierto') {
+        prestamo.total_pagado = safeParseFloat(prestamo.total_pagado_abierto);
+        prestamo.saldo_actual = safeParseFloat(prestamo.saldo_actual);
+        
+        // Obtener historial de pagos abiertos
+        prestamo.historialPagos = await db.query(`
+          SELECT * FROM pagos_abiertos 
+          WHERE prestamo_id = ?
+          ORDER BY fecha DESC
+        `, {
+          replacements: [id],
+          type: QueryTypes.SELECT
+        });
+      } else {
+        prestamo.total_pagado = safeParseFloat(prestamo.total_pagado_cerrado);
+        prestamo.saldo_actual = Math.max(0, prestamo.monto_total + prestamo.moras - prestamo.total_pagado);
+        
+        // Calcular moras para préstamos cerrados
+        const cuotas = await Prestamo.findCuotasByPrestamo(id);
+        let morasPendientes = 0;
+        
+        cuotas.forEach(cuota => {
+          if (cuota.estado === 'pendiente' && moment(cuota.fecha_vencimiento).add(3, 'days').isBefore(moment())) {
+            morasPendientes += cuota.monto * 0.05; // 5% de mora
+          }
+        });
+        
+        prestamo.moras += morasPendientes;
+        prestamo.cuotas = cuotas;
+      }
+
+      return prestamo;
+    } catch (error) {
+      console.error(`Error en findById(${id}):`, error);
+      throw error;
+    }
+  },
   update: async (id, data) => {
     await db.query(`
       UPDATE solicitudes_prestamos
@@ -297,61 +367,50 @@ insertCuotas: async (cuotasData) => {
   }
 },
 
-generateCuotas: async (prestamoId, montoTotal, numeroCuotas, formaPago = 'mensual') => {
-  if (!prestamoId) throw new Error('ID del préstamo no válido al generar cuotas');
+generateCuotas: async (prestamoId, montoTotal, numeroCuotas, formaPago) => {
+    const cuotas = [];
+    const montoPorCuota = parseFloat((montoTotal / numeroCuotas).toFixed(2));
+    let fechaBase = moment();
 
-  // ✅ Verificar si ya existen cuotas para este préstamo
-  const [{ count }] = await db.query(`
-    SELECT COUNT(*)::int AS count FROM cuotas WHERE prestamo_id = $1
-  `, {
-    bind: [prestamoId],
-    type: QueryTypes.SELECT
-  });
-
-  if (count > 0) {
-    console.warn(`⚠️ Ya existen cuotas para el préstamo ${prestamoId}. Se omite la generación.`);
-    return;
-  }
-
-  const numCuotas = parseInt(numeroCuotas);
-  if (isNaN(numCuotas)) throw new Error('Número de cuotas no válido');
-
-  const cuotas = [];
-  const montoTotalNum = safeParseFloat(montoTotal);
-  const montoPorCuota = parseFloat((montoTotalNum / numCuotas).toFixed(2));
-  const fechaBase = moment();
-
-  let diasIncremento = 30;
-  switch (formaPago) {
-    case 'diario': diasIncremento = 1; break;
-    case 'semanal': diasIncremento = 7; break;
-    case 'quincenal': diasIncremento = 15; break;
-    case 'mensual': diasIncremento = 30; break;
-  }
-
-  let acumulado = 0;
-  for (let i = 0; i < numCuotas; i++) {
-    let monto = montoPorCuota;
-    if (i === numCuotas - 1) {
-      monto = parseFloat((montoTotalNum - acumulado).toFixed(2));
-    } else {
-      acumulado += montoPorCuota;
+    // Determinar intervalo entre cuotas según forma de pago
+    let diasIncremento;
+    switch (formaPago) {
+      case 'diario': diasIncremento = 1; break;
+      case 'semanal': diasIncremento = 7; break;
+      case 'quincenal': diasIncremento = 15; break;
+      case 'mensual': diasIncremento = 30; break;
+      default: diasIncremento = 30;
     }
 
-    const fecha = fechaBase.clone().add(diasIncremento * (i + 1), 'days').format('YYYY-MM-DD');
+    // Generar cada cuota
+    for (let i = 0; i < numeroCuotas; i++) {
+      const fechaVencimiento = fechaBase.clone().add((i + 1) * diasIncremento, 'days');
+      
+      cuotas.push({
+        prestamo_id: prestamoId,
+        numero_cuota: i + 1,
+        monto: i === numeroCuotas - 1 ? 
+          parseFloat((montoTotal - (montoPorCuota * i)).toFixed(2)) : // Ajuste para última cuota
+          montoPorCuota,
+        fecha_vencimiento: fechaVencimiento.format('YYYY-MM-DD'),
+        estado: 'pendiente'
+      });
+    }
 
-    cuotas.push({
-      prestamo_id: prestamoId,
-      numero_cuota: i + 1,
-      monto,
-      fecha_vencimiento: fecha,
-      estado: 'pendiente'
-    });
-  }
-
-  await Prestamo.insertCuotas(cuotas);
-},
-
+    // Insertar cuotas en lote
+    if (cuotas.length > 0) {
+      await db.query(`
+        INSERT INTO cuotas (
+          prestamo_id, numero_cuota, monto, fecha_vencimiento, estado
+        ) VALUES ${cuotas.map(() => '(?, ?, ?, ?, ?)').join(',')}
+      `, {
+        replacements: cuotas.flatMap(c => [
+          c.prestamo_id, c.numero_cuota, c.monto, c.fecha_vencimiento, c.estado
+        ]),
+        type: QueryTypes.INSERT
+      });
+    }
+  },
 
 
 
