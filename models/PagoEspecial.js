@@ -1,137 +1,111 @@
+// models/PagoEspecial.js
 const db = require('./db');
-const { QueryTypes } = require('sequelize');
-const moment = require('moment');
-
-const safeParseFloat = (value, defaultValue = 0) => {
-    const num = parseFloat(value);
-    return isNaN(num) ? defaultValue : num;
-};
 
 const PagoEspecial = {
-    findByPrestamo: async (prestamoId) => {
-        try {
-            const rows = await db.query(`
-                SELECT * FROM pagos_especiales 
-                WHERE prestamo_id = :prestamoId
-                ORDER BY fecha DESC
-            `, {
-                replacements: { prestamoId },
-                type: QueryTypes.SELECT
-            });
-            return rows;
-        } catch (error) {
-            console.error(`Error al buscar pagos por préstamo especial (${prestamoId}):`, error.message);
-            throw error;
-        }
-    },
+  findAll: async (options = {}) => {
+    let query = `SELECT * FROM pagos_especiales`;
+    const replacements = {};
 
-    findById: async (id) => {
-        try {
-            const rows = await db.query(`
-                SELECT * FROM pagos_especiales 
-                WHERE id = :id
-            `, {
-                replacements: { id },
-                type: QueryTypes.SELECT
-            });
-            return rows[0] || null;
-        } catch (error) {
-            console.error(`Error al buscar pago especial por ID (${id}):`, error.message);
-            throw error;
-        }
-    },
-
-    create: async (data) => {
-        const {
-            prestamo_id,
-            monto,
-            capital_pagado,
-            interes_pagado,
-            metodo,
-            referencia = null,
-            registrado_por = 'Sistema',
-            fecha = moment().format('YYYY-MM-DD HH:mm:ss')
-        } = data;
-
-        try {
-            const result = await db.query(`
-                INSERT INTO pagos_especiales
-                (prestamo_id, monto, capital_pagado, interes_pagado, metodo, referencia, registrado_por, fecha)
-                VALUES (:prestamo_id, :monto, :capital_pagado, :interes_pagado, :metodo, :referencia, :registrado_por, :fecha)
-                RETURNING id
-            `, {
-                replacements: {
-                    prestamo_id,
-                    monto: safeParseFloat(monto),
-                    capital_pagado: safeParseFloat(capital_pagado),
-                    interes_pagado: safeParseFloat(interes_pagado),
-                    metodo,
-                    referencia,
-                    registrado_por,
-                    fecha
-                },
-                type: QueryTypes.INSERT
-            });
-
-            return result[0]?.id || null;
-        } catch (error) {
-            console.error('Error al crear pago especial:', error.message);
-            throw error;
-        }
-    },
-
-    update: async (id, data) => {
-        const {
-            monto,
-            capital_pagado,
-            interes_pagado,
-            metodo,
-            referencia = null,
-            registrado_por,
-            fecha
-        } = data;
-
-        try {
-            await db.query(`
-                UPDATE pagos_especiales SET
-                monto = :monto,
-                capital_pagado = :capital_pagado,
-                interes_pagado = :interes_pagado,
-                metodo = :metodo,
-                referencia = :referencia,
-                registrado_por = :registrado_por,
-                fecha = :fecha
-                WHERE id = :id
-            `, {
-                replacements: {
-                    id,
-                    monto: safeParseFloat(monto),
-                    capital_pagado: safeParseFloat(capital_pagado),
-                    interes_pagado: safeParseFloat(interes_pagado),
-                    metodo,
-                    referencia,
-                    registrado_por,
-                    fecha
-                },
-                type: QueryTypes.UPDATE
-            });
-        } catch (error) {
-            console.error(`Error al actualizar pago especial (${id}):`, error.message);
-            throw error;
-        }
-    },
-
-    delete: async (id) => {
-        try {
-            await db.query('DELETE FROM pagos_especiales WHERE id = :id', {
-                replacements: { id },
-                type: QueryTypes.DELETE
-            });
-        } catch (error) {
-            console.error(`Error al eliminar pago especial (${id}):`, error.message);
-            throw error;
-        }
+    if (options.where) {
+      const whereClauses = [];
+      
+      if (options.where.prestamo_id) {
+        whereClauses.push('prestamo_id = :prestamo_id');
+        replacements.prestamo_id = options.where.prestamo_id;
+      }
+      
+      if (whereClauses.length > 0) {
+        query += ' WHERE ' + whereClauses.join(' AND ');
+      }
     }
+
+    if (options.order) {
+      const [column, direction] = options.order[0];
+      query += ` ORDER BY ${column} ${direction}`;
+    } else {
+      query += ' ORDER BY fecha DESC';
+    }
+
+    const [rows] = await db.query(query, { replacements });
+    return rows;
+  },
+
+  findByPk: async (id) => {
+    const [rows] = await db.query(`
+      SELECT * FROM pagos_especiales WHERE id = :id
+    `, {
+      replacements: { id }
+    });
+    return rows[0];
+  },
+
+// models/PagoEspecial.js
+findAllByPrestamoId: async (prestamoId) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT * FROM pagos_especiales 
+      WHERE prestamo_id = :prestamoId
+      ORDER BY fecha DESC
+    `, {
+      replacements: { prestamoId },
+      type: db.QueryTypes.SELECT
+    });
+    return rows || [];
+  } catch (error) {
+    console.error('Error en findAllByPrestamoId:', error);
+    return [];
+  }
+},
+
+  create: async (pago) => {
+    const {
+      prestamo_id,
+      monto,
+      interes_pagado = 0,
+      capital_pagado = 0,
+      metodo = 'efectivo',
+      referencia = '',
+      fecha = new Date(),
+      registrado_por = 'Sistema'
+    } = pago;
+
+    // Validar que el monto sea positivo
+    if (monto <= 0) {
+      throw new Error('El monto del pago debe ser mayor que cero');
+    }
+
+    // Validar que la suma de capital e interés sea igual al monto
+    if (Math.abs((interes_pagado + capital_pagado) - monto) > 0.01) {
+      throw new Error('La suma de capital e interés debe ser igual al monto total');
+    }
+
+    const [result] = await db.query(`
+      INSERT INTO pagos_especiales
+      (prestamo_id, monto, interes_pagado, capital_pagado, metodo, referencia, fecha, registrado_por)
+      VALUES (:prestamo_id, :monto, :interes_pagado, :capital_pagado, :metodo, :referencia, :fecha, :registrado_por)
+    `, {
+      replacements: {
+        prestamo_id,
+        monto,
+        interes_pagado,
+        capital_pagado,
+        metodo,
+        referencia,
+        fecha,
+        registrado_por
+      }
+    });
+
+    return result.insertId;
+  },
+
+  calcularDistribucionPago: (monto, interesPorcentaje, capitalRestante) => {
+    const interes = capitalRestante * (interesPorcentaje / 100);
+    const interesPagado = Math.min(monto, interes);
+    const capitalPagado = monto - interesPagado;
+    
+    return { interesPagado, capitalPagado };
+  }
 };
 
 module.exports = PagoEspecial;

@@ -109,36 +109,33 @@ findCuotasByPrestamo: async (prestamoId) => {
   });
 },
 
-// Prestamo.js
-findAllWithClientes: async (estado = null) => {
-  let query = `
-    SELECT p.*, 
-           c.nombre AS cliente_nombre, 
-           c.apellidos AS cliente_apellidos,
-           c.profesion AS cliente_profesion
-    FROM solicitudes_prestamos p
-    JOIN clientes c ON p.cliente_id = c.id
-  `;
+  findAllWithClientes: async (estado = null) => {
+    let query = `
+      SELECT p.*, 
+             c.nombre AS cliente_nombre, 
+             c.apellidos AS cliente_apellidos,
+             c.profesion AS cliente_profesion
+      FROM solicitudes_prestamos p
+      JOIN clientes c ON p.cliente_id = c.id
+    `;
 
-  const values = [];
-  if (estado) {
-    query += ' WHERE p.estado = ?';
-    values.push(estado);
-  }
+    const values = [];
+    if (estado) {
+      query += ' WHERE p.estado = ?';
+      values.push(estado);
+    }
 
-  const rows = await db.query(query, { replacements: values, type: QueryTypes.SELECT });
+    const rows = await db.query(query, { replacements: values, type: QueryTypes.SELECT });
 
-  console.log('📌 Préstamos normales encontrados:', rows.length); // <= Agrega esto
-
-  return rows.map(row => {
-    row.monto_aprobado = safeParseFloat(row.monto_aprobado);
-    row.interes_porcentaje = safeParseFloat(row.interes_porcentaje, 43);
-    row.monto_interes = row.monto_aprobado * (row.interes_porcentaje / 100);
-    row.monto_total = row.monto_aprobado + row.monto_interes;
-    row.moras = safeParseFloat(row.moras, 0);
-    return row;
-  });
-},
+    return rows.map(row => {
+      row.monto_aprobado = safeParseFloat(row.monto_aprobado);
+      row.interes_porcentaje = safeParseFloat(row.interes_porcentaje, 43);
+      row.monto_interes = row.monto_aprobado * (row.interes_porcentaje / 100);
+      row.monto_total = row.monto_aprobado + row.monto_interes;
+      row.moras = safeParseFloat(row.moras, 0);
+      return row;
+    });
+  },
 
 create: async (data) => {
   const {
@@ -326,8 +323,7 @@ generateCuotas: async (prestamoId, montoTotal, numeroCuotas, formaPago = 'mensua
       fecha_display: pago.fecha ? moment(pago.fecha).format('DD/MM/YYYY') : 'Sin fecha'
     }));
   },
-  
- 
+
  // En el método registrarPago del modelo
 // En el método registrarPago
 // En el método registrarPago
@@ -384,66 +380,7 @@ registrarPago: async (pagoData) => {
   }
 
   return result[0].id;
-},
-// Aprobar préstamo
-aprobar: async (id, datos) => {
-  const [row] = await db.query(
-    'SELECT estado FROM solicitudes_prestamos WHERE id = ?',
-    { replacements: [id], type: QueryTypes.SELECT }
-  );
-
-  if (!row) throw new Error(`❌ El préstamo con ID ${id} no existe`);
-  if (row.estado !== 'pendiente') throw new Error(`⚠️ El préstamo ya está en estado '${row.estado}'`);
-
-  await db.query(
-    `UPDATE solicitudes_prestamos
-     SET estado = 'aprobado',
-         monto_aprobado = ?,
-         interes_porcentaje = ?,
-         ruta_id = ?
-     WHERE id = ?`,
-    {
-      replacements: [
-        safeParseFloat(datos.monto_aprobado),
-        safeParseFloat(datos.interes_porcentaje, 43),
-        datos.ruta_id,
-        id
-      ],
-      type: QueryTypes.UPDATE
-    }
-  );
-
-  console.log(`✅ Préstamo ${id} aprobado con éxito`);
-},
-
-// Rechazar préstamo
-rechazar: async (id, motivo = 'Sin motivo especificado') => {
-  const [row] = await db.query(
-    'SELECT estado FROM solicitudes_prestamos WHERE id = ?',
-    { replacements: [id], type: QueryTypes.SELECT }
-  );
-
-  if (!row) throw new Error(`❌ El préstamo con ID ${id} no existe`);
-  if (row.estado !== 'pendiente') throw new Error(`⚠️ El préstamo ya está en estado '${row.estado}'`);
-
-  await db.query(
-    `UPDATE solicitudes_prestamos
-     SET estado = 'rechazado',
-         notas = ?
-     WHERE id = ?`,
-    {
-      replacements: [motivo, id],
-      type: QueryTypes.UPDATE
-    }
-  );
-
-  console.log(`❌ Préstamo ${id} rechazado: ${motivo}`);
-},
-
-
-
+}
 };
-
-
 
 module.exports = Prestamo;

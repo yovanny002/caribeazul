@@ -1,42 +1,36 @@
+// routes/prestamosEspeciales.js
 const express = require('express');
 const router = express.Router();
-const { checkRole } = require('../middlewares/roles');
-const controller = require('../controllers/prestamosEspecialesController');
+const prestamosEspecialesController = require('../controllers/prestamosEspecialesController');
 
-// Middleware de validación de ID para rutas con :id
-const validateId = (req, res, next) => {
-  const id = parseInt(req.params.id);
-  if (isNaN(id) || id <= 0) {
-    return res.status(400).json({ error: 'ID inválido' });
-  }
-  req.id = id;
-  next();
-};
+// Listado de préstamos especiales
+router.get('/', prestamosEspecialesController.index);
 
-// Rutas sin ID
-router.get('/', checkRole(['administrador', 'supervisor']), controller.index);
-router.get('/crear', checkRole(['administrador', 'supervisor']), controller.createForm);
-router.post('/crear', checkRole(['administrador', 'supervisor']), controller.create);
+// Formulario para nuevo préstamo especial
+router.get('/nuevo', prestamosEspecialesController.createForm);
 
-// Middleware que se aplica sólo a rutas con ID
-router.use('/:id', validateId);
+// Guardar nuevo préstamo especial
+router.post('/crear', prestamosEspecialesController.create);
 
-// Rutas con ID
-router.route('/:id')
-  .get(checkRole(['administrador', 'supervisor', 'servicio']), controller.show)
-  .put(checkRole(['administrador', 'supervisor']), controller.update);
+// Ver detalle de un préstamo especial
+router.get('/:id', prestamosEspecialesController.show);
 
-router.get('/:id/editar', checkRole(['administrador', 'supervisor']), controller.editForm);
+// Formulario para editar préstamo especial
+router.get('/:id/editar', prestamosEspecialesController.editForm);
 
-// Rutas para aprobación y rechazo
-router.post('/:id/aprobar', checkRole(['administrador']), controller.aprobar);
-router.post('/:id/rechazar', checkRole(['administrador']), controller.rechazar);
+// Actualizar préstamo especial
+router.post('/:id/actualizar', prestamosEspecialesController.update);
 
-// Rutas de pagos
-router.get('/:id/pago', checkRole(['administrador', 'supervisor']), controller.pagoForm);
-router.post('/:id/pago', checkRole(['administrador', 'supervisor']), controller.procesarPago);
+// Formulario para registrar pago
+router.get('/:id/pago', prestamosEspecialesController.pagoForm);
 
-// Ruta para recibo de pago
-router.get('/:id/recibo/:pagoId', controller.recibo);
+// Procesar pago
+router.post('/:id/pago', prestamosEspecialesController.procesarPago);
+
+// Generar recibo de pago
+router.get('/:id/recibo/:pagoId', prestamosEspecialesController.recibo);
+
+// Ruta para aprobar préstamos especiales
+router.post('/:id/aprobar', prestamosEspecialesController.aprobarPrestamoEspecial);
 
 module.exports = router;
