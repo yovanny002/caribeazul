@@ -107,6 +107,16 @@
               <table class="table table-sm table-borderless">
                 <tbody>
                   <tr>
+                    <th>Ruta Asignada:</th>
+                    <td>
+                      <%= prestamo.ruta_nombre ? `${prestamo.ruta_zona} - ${prestamo.ruta_nombre}` : 'No asignada' %>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th width="40%">Fecha de Solicitud:</th>
+                    <td><%= prestamo.created_at ? new Date(prestamo.created_at).toLocaleDateString('es-DO') : 'N/A' %></td>
+                  </tr>
+                  <tr>
                     <th>Tipo de Préstamo:</th>
                     <td>
                       <span class="badge bg-<%= prestamo.tipo_prestamo === 'abierto' ? 'info' : 'primary' %>">
@@ -115,24 +125,39 @@
                     </td>
                   </tr>
                   <tr>
-                    <th>Capital Inicial:</th>
-                    <td>RD$ <%= formatMoney(prestamo.monto_aprobado) %></td>
+                    <th>Monto Solicitado:</th>
+                    <td>RD$ <%= formatMoney(prestamo.monto_solicitado) %></td>
+                  </tr>
+                  <tr>
+                    <th>Monto Aprobado:</th>
+                    <td class="fw-bold">RD$ <%= formatMoney(prestamo.monto_aprobado) %></td>
                   </tr>
                   <% if (prestamo.tipo_prestamo === 'abierto') { %>
                     <tr>
-                      <th>Interés Mensual:</th>
-                      <td><%= prestamo.interes_porcentaje %>%</td>
-                    </tr>
-                    <tr>
-                      <th>Interés Actual:</th>
-                      <td class="fw-bold">
-                        RD$ <span id="interesActual"><%= formatMoney(prestamo.interes_acumulado || 0) %></span>
+                      <th>Interés Diario:</th>
+                      <td class="fw-bold" id="interesDiario">
+                        <i class="fas fa-spinner fa-spin"></i> Calculando...
                       </td>
                     </tr>
                   <% } %>
                   <tr>
-                    <th>Saldo Pendiente:</th>
-                    <td class="fw-bold text-danger">RD$ <%= formatMoney(prestamo.saldo_actual) %></td>
+                    <th>Mora Acumulada:</th>
+                    <td class="text-danger fw-bold">RD$ <%= formatMoney(prestamo.mora_total) %></td>
+                  </tr>
+                  <tr>
+                    <th>Forma de Pago:</th>
+                    <td>
+                      <span class="badge bg-primary">
+                        <%= prestamo.forma_pago === 'diario' ? 'Diario' :
+                          prestamo.forma_pago === 'semanal' ? 'Semanal' :
+                          prestamo.forma_pago === 'quincenal' ? 'Quincenal' :
+                          prestamo.forma_pago === 'mensual' ? 'Mensual' : 'Personalizado' %>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Total a Pagar:</th>
+                    <td class="fw-bold text-success">RD$ <%= formatMoney(prestamo.monto_total) %></td>
                   </tr>
                 </tbody>
               </table>
@@ -140,7 +165,7 @@
           </div>
         </div>
       </div>
-
+      
       <!-- Estado Actual -->
       <div class="col-md-6 mb-4">
         <div class="card h-100">
@@ -148,38 +173,6 @@
             <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Estado Actual</h5>
           </div>
           <div class="card-body">
-            <% if (prestamo.tipo_prestamo === 'abierto') { %>
-              <div class="mb-4">
-                <h6 class="mb-3">Registrar Pago</h6>
-                <form id="formPagoAbierto" class="row g-3">
-                  <div class="col-md-6">
-                    <label class="form-label">Monto del Pago (RD$)</label>
-                    <input type="number" class="form-control" id="montoPago" step="0.01" min="0.01" required>
-                  </div>
-                  <div class="col-md-6">
-                    <label class="form-label">Método</label>
-                    <select class="form-select" id="metodoPago" required>
-                      <option value="efectivo">Efectivo</option>
-                      <option value="transferencia">Transferencia</option>
-                      <option value="tarjeta">Tarjeta</option>
-                    </select>
-                  </div>
-                  <div class="col-12">
-                    <button type="submit" class="btn btn-primary">
-                      <i class="fas fa-check me-2"></i>Registrar Pago
-                    </button>
-                  </div>
-                </form>
-              </div>
-              <div class="alert alert-info">
-                <strong>Próximo pago:</strong> 
-                <span id="detalleInteres">
-                  Interés: RD$ <%= formatMoney(prestamo.interes_acumulado || 0) %> | 
-                  Capital disponible: RD$ <%= formatMoney(prestamo.saldo_actual) %>
-                </span>
-              </div>
-            <% } %>
-            
             <div class="table-responsive">
               <table class="table table-sm table-borderless">
                 <tbody>
@@ -188,16 +181,49 @@
                     <td class="text-success fw-bold">RD$ <%= formatMoney(prestamo.total_pagado) %></td>
                   </tr>
                   <tr>
+                    <th>Saldo Pendiente:</th>
+                    <td class="text-danger fw-bold">RD$ <%= formatMoney(prestamo.saldo_actual) %></td>
+                  </tr>
+                  <% if (prestamo.tipo_prestamo === 'cerrado') { %>
+                    <tr>
+                      <th>Próxima Cuota:</th>
+                      <td>
+                        <% const proximaCuota = cuotas.find(c => c.estado === 'pendiente'); %>
+                        <% if (proximaCuota) { %>
+                          <%- moment(proximaCuota.fecha_vencimiento).format('DD/MM/YYYY') %> -
+                          RD$ <%= formatMoney(proximaCuota.monto) %>
+                        <% } else { %>
+                          <span class="text-muted">No hay cuotas pendientes</span>
+                        <% } %>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>Cuotas Pagadas:</th>
+                      <td>
+                        <%
+                          const totalCuotas = cuotas.length;
+                          const cuotasPagadas = cuotas.filter(c => c.estado === 'pagada').length;
+                        %>
+                        <div class="progress" style="height: 20px;">
+                          <div class="progress-bar bg-success" role="progressbar"
+                               style="width: <%= totalCuotas > 0 ? (cuotasPagadas / totalCuotas) * 100 : 0 %>%"
+                               aria-valuenow="<%= cuotasPagadas %>"
+                               aria-valuemin="0"
+                               aria-valuemax="<%= totalCuotas %>">
+                            <%= cuotasPagadas %>/<%= totalCuotas %>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  <% } %>
+                  <tr>
                     <th>Último Pago:</th>
                     <td>
                       <% if (historialPagos.length > 0) { %>
                         <%- moment(historialPagos[0].fecha).format('DD/MM/YYYY') %> -
                         RD$ <%= formatMoney(historialPagos[0].monto) %>
-                        <% if (historialPagos[0].interes > 0) { %>
-                          <br><small class="text-muted">
-                            (Interés: RD$ <%= formatMoney(historialPagos[0].interes) %> | 
-                            Capital: RD$ <%= formatMoney(historialPagos[0].capital) %>)
-                          </small>
+                        <% if (prestamo.tipo_prestamo === 'abierto' && historialPagos[0].interes > 0) { %>
+                          <br><small class="text-muted">(Interés: RD$ <%= formatMoney(historialPagos[0].interes) %> | Capital: RD$ <%= formatMoney(historialPagos[0].capital) %>)</small>
                         <% } %>
                       <% } else { %>
                         <span class="text-muted">Sin pagos registrados</span>
@@ -386,6 +412,7 @@
       </div>
     </div>
   </div>
+
   <!-- Tab de Documentos -->
         <div class="tab-pane fade" id="documentos" role="tabpanel">
           <div class="card">
@@ -851,47 +878,22 @@ document.querySelectorAll('.btn-eliminar-doc').forEach(btn => {
 
 </script>
 <!-- Script para calcular interés diario en préstamos abiertos -->
-
-<% if (prestamo.tipo_prestamo === 'abierto') { %>
+<% if (esAbierto) { %>
 <script>
   document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('formPagoAbierto');
-    
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const monto = parseFloat(document.getElementById('montoPago').value);
-      const metodo = document.getElementById('metodoPago').value;
-      
-      if (!monto || monto <= 0) {
-        alert('Monto inválido');
-        return;
-      }
-
-      try {
-        const response = await fetch(`/prestamos/<%= prestamo.id %>/pagar-abierto`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            monto,
-            metodo
-          })
-        });
-
-        const data = await response.json();
-        
+    fetch(`/prestamos/<%= prestamo.id %>/calcular-interes`)
+      .then(response => response.json())
+      .then(data => {
         if (data.success) {
-          window.location.reload();
-        } else {
-          alert(data.message || 'Error al registrar pago');
+          document.getElementById('interesDiario').innerHTML = 
+            `RD$ ${data.interesDiario.toFixed(2)} (${prestamo.interes_porcentaje}% anual)`;
         }
-      } catch (error) {
-        console.error('Error:', error);
-        alert('Error al conectar con el servidor');
-      }
-    });
+      })
+      .catch(error => {
+        console.error('Error calculando interés:', error);
+        document.getElementById('interesDiario').innerHTML = 
+          'Error calculando interés';
+      });
   });
 </script>
 <% } %>
