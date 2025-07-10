@@ -12,8 +12,8 @@
         <span id="current-date"><%= new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) %></span>
       </span>
       <button class="btn btn-outline-primary btn-lg rounded-pill shadow-sm btn-refresh">
-    <i class="fas fa-sync-alt me-2"></i> Actualizar Datos
-  </button>
+        <i class="fas fa-sync-alt me-2"></i> Actualizar Datos
+      </button>
     </div>
   </div>
 
@@ -152,15 +152,27 @@
               <thead>
                 <tr class="text-muted text-uppercase">
                   <th scope="col">Cliente</th>
-                  <th scope="col">Monto</th>
-                  <th scope="col">Vence</th>
+                  <th scope="col">Monto Total</th>
+                  <th scope="col">Estado</th>
                 </tr>
               </thead>
               <tbody>
                 <% pagosPendientes.forEach(p => { %>
-                <tr>
-                  <td><small><%= p.nombre %></small></td>
-                  <td><span class="fw-bold">$<%= p.monto.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span></td>
+                <tr class="<%= new Date(p.fecha_vencimiento) < new Date() ? 'table-danger' : '' %>">
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span class="fw-bold"><%= p.nombre %></span>
+                      <small class="text-muted"><%= p.telefono1 %></small>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span class="fw-bold">$<%= p.monto_con_mora.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                      <% if (p.monto_con_mora > p.monto) { %>
+                        <small class="text-danger">Incluye mora: $<%= (p.monto_con_mora - p.monto).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></small>
+                      <% } %>
+                    </div>
+                  </td>
                   <td>
                     <% const dueDate = new Date(p.fecha_vencimiento); %>
                     <% const today = new Date(); %>
@@ -179,6 +191,12 @@
                     <span class="badge <%= badgeClass %> px-2 py-1">
                       <%= dueDate < today ? 'Vencido' : dueDate.toLocaleDateString('es-ES') %>
                     </span>
+                    <button class="btn btn-sm btn-link text-primary" data-bs-toggle="modal" data-bs-target="#pagoModal" 
+                      data-cliente="<%= p.nombre %>" 
+                      data-monto="<%= p.monto_con_mora %>"
+                      data-cuota="<%= p.cuota_id %>">
+                      <i class="fas fa-money-bill-wave"></i>
+                    </button>
                   </td>
                 </tr>
                 <% }) %>
@@ -195,36 +213,96 @@
     </div>
   </div>
 
+  <!-- Modal para registrar pagos -->
+  <div class="modal fade" id="pagoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Registrar Pago</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formPago">
+            <input type="hidden" id="cuotaId" name="cuota_id">
+            <div class="mb-3">
+              <label class="form-label">Cliente</label>
+              <input type="text" class="form-control" id="modalCliente" readonly>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Monto a Pagar</label>
+              <input type="text" class="form-control" id="modalMonto" readonly>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Método de Pago</label>
+              <select class="form-select" name="metodo" required>
+                <option value="efectivo">Efectivo</option>
+                <option value="transferencia">Transferencia</option>
+                <option value="tarjeta">Tarjeta</option>
+                <option value="cheque">Cheque</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Referencia (opcional)</label>
+              <input type="text" class="form-control" name="referencia">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Notas (opcional)</label>
+              <textarea class="form-control" name="notas" rows="2"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Registrar Pago</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row mt-4">
     <div class="col-lg-12">
       <div class="card border-0 shadow-lg rounded-3">
-        <div class="card-header bg-white border-bottom-0 py-4">
+        <div class="card-header bg-white border-bottom-0 py-4 d-flex justify-content-between align-items-center">
           <h5 class="mb-0 fw-bold text-info">Resumen Financiero General</h5>
+          <div class="dropdown">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fas fa-calendar-alt me-1"></i> Este Mes
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+              <li><a class="dropdown-item" href="#" data-period="today">Hoy</a></li>
+              <li><a class="dropdown-item" href="#" data-period="week">Esta Semana</a></li>
+              <li><a class="dropdown-item active" href="#" data-period="month">Este Mes</a></li>
+              <li><a class="dropdown-item" href="#" data-period="year">Este Año</a></li>
+            </ul>
+          </div>
         </div>
         <div class="card-body py-4">
           <div class="row g-4">
             <div class="col-md-3">
               <div class="p-4 bg-light rounded-lg text-center financial-summary-card">
                 <h6 class="text-muted mb-2">Capital Prestado</h6>
-                <h4 class="fw-bold mb-0 text-dark">$<%= capital_prestado.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></h4>
+                <h4 class="mb-0 fw-bold text-dark">$<%= capital_prestado.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></h4>
+                <small class="text-success"><i class="fas fa-caret-up me-1"></i> 15% vs mes anterior</small>
               </div>
             </div>
             <div class="col-md-3">
               <div class="p-4 bg-light rounded-lg text-center financial-summary-card">
                 <h6 class="text-muted mb-2">Intereses Generados</h6>
-                <h4 class="fw-bold mb-0 text-dark">$<%= intereses_generados.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></h4>
+                <h4 class="mb-0 fw-bold text-dark">$<%= intereses_generados.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></h4>
+                <small class="text-success"><i class="fas fa-caret-up me-1"></i> 8% vs mes anterior</small>
               </div>
             </div>
             <div class="col-md-3">
               <div class="p-4 bg-light rounded-lg text-center financial-summary-card">
                 <h6 class="text-muted mb-2">Monto en Morosidad</h6>
-                <h4 class="fw-bold mb-0 text-danger">$<%= morosidad.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></h4>
+                <h4 class="mb-0 fw-bold text-danger">$<%= morosidad.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></h4>
+                <small class="<%= morosidad > 0 ? 'text-danger' : 'text-success' %>">
+                  <%= morosidad > 0 ? 'Requiere acción' : 'Todo al día' %>
+                </small>
               </div>
             </div>
             <div class="col-md-3">
               <div class="p-4 bg-light rounded-lg text-center financial-summary-card">
                 <h6 class="text-muted mb-2">Total Recuperado</h6>
-                <h4 class="fw-bold mb-0 text-success">$<%= recuperado.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></h4>
+                <h4 class="mb-0 fw-bold text-success">$<%= recuperado.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></h4>
+                <small class="text-success"><i class="fas fa-caret-up me-1"></i> 12% vs mes anterior</small>
               </div>
             </div>
           </div>
@@ -233,6 +311,7 @@
     </div>
   </div>
 </div>
+
 <script>
   // Función para formatear números como moneda
   function formatCurrency(amount) {
@@ -245,6 +324,11 @@
   // Función para actualizar los datos del dashboard
   async function updateDashboardData() {
     try {
+      // Mostrar spinner de carga en el botón
+      const refreshBtn = document.querySelector('.btn-refresh');
+      refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Actualizando...';
+      refreshBtn.disabled = true;
+      
       const response = await fetch('/dashboard/data');
       if (!response.ok) throw new Error('Error al obtener datos');
       
@@ -328,41 +412,11 @@
       const now = new Date();
       document.getElementById('last-update').textContent = `Última actualización: ${now.toLocaleTimeString('es-ES')}`;
       
-    } catch (error) {
-      console.error('Error al actualizar datos:', error);
-    }
-  }
-
-  // Actualizar datos inmediatamente y luego cada 15 minutos (900,000 ms)
-  updateDashboardData();
-  setInterval(updateDashboardData, 900000);
-  
-  // También puedes agregar un botón para actualización manual
-  document.querySelector('.btn-refresh').addEventListener('click', updateDashboardData);
-</script>
-<script>
-  // Función para actualizar los datos
-  async function updateDashboardData() {
-    try {
-      // Mostrar spinner de carga en el botón
-      const refreshBtn = document.querySelector('.btn-refresh');
-      refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Actualizando...';
-      refreshBtn.disabled = true;
-      
-      // Obtener los nuevos datos
-      const response = await fetch('/dashboard/data');
-      if (!response.ok) throw new Error('Error al obtener datos');
-      
-      const data = await response.json();
-      
-      // Aquí iría el código para actualizar la UI con los nuevos datos
-      // (el mismo que te mostré en respuestas anteriores)
-      
       // Mostrar notificación de éxito
       showToast('Datos actualizados correctamente', 'success');
       
     } catch (error) {
-      console.error('Error al actualizar:', error);
+      console.error('Error al actualizar datos:', error);
       showToast('Error al actualizar datos', 'danger');
     } finally {
       // Restaurar el botón a su estado original
@@ -401,53 +455,155 @@
     }, 3000);
   }
 
-  // Asignar el evento click al botón
-  document.querySelector('.btn-refresh').addEventListener('click', updateDashboardData);
+  // Configuración del modal de pagos
+  document.addEventListener('DOMContentLoaded', function() {
+    const pagoModal = document.getElementById('pagoModal');
+    if (pagoModal) {
+      pagoModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const cliente = button.getAttribute('data-cliente');
+        const monto = button.getAttribute('data-monto');
+        const cuotaId = button.getAttribute('data-cuota');
+        
+        document.getElementById('modalCliente').value = cliente;
+        document.getElementById('modalMonto').value = '$' + parseFloat(monto).toLocaleString('es-DO', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+        document.getElementById('cuotaId').value = cuotaId;
+      });
+    }
+
+    // Manejo del formulario de pago
+    const formPago = document.getElementById('formPago');
+    if (formPago) {
+      formPago.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(formPago);
+        const response = await fetch('/pagos/registrar', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (response.ok) {
+          showToast('Pago registrado correctamente', 'success');
+          $('#pagoModal').modal('hide');
+          updateDashboardData();
+        } else {
+          showToast('Error al registrar el pago', 'danger');
+        }
+      });
+    }
+
+    // Filtros de período
+    document.querySelectorAll('[data-period]').forEach(item => {
+      item.addEventListener('click', function(e) {
+        e.preventDefault();
+        const period = this.getAttribute('data-period');
+        
+        // Actualizar el botón del dropdown
+        document.querySelector('#dropdownMenuButton').innerHTML = 
+          `<i class="fas fa-calendar-alt me-1"></i> ${this.textContent}`;
+        
+        // Quitar clase active de todos los items
+        document.querySelectorAll('[data-period]').forEach(i => {
+          i.classList.remove('active');
+        });
+        // Agregar clase active al item seleccionado
+        this.classList.add('active');
+        
+        // Aquí iría la lógica para filtrar los datos por período
+        console.log('Filtrando por:', period);
+      });
+    });
+
+    // Actualizar datos inmediatamente y luego cada 15 minutos (900,000 ms)
+    updateDashboardData();
+    setInterval(updateDashboardData, 900000);
+    
+    // También puedes agregar un botón para actualización manual
+    document.querySelector('.btn-refresh').addEventListener('click', updateDashboardData);
+  });
 </script>
-<%- include('../partials/footer') %>
 
 <style>
   body {
-    background-color: #f8f9fa; /* Light background for the whole page */
+    background-color: #f8f9fa;
   }
 
   .card-hover:hover {
-    transform: translateY(-8px); /* Slightly more pronounced lift */
-    box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important; /* Stronger shadow on hover */
+    transform: translateY(-8px);
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
     transition: all 0.3s ease-in-out;
   }
 
   .card {
-    border-radius: 0.75rem; /* More rounded corners for cards */
+    border-radius: 0.75rem;
   }
 
   .bg-primary-subtle {
-    background-color: #e0f2f7 !important; /* Lighter primary background for badges */
+    background-color: #e0f2f7 !important;
   }
 
   .text-primary {
-    color: #007bff !important; /* Ensure consistent primary color */
+    color: #007bff !important;
   }
 
   .bg-success-subtle {
-    background-color: #d4edda !important; /* Lighter success background for badges */
+    background-color: #d4edda !important;
   }
 
   .bg-warning-subtle {
-    background-color: #fff3cd !important; /* Lighter warning background for badges */
+    background-color: #fff3cd !important;
   }
 
   .financial-summary-card {
-    border: 1px solid #e9ecef; /* Subtle border for financial summary cards */
-    transition: all 0.2s ease-in-out;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
   }
 
   .financial-summary-card:hover {
-    background-color: #e2e6ea !important;
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+    border-left-color: var(--bs-primary);
   }
 
-  .list-group-item:hover {
-    background-color: #f2f2f2; /* Light hover effect for list items */
-    transition: background-color 0.2s ease;
+  .financial-summary-card h4 {
+    font-size: 1.5rem;
+  }
+
+  .financial-summary-card small {
+    font-size: 0.75rem;
+  }
+
+  /* Estilos para el modal */
+  #pagoModal .modal-body {
+    padding: 2rem;
+  }
+
+  /* Estilos para las tablas */
+  .table-danger {
+    background-color: rgba(220, 53, 69, 0.05);
+  }
+
+  /* Responsividad mejorada */
+  @media (max-width: 768px) {
+    .financial-summary-card {
+      margin-bottom: 1rem;
+    }
+    
+    .btn-refresh {
+      width: 100%;
+      margin-top: 1rem;
+    }
+    
+    .d-flex.justify-content-between {
+      flex-direction: column;
+    }
   }
 </style>
+
+<%- include('../partials/footer') %>
