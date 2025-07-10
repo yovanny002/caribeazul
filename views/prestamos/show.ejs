@@ -92,289 +92,327 @@
           </button>
         </li>
       </ul>
-      <!-- Contenido de los Tabs -->
-      <div class="tab-content" id="prestamoTabsContent">
-        <!-- Tab de Resumen -->
-        <div class="tab-pane fade show active" id="resumen" role="tabpanel">
-          <div class="row">
-            <!-- Detalles del Préstamo -->
-            <div class="col-md-6 mb-4">
-              <div class="card h-100">
-                <div class="card-header bg-light">
-                  <h5 class="mb-0"><i class="fas fa-file-contract me-2"></i>Detalles del Préstamo</h5>
-                </div>
-                <div class="card-body">
-                  <div class="table-responsive">
-                    <table class="table table-sm table-borderless">
-                      <tbody>
-                    <tr>
+<div class="tab-content" id="prestamoTabsContent">
+  <!-- Tab de Resumen -->
+  <div class="tab-pane fade show active" id="resumen" role="tabpanel">
+    <div class="row">
+      <!-- Detalles del Préstamo -->
+      <div class="col-md-6 mb-4">
+        <div class="card h-100">
+          <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-file-contract me-2"></i>Detalles del Préstamo</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-sm table-borderless">
+                <tbody>
+                  <tr>
                     <th>Ruta Asignada:</th>
                     <td>
                       <%= prestamo.ruta_nombre ? `${prestamo.ruta_zona} - ${prestamo.ruta_nombre}` : 'No asignada' %>
                     </td>
                   </tr>
-
-
-                        <tr>
-                          <th width="40%">Fecha de Solicitud:</th>
-                          <td><%= prestamo.created_at ? new Date(prestamo.created_at).toLocaleDateString('es-DO') : 'N/A' %></td>
-                        </tr>
-                        <tr>
-                          <th>Monto Solicitado:</th>
-                          <td>RD$ <%= formatMoney(prestamo.monto_solicitado) %></td>
-                        </tr>
-                        <tr>
-                          <th>Monto Aprobado:</th>
-                          <td class="fw-bold">RD$ <%= formatMoney(prestamo.monto_aprobado) %></td>
-                        </tr>
-                       <tr>
-                        <th>Mora Acumulada:</th>
-                        <td class="text-danger fw-bold">RD$ <%= formatMoney(prestamo.mora_total) %></td>
-                      </tr>
-                      <tr>
-                          <th>Forma de Pago:</th>
-                          <td>
-                            <span class="badge bg-primary">
-                              <%= prestamo.forma_pago === 'diario' ? 'Diario' :
-                                prestamo.forma_pago === 'semanal' ? 'Semanal' :
-                                prestamo.forma_pago === 'quincenal' ? 'Quincenal' :
-                                prestamo.forma_pago === 'mensual' ? 'Mensual' : 'Personalizado' %>
-                            </span>
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Total a Pagar:</th>
-                          <td class="fw-bold text-success">RD$ <%= formatMoney(prestamo.monto_total) %></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <!-- Estado Actual -->
-            <div class="col-md-6 mb-4">
-              <div class="card h-100">
-                <div class="card-header bg-light">
-                  <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Estado Actual</h5>
-                </div>
-                <div class="card-body">
-                  <div class="table-responsive">
-                    <table class="table table-sm table-borderless">
-                      <tbody>
-                        <tr>
-                          <th width="40%">Total Pagado:</th>
-                          <td class="text-success fw-bold">RD$ <%= formatMoney(prestamo.total_pagado) %></td>
-                        </tr>
-                        <tr>
-                          <th>Saldo Pendiente:</th>
-                          <td class="text-danger fw-bold">RD$ <%= formatMoney(prestamo.saldo_actual) %></td>
-                        </tr>
-                        <tr>
-                          <th>Próxima Cuota:</th>
-                          <td>
-                            <% const proximaCuota = cuotas.find(c => c.estado === 'pendiente'); %>
-                            <% if (proximaCuota) { %>
-                              <%- moment(proximaCuota.fecha_vencimiento).format('DD/MM/YYYY') %> -
-                              RD$ <%= formatMoney(proximaCuota.monto) %>
-                            <% } else { %>
-                              <span class="text-muted">No hay cuotas pendientes</span>
-                            <% } %>
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Cuotas Pagadas:</th>
-                          <td>
-                            <%
-                              const totalCuotas = cuotas.length;
-                              const cuotasPagadas = cuotas.filter(c => c.estado === 'pagada').length;
-                            %>
-                            <div class="progress" style="height: 20px;">
-                              <div class="progress-bar bg-success" role="progressbar"
-                                   style="width: <%= totalCuotas > 0 ? (cuotasPagadas / totalCuotas) * 100 : 0 %>%"
-                                   aria-valuenow="<%= cuotasPagadas %>"
-                                   aria-valuemin="0"
-                                   aria-valuemax="<%= totalCuotas %>">
-                                <%= cuotasPagadas %>/<%= totalCuotas %>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Último Pago:</th>
-                          <td>
-                            <% if (historialPagos.length > 0) { %>
-                              <%- moment(historialPagos[0].fecha).format('DD/MM/YYYY') %> -
-                              RD$ <%= formatMoney(historialPagos[0].monto) %>
-                            <% } else { %>
-                              <span class="text-muted">Sin pagos registrados</span>
-                            <% } %>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
+                  <tr>
+                    <th width="40%">Fecha de Solicitud:</th>
+                    <td><%= prestamo.created_at ? new Date(prestamo.created_at).toLocaleDateString('es-DO') : 'N/A' %></td>
+                  </tr>
+                  <tr>
+                    <th>Tipo de Préstamo:</th>
+                    <td>
+                      <span class="badge bg-<%= prestamo.tipo_prestamo === 'abierto' ? 'info' : 'primary' %>">
+                        <%= prestamo.tipo_prestamo === 'abierto' ? 'Abierto (Interés sobre saldo)' : 'Cerrado (Cuotas fijas)' %>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Monto Solicitado:</th>
+                    <td>RD$ <%= formatMoney(prestamo.monto_solicitado) %></td>
+                  </tr>
+                  <tr>
+                    <th>Monto Aprobado:</th>
+                    <td class="fw-bold">RD$ <%= formatMoney(prestamo.monto_aprobado) %></td>
+                  </tr>
+                  <% if (prestamo.tipo_prestamo === 'abierto') { %>
+                    <tr>
+                      <th>Interés Diario:</th>
+                      <td class="fw-bold" id="interesDiario">
+                        <i class="fas fa-spinner fa-spin"></i> Calculando...
+                      </td>
+                    </tr>
+                  <% } %>
+                  <tr>
+                    <th>Mora Acumulada:</th>
+                    <td class="text-danger fw-bold">RD$ <%= formatMoney(prestamo.mora_total) %></td>
+                  </tr>
+                  <tr>
+                    <th>Forma de Pago:</th>
+                    <td>
+                      <span class="badge bg-primary">
+                        <%= prestamo.forma_pago === 'diario' ? 'Diario' :
+                          prestamo.forma_pago === 'semanal' ? 'Semanal' :
+                          prestamo.forma_pago === 'quincenal' ? 'Quincenal' :
+                          prestamo.forma_pago === 'mensual' ? 'Mensual' : 'Personalizado' %>
+                      </span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th>Total a Pagar:</th>
+                    <td class="fw-bold text-success">RD$ <%= formatMoney(prestamo.monto_total) %></td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
-        <!-- Tab de Cuotas -->
-       <div class="tab-pane fade" id="cuotas" role="tabpanel">
-  <div class="card">
-    <div class="card-header bg-light d-flex justify-content-between align-items-center">
-      <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Plan de Pagos</h5>
-      <div>
-        <%
-          const cp = cuotas.filter(c => c.estado === 'pagada').length;
-          const cup = cuotas.length - cp;
-        %>
-        <span class="badge bg-success me-2">Pagadas: <%= cp %></span>
-        <span class="badge bg-warning text-dark">Pendientes: <%= cup %></span>
       </div>
-    </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>#</th>
-              <th>Monto</th>
-              <th>Vencimiento</th>
-              <th>Mora</th>
-              <th>Estado</th>
-              <th>Pago</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% if (cuotas.length > 0) { %>
-              <% cuotas.forEach(cuota => { %>
-                <% const esVencida = new Date(cuota.fecha_vencimiento) < new Date() && cuota.estado !== 'pagada'; %>
-                <tr class="<%= esVencida ? 'table-danger' : '' %>">
-                  <td><%= cuota.numero_cuota %></td>
-                  <td>RD$ <%= formatMoney(cuota.monto) %></td>
-                  <td>
-                    <%- moment(cuota.fecha_vencimiento).format('DD/MM/YYYY') %>
-                    <% if (esVencida) { %>
-                      <span class="badge bg-danger ms-2">Vencida</span>
-                    <% } %>
-                  </td>
-                  <td>
-                    RD$ <%= formatMoney(cuota.monto) %>
-                    <% if (cuota.mora && cuota.mora > 0) { %>
-                      <br><small class="text-danger">+ RD$ <%= formatMoney(cuota.mora) %> mora</small>
-                    <% } %>
-                  </td>
-                  <td>
-                    <span class="badge <%= cuota.estado === 'pagada' ? 'bg-success' :
-                                              cuota.estado === 'parcial' ? 'bg-info' : 'bg-secondary' %>">
-                      <%= cuota.estado %>
-                    </span>
-                  </td>
-                  <td>
-                    <%- cuota.fecha_pago ? moment(cuota.fecha_pago).format('DD/MM/YYYY') : '—' %>
-                  </td>
-                  <td>
-                    <% if (cuota.estado !== 'pagada') { %>
-                      <button class="btn btn-sm btn-outline-primary btn-pagar-cuota"
-                        data-cuota-id="<%= cuota.id %>"
-                        data-cuota-numero="<%= cuota.numero_cuota %>"
-                        data-monto="<%= cuota.total_a_pagar || cuota.monto %>">
-                        <i class="fas fa-money-bill-wave me-1"></i> Pagar
-                      </button>
-                    <% } else { %>
-                      <button class="btn btn-sm btn-outline-secondary btn-ver-recibo"
-                        data-pago-id="<%= historialPagos.find(p => p.cuota_id === cuota.id)?.id || '' %>">
-                        <i class="fas fa-receipt me-1"></i> Completado
-                      </button>
-                    <% } %>
-                  </td>
-                </tr>
-              <% }); %>
-            <% } else { %>
-              <tr>
-                <td colspan="7" class="text-center py-4 text-muted">
-                  No hay cuotas registradas para este préstamo
-                </td>
-              </tr>
-            <% } %>
-          </tbody>
-        </table>
+      
+      <!-- Estado Actual -->
+      <div class="col-md-6 mb-4">
+        <div class="card h-100">
+          <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Estado Actual</h5>
+          </div>
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-sm table-borderless">
+                <tbody>
+                  <tr>
+                    <th width="40%">Total Pagado:</th>
+                    <td class="text-success fw-bold">RD$ <%= formatMoney(prestamo.total_pagado) %></td>
+                  </tr>
+                  <tr>
+                    <th>Saldo Pendiente:</th>
+                    <td class="text-danger fw-bold">RD$ <%= formatMoney(prestamo.saldo_actual) %></td>
+                  </tr>
+                  <% if (prestamo.tipo_prestamo === 'cerrado') { %>
+                    <tr>
+                      <th>Próxima Cuota:</th>
+                      <td>
+                        <% const proximaCuota = cuotas.find(c => c.estado === 'pendiente'); %>
+                        <% if (proximaCuota) { %>
+                          <%- moment(proximaCuota.fecha_vencimiento).format('DD/MM/YYYY') %> -
+                          RD$ <%= formatMoney(proximaCuota.monto) %>
+                        <% } else { %>
+                          <span class="text-muted">No hay cuotas pendientes</span>
+                        <% } %>
+                      </td>
+                    </tr>
+                    <tr>
+                      <th>Cuotas Pagadas:</th>
+                      <td>
+                        <%
+                          const totalCuotas = cuotas.length;
+                          const cuotasPagadas = cuotas.filter(c => c.estado === 'pagada').length;
+                        %>
+                        <div class="progress" style="height: 20px;">
+                          <div class="progress-bar bg-success" role="progressbar"
+                               style="width: <%= totalCuotas > 0 ? (cuotasPagadas / totalCuotas) * 100 : 0 %>%"
+                               aria-valuenow="<%= cuotasPagadas %>"
+                               aria-valuemin="0"
+                               aria-valuemax="<%= totalCuotas %>">
+                            <%= cuotasPagadas %>/<%= totalCuotas %>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  <% } %>
+                  <tr>
+                    <th>Último Pago:</th>
+                    <td>
+                      <% if (historialPagos.length > 0) { %>
+                        <%- moment(historialPagos[0].fecha).format('DD/MM/YYYY') %> -
+                        RD$ <%= formatMoney(historialPagos[0].monto) %>
+                        <% if (prestamo.tipo_prestamo === 'abierto' && historialPagos[0].interes > 0) { %>
+                          <br><small class="text-muted">(Interés: RD$ <%= formatMoney(historialPagos[0].interes) %> | Capital: RD$ <%= formatMoney(historialPagos[0].capital) %>)</small>
+                        <% } %>
+                      <% } else { %>
+                        <span class="text-muted">Sin pagos registrados</span>
+                      <% } %>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-        <!-- Tab de Historial de Pagos -->
-        <div class="tab-pane fade" id="pagos" role="tabpanel">
-          <div class="card">
-            <div class="card-header bg-light d-flex justify-content-between align-items-center">
-              <h5 class="mb-0"><i class="fas fa-history me-2"></i>Historial de Pagos</h5>
-              <div>
-                <span class="badge bg-primary">
-                  Total: RD$ <%= formatMoney(prestamo.total_pagado) %>
-                </span>
-              </div>
-            </div>
-            <div class="card-body p-0">
-              <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                  <thead class="table-light">
-                    <tr>
-                      <th>Fecha</th>
-                      <th>Método</th>
-                      <th>Monto</th>
-                      <th>Cuota</th>
-                      <th>Registrado por</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% if (historialPagos.length > 0) { %>
-                      <% historialPagos.forEach(pago => { %>
-                        <tr>
-                          <td><%- moment(pago.fecha).format('DD/MM/YYYY') %></td>
-                          <td>
-                            <span class="badge
-                              <%= pago.metodo === 'efectivo' ? 'bg-success' :
-                                  pago.metodo === 'transferencia' ? 'bg-info' : 'bg-secondary' %>">
-                              <%= pago.metodo.toUpperCase() %>
-                            </span>
-                          </td>
-                          <td class="fw-bold">RD$ <%= formatMoney(pago.monto) %></td>
-                          <td>
-                            <% if (pago.cuota_id) { %>
-                              <span class="badge bg-primary">#<%= pago.numero_cuota %></span>
-                            <% } else { %>
-                              <span class="text-muted">Adicional</span>
-                            <% } %>
-                          </td>
-                          <td><%= pago.registrado_por %></td>
-                          <td>
-                            <div class="btn-group btn-group-sm" role="group">
-                              <a href="/prestamos/<%= prestamo.id %>/recibo?pago=<%= pago.id %>"
-                                 class="btn btn-outline-primary" target="_blank">
-                                <i class="fas fa-eye"></i> Recibo
-                              </a>
-                            </div>
-                          </td>
-                        </tr>
-                      <% }); %>
-                    <% } else { %>
-                      <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">
-                          No hay pagos registrados para este préstamo
-                        </td>
-                      </tr>
-                    <% } %>
-                  </tbody>
-                </table>
-              </div>
-            </div>
+  <!-- Tab de Cuotas (solo para préstamos cerrados) -->
+  <% if (prestamo.tipo_prestamo === 'cerrado') { %>
+    <div class="tab-pane fade" id="cuotas" role="tabpanel">
+      <div class="card">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Plan de Pagos</h5>
+          <div>
+            <%
+              const cp = cuotas.filter(c => c.estado === 'pagada').length;
+              const cup = cuotas.length - cp;
+            %>
+            <span class="badge bg-success me-2">Pagadas: <%= cp %></span>
+            <span class="badge bg-warning text-dark">Pendientes: <%= cup %></span>
           </div>
         </div>
-        <!-- Tab de Documentos -->
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>#</th>
+                  <th>Monto</th>
+                  <th>Vencimiento</th>
+                  <th>Mora</th>
+                  <th>Estado</th>
+                  <th>Pago</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% if (cuotas.length > 0) { %>
+                  <% cuotas.forEach(cuota => { %>
+                    <% const esVencida = new Date(cuota.fecha_vencimiento) < new Date() && cuota.estado !== 'pagada'; %>
+                    <tr class="<%= esVencida ? 'table-danger' : '' %>">
+                      <td><%= cuota.numero_cuota %></td>
+                      <td>RD$ <%= formatMoney(cuota.monto) %></td>
+                      <td>
+                        <%- moment(cuota.fecha_vencimiento).format('DD/MM/YYYY') %>
+                        <% if (esVencida) { %>
+                          <span class="badge bg-danger ms-2">Vencida</span>
+                        <% } %>
+                      </td>
+                      <td>
+                        <% if (cuota.mora && cuota.mora > 0) { %>
+                          <small class="text-danger">RD$ <%= formatMoney(cuota.mora) %></small>
+                        <% } else { %>
+                          -
+                        <% } %>
+                      </td>
+                      <td>
+                        <span class="badge <%= cuota.estado === 'pagada' ? 'bg-success' :
+                                                  cuota.estado === 'parcial' ? 'bg-info' : 'bg-secondary' %>">
+                          <%= cuota.estado %>
+                        </span>
+                      </td>
+                      <td>
+                        <%- cuota.fecha_pago ? moment(cuota.fecha_pago).format('DD/MM/YYYY') : '—' %>
+                      </td>
+                      <td>
+                        <% if (cuota.estado !== 'pagada') { %>
+                          <button class="btn btn-sm btn-outline-primary btn-pagar-cuota"
+                            data-cuota-id="<%= cuota.id %>"
+                            data-cuota-numero="<%= cuota.numero_cuota %>"
+                            data-monto="<%= cuota.total_a_pagar || cuota.monto %>">
+                            <i class="fas fa-money-bill-wave me-1"></i> Pagar
+                          </button>
+                        <% } else { %>
+                          <button class="btn btn-sm btn-outline-secondary btn-ver-recibo"
+                            data-pago-id="<%= historialPagos.find(p => p.cuota_id === cuota.id)?.id || '' %>">
+                            <i class="fas fa-receipt me-1"></i> Completado
+                          </button>
+                        <% } %>
+                      </td>
+                    </tr>
+                  <% }); %>
+                <% } else { %>
+                  <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">
+                      No hay cuotas registradas para este préstamo
+                    </td>
+                  </tr>
+                <% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- Tab de Historial de Pagos -->
+  <div class="tab-pane fade" id="pagos" role="tabpanel">
+    <div class="card">
+      <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-history me-2"></i>Historial de Pagos</h5>
+        <div>
+          <span class="badge bg-primary">
+            Total: RD$ <%= formatMoney(prestamo.total_pagado) %>
+          </span>
+          <% if (prestamo.tipo_prestamo === 'abierto') { %>
+            <span class="badge bg-info ms-2">
+              Capital restante: RD$ <%= formatMoney(prestamo.saldo_actual) %>
+            </span>
+          <% } %>
+        </div>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Fecha</th>
+                <th>Método</th>
+                <th>Monto</th>
+                <% if (prestamo.tipo_prestamo === 'abierto') { %>
+                  <th>Interés</th>
+                  <th>Capital</th>
+                <% } else { %>
+                  <th>Cuota</th>
+                <% } %>
+                <th>Registrado por</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% if (historialPagos.length > 0) { %>
+                <% historialPagos.forEach(pago => { %>
+                  <tr>
+                    <td><%- moment(pago.fecha).format('DD/MM/YYYY') %></td>
+                    <td>
+                      <span class="badge
+                        <%= pago.metodo === 'efectivo' ? 'bg-success' :
+                            pago.metodo === 'transferencia' ? 'bg-info' : 'bg-secondary' %>">
+                        <%= pago.metodo.toUpperCase() %>
+                      </span>
+                    </td>
+                    <td class="fw-bold">RD$ <%= formatMoney(pago.monto) %></td>
+                    <% if (prestamo.tipo_prestamo === 'abierto') { %>
+                      <td class="text-danger">RD$ <%= formatMoney(pago.interes || 0) %></td>
+                      <td class="text-success">RD$ <%= formatMoney(pago.capital || 0) %></td>
+                    <% } else { %>
+                      <td>
+                        <% if (pago.cuota_id) { %>
+                          <span class="badge bg-primary">#<%= pago.numero_cuota %></span>
+                        <% } else { %>
+                          <span class="text-muted">Adicional</span>
+                        <% } %>
+                      </td>
+                    <% } %>
+                    <td><%= pago.registrado_por %></td>
+                    <td>
+                      <div class="btn-group btn-group-sm" role="group">
+                        <a href="/prestamos/<%= prestamo.id %>/recibo?pago=<%= pago.id %>"
+                           class="btn btn-outline-primary" target="_blank">
+                          <i class="fas fa-eye"></i> Recibo
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                <% }); %>
+              <% } else { %>
+                <tr>
+                  <td colspan="<%= prestamo.tipo_prestamo === 'abierto' ? '7' : '6' %>" class="text-center py-4 text-muted">
+                    No hay pagos registrados para este préstamo
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Tab de Documentos -->
         <div class="tab-pane fade" id="documentos" role="tabpanel">
           <div class="card">
             <div class="card-header bg-light">
@@ -838,6 +876,26 @@ document.querySelectorAll('.btn-eliminar-doc').forEach(btn => {
 });
 
 </script>
+<!-- Script para calcular interés diario en préstamos abiertos -->
+<% if (esAbierto) { %>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    fetch(`/prestamos/<%= prestamo.id %>/calcular-interes`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById('interesDiario').innerHTML = 
+            `RD$ ${data.interesDiario.toFixed(2)} (${prestamo.interes_porcentaje}% anual)`;
+        }
+      })
+      .catch(error => {
+        console.error('Error calculando interés:', error);
+        document.getElementById('interesDiario').innerHTML = 
+          'Error calculando interés';
+      });
+  });
+</script>
+<% } %>
 
 
 <%- include('../partials/footer') %>

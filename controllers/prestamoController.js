@@ -24,14 +24,19 @@
   };
 
   // Mostrar formulario para crear préstamo
+// Modificar el método createForm para incluir tipo de préstamo
 exports.createForm = async (req, res) => {
   try {
     const clientes = await Cliente.findAll();
-    const rutas = await Ruta.findAll(); // <-- Asegúrate de que devuelve [{ id, zona, nombre }, ...]
+    const rutas = await Ruta.findAll();
 
     res.render('prestamos/create', {
       clientes,
-      rutas
+      rutas,
+      tiposPrestamo: [
+        { value: 'cerrado', label: 'Préstamo Cerrado (Cuotas fijas)' },
+        { value: 'abierto', label: 'Préstamo Abierto (Interés sobre saldo)' }
+      ]
     });
   } catch (error) {
     console.error('❌ Error cargando formulario de préstamo:', error.message);
@@ -134,6 +139,7 @@ exports.aprobarPrestamo = async (req, res) => {
 
   // En tu controlador (prestamoController.js)
 // En el método show, asegurarnos de pasar moment a la vista
+// Modificar el método show para mostrar información de préstamos abiertos
 exports.show = async (req, res) => {
   try {
     const prestamoId = req.params.id;
@@ -144,31 +150,54 @@ exports.show = async (req, res) => {
       return res.redirect('/prestamos');
     }
 
-    const cuotas = await Prestamo.findCuotasByPrestamo(prestamoId);
-    const historialPagos = await Prestamo.getHistorialPagos(prestamoId);
-
-    // Calcular mora pendiente para cada cuota vencida
-    const cuotasConMora = await Promise.all(cuotas.map(async cuota => {
-      const esVencida = new Date(cuota.fecha_vencimiento) < new Date() && cuota.estado !== 'pagada';
-      if (esVencida) {
-        const diasAtraso = Math.max(0, Math.floor((new Date() - new Date(cuota.fecha_vencimiento)) / (1000 * 60 * 60 * 24)) - 2);
-        cuota.mora = diasAtraso > 0 ? cuota.monto * 0.05 * diasAtraso : 0;
-      } else {
-        cuota.mora = 0;
-      }
-      return cuota;
-    }));
+    let cuotas = [];
+    let historialPagos = [];
+    
+    if (prestamo.tipo_prestamo === 'cerrado') {
+      cuotas = await Prestamo.findCuotasByPrestamo(prestamoId);
+      historialPagos = await Prestamo.getHistorialPagos(prestamoId);
+    } else {
+      // Para préstamos abiertos, obtener historial de pagos con detalles de interés/capital
+      historialPagos = await db.query(`
+        SELECT p.*, 
+               DATE_FORMAT(p.fecha, '%d/%m/%Y') as fecha_display,
+               p.monto as monto_formatted
+        FROM pagos p
+        WHERE p.prestamo_id = ?
+        ORDER BY p.fecha DESC
+      `, { replacements: [prestamoId], type: QueryTypes.SELECT });
+    }
 
     res.render('prestamos/show', {
       prestamo,
-      cuotas: cuotasConMora,
+      cuotas,
       historialPagos,
-      moment
+      moment,
+      esAbierto: prestamo.tipo_prestamo === 'abierto'
     });
   } catch (error) {
     console.error('Error al mostrar préstamo:', error);
     req.flash('error', 'Error al cargar detalles del préstamo');
     res.redirect('/prestamos');
+  }
+};
+// Nuevo método para calcular interés acumulado
+exports.calcularInteres = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const interesDiario = await Prestamo.calcularInteresDiario(id);
+    
+    res.json({
+      success: true,
+      interesDiario,
+      message: 'Interés calculado correctamente'
+    });
+  } catch (error) {
+    console.error('Error calculando interés:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error calculando interés'
+    });
   }
 };
   exports.pagarCuota = async (req, res) => {

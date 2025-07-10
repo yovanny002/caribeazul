@@ -130,7 +130,17 @@
                     </select>
                     <div class="invalid-feedback">Seleccione una forma de pago</div>
                   </div>
-           
+                  <!-- Agregar después del campo de forma de pago -->
+                    <div class="col-md-6">
+                      <label for="tipo_prestamo" class="form-label fw-bold">Tipo de Préstamo</label>
+                      <select class="form-select" id="tipo_prestamo" name="tipo_prestamo" required>
+                        <% tiposPrestamo.forEach(tipo => { %>
+                          <option value="<%= tipo.value %>"><%= tipo.label %></option>
+                        <% }); %>
+                      </select>
+                      <div class="invalid-feedback">Seleccione un tipo de préstamo</div>
+                    </div>
+                              
                   <!-- Resumen -->
                   <div class="col-12">
                     <div class="card bg-light mt-2">
