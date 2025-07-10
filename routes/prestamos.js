@@ -9,7 +9,7 @@ router.get('/create', prestamoController.createForm);
 router.post('/create', prestamoController.create);
 
 // Rutas específicas para admin
-router.get('/pendientes', checkRole(['administrador']), prestamoController.pendientes);
+router.get('/pendientes', checkRole(['administrador', 'supervisor']), prestamoController.pendientes);
 router.post('/:id/aprobar', checkRole(['administrador']), prestamoController.aprobarPrestamo);
 
 // Rutas dinámicas (editar, actualizar, mostrar)

@@ -109,33 +109,44 @@ findCuotasByPrestamo: async (prestamoId) => {
   });
 },
 
-  findAllWithClientes: async (estado = null) => {
-    let query = `
-      SELECT p.*, 
-             c.nombre AS cliente_nombre, 
-             c.apellidos AS cliente_apellidos,
-             c.profesion AS cliente_profesion
-      FROM solicitudes_prestamos p
-      JOIN clientes c ON p.cliente_id = c.id
-    `;
+findAllWithClientes: async (estado = null) => {
+  let query = `
+    SELECT p.*, 
+           c.nombre AS cliente_nombre, 
+           c.apellidos AS cliente_apellidos,
+           c.cedula AS cliente_cedula,
+           c.profesion AS cliente_profesion,
+           r.nombre AS ruta_nombre
+    FROM solicitudes_prestamos p
+    JOIN clientes c ON p.cliente_id = c.id
+    LEFT JOIN rutas r ON p.ruta_id = r.id
+  `;
 
-    const values = [];
-    if (estado) {
-      query += ' WHERE p.estado = ?';
-      values.push(estado);
-    }
+  const replacements = [];
+  if (estado) {
+    query += ' WHERE p.estado = ?';
+    replacements.push(estado);
+  }
 
-    const rows = await db.query(query, { replacements: values, type: QueryTypes.SELECT });
+  query += ' ORDER BY p.created_at DESC';
 
-    return rows.map(row => {
-      row.monto_aprobado = safeParseFloat(row.monto_aprobado);
-      row.interes_porcentaje = safeParseFloat(row.interes_porcentaje, 43);
-      row.monto_interes = row.monto_aprobado * (row.interes_porcentaje / 100);
-      row.monto_total = row.monto_aprobado + row.monto_interes;
-      row.moras = safeParseFloat(row.moras, 0);
-      return row;
+  try {
+    const rows = await db.query(query, { 
+      replacements, 
+      type: QueryTypes.SELECT 
     });
-  },
+
+    return rows.map(row => ({
+      ...row,
+      monto_aprobado: safeParseFloat(row.monto_aprobado),
+      monto_solicitado: safeParseFloat(row.monto_solicitado),
+      interes_porcentaje: safeParseFloat(row.interes_porcentaje, 43)
+    }));
+  } catch (error) {
+    console.error('Error en findAllWithClientes:', error);
+    throw error;
+  }
+},
 
 create: async (data) => {
   const {
