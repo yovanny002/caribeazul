@@ -60,7 +60,8 @@ static async _getNormalLoans() {
     ...loan,
     loanType: 'normal',
     displayType: 'Préstamo Normal',
-    icon: 'fa-file-invoice-dollar'
+    icon: 'fa-file-invoice-dollar',
+    fecha_creacion: loan.created_at // Añadir esta línea
   }));
 }
 static async _getSpecialLoans() {
@@ -71,7 +72,8 @@ static async _getSpecialLoans() {
     ...loan,
     loanType: 'special',
     displayType: 'Préstamo Especial',
-    icon: 'fa-star'
+    icon: 'fa-star',
+    echa_creacion: loan.fecha_creacion // Ya existe, pero para consistencia
   }));
 }
   static _getTemplateHelpers() {
