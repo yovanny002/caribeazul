@@ -326,22 +326,8 @@ generateCuotas: async (prestamoId, montoTotal, numeroCuotas, formaPago = 'mensua
       fecha_display: pago.fecha ? moment(pago.fecha).format('DD/MM/YYYY') : 'Sin fecha'
     }));
   },
-  rechazar: async (id, data) => {
-  await db.query(`
-    UPDATE solicitudes_prestamos
-    SET estado = :estado,
-        motivo_rechazo = :motivo_rechazo
-    WHERE id = :id
-  `, {
-    replacements: {
-      id,
-      estado: data.estado || 'rechazado',
-      motivo_rechazo: data.motivo_rechazo || 'Sin motivo especificado'
-    },
-    type: QueryTypes.UPDATE
-  });
-},
-
+  
+ 
  // En el método registrarPago del modelo
 // En el método registrarPago
 // En el método registrarPago
@@ -398,7 +384,66 @@ registrarPago: async (pagoData) => {
   }
 
   return result[0].id;
-}
+},
+// Aprobar préstamo
+aprobar: async (id, datos) => {
+  const [row] = await db.query(
+    'SELECT estado FROM solicitudes_prestamos WHERE id = ?',
+    { replacements: [id], type: QueryTypes.SELECT }
+  );
+
+  if (!row) throw new Error(`❌ El préstamo con ID ${id} no existe`);
+  if (row.estado !== 'pendiente') throw new Error(`⚠️ El préstamo ya está en estado '${row.estado}'`);
+
+  await db.query(
+    `UPDATE solicitudes_prestamos
+     SET estado = 'aprobado',
+         monto_aprobado = ?,
+         interes_porcentaje = ?,
+         ruta_id = ?
+     WHERE id = ?`,
+    {
+      replacements: [
+        safeParseFloat(datos.monto_aprobado),
+        safeParseFloat(datos.interes_porcentaje, 43),
+        datos.ruta_id,
+        id
+      ],
+      type: QueryTypes.UPDATE
+    }
+  );
+
+  console.log(`✅ Préstamo ${id} aprobado con éxito`);
+},
+
+// Rechazar préstamo
+rechazar: async (id, motivo = 'Sin motivo especificado') => {
+  const [row] = await db.query(
+    'SELECT estado FROM solicitudes_prestamos WHERE id = ?',
+    { replacements: [id], type: QueryTypes.SELECT }
+  );
+
+  if (!row) throw new Error(`❌ El préstamo con ID ${id} no existe`);
+  if (row.estado !== 'pendiente') throw new Error(`⚠️ El préstamo ya está en estado '${row.estado}'`);
+
+  await db.query(
+    `UPDATE solicitudes_prestamos
+     SET estado = 'rechazado',
+         notas = ?
+     WHERE id = ?`,
+    {
+      replacements: [motivo, id],
+      type: QueryTypes.UPDATE
+    }
+  );
+
+  console.log(`❌ Préstamo ${id} rechazado: ${motivo}`);
+},
+
+
+
 };
+
+
 
 module.exports = Prestamo;

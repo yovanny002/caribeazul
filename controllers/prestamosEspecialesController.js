@@ -411,6 +411,57 @@ async create(req, res) {
       nuevoEstado: nuevoCapitalRestante <= 0.01 ? 'pagado' : prestamo.estado
     };
   },
+aprobar: async (id, datos) => {
+  const [row] = await db.query(
+    'SELECT estado FROM prestamos_especiales WHERE id = ?',
+    { replacements: [id], type: QueryTypes.SELECT }
+  );
+
+  if (!row) throw new Error(`❌ El préstamo especial con ID ${id} no existe`);
+  if (row.estado !== 'pendiente') throw new Error(`⚠️ El préstamo especial ya está en estado '${row.estado}'`);
+
+  await db.query(
+    `UPDATE prestamos_especiales
+     SET estado = 'aprobado',
+         monto_aprobado = ?,
+         interes_porcentaje = ?,
+         ruta_id = ?
+     WHERE id = ?`,
+    {
+      replacements: [
+        safeParseFloat(datos.monto_aprobado),
+        safeParseFloat(datos.interes_porcentaje, 43),
+        datos.ruta_id,
+        id
+      ],
+      type: QueryTypes.UPDATE
+    }
+  );
+
+  console.log(`✅ Préstamo especial ${id} aprobado con éxito`);
+},
+rechazar: async (id, motivo = 'Sin motivo especificado') => {
+  const [row] = await db.query(
+    'SELECT estado FROM prestamos_especiales WHERE id = ?',
+    { replacements: [id], type: QueryTypes.SELECT }
+  );
+
+  if (!row) throw new Error(`❌ El préstamo especial con ID ${id} no existe`);
+  if (row.estado !== 'pendiente') throw new Error(`⚠️ Ya está en estado '${row.estado}'`);
+
+  await db.query(
+    `UPDATE prestamos_especiales
+     SET estado = 'rechazado',
+         notas = ?
+     WHERE id = ?`,
+    {
+      replacements: [motivo, id],
+      type: QueryTypes.UPDATE
+    }
+  );
+
+  console.log(`❌ Préstamo especial ${id} rechazado: ${motivo}`);
+},
 
   // Middleware de validación
   validatePrestamoId
