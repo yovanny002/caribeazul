@@ -3,39 +3,44 @@ const router = express.Router();
 const { checkRole } = require('../middlewares/roles');
 const controller = require('../controllers/prestamosEspecialesController');
 
-// Middleware de validación de ID
+// Middleware de validación de ID (versión mejorada)
 const validateId = (req, res, next) => {
+  // Excluir rutas que no necesitan validación de ID
+  if (req.path === '/create' || req.path.endsWith('/crear')) {
+    return next();
+  }
+
   const id = parseInt(req.params.id);
-  if (isNaN(id)) {
+  if (isNaN(id) || id <= 0) {
     return res.status(400).json({ error: 'ID inválido' });
   }
   req.id = id;
   next();
 };
 
-// Rutas CRUD básicas
+// Rutas que NO requieren ID
 router.get('/', checkRole(['administrador', 'supervisor']), controller.index);
 router.get('/create', checkRole(['administrador', 'supervisor']), controller.createForm);
 router.post('/create', checkRole(['administrador', 'supervisor']), controller.create);
 
+// Rutas que SÍ requieren ID
+router.use('/:id', validateId); // Aplica validateId solo a rutas con :id
 
-// Rutas para un préstamo específico
 router.route('/:id')
-  .all(validateId)
   .get(checkRole(['administrador', 'supervisor', 'servicio']), controller.show)
   .put(checkRole(['administrador', 'supervisor']), controller.update);
 
-router.get('/:id/edit', validateId, checkRole(['administrador', 'supervisor']), controller.editForm);
+router.get('/:id/edit', checkRole(['administrador', 'supervisor']), controller.editForm);
 
-// Aprobación/rechazo
-router.post('/:id/aprobar', validateId, checkRole(['administrador']), controller.aprobar);
-router.post('/:id/rechazar', validateId, checkRole(['administrador']), controller.rechazar);
+// Rutas de aprobación/rechazo
+router.post('/:id/aprobar', checkRole(['administrador']), controller.aprobar);
+router.post('/:id/rechazar', checkRole(['administrador']), controller.rechazar);
 
-// Pagos
-router.get('/:id/pago', validateId, checkRole(['administrador', 'supervisor']), controller.pagoForm);
-router.post('/:id/pago', validateId, checkRole(['administrador', 'supervisor']), controller.procesarPago);
+// Rutas de pagos
+router.get('/:id/pago', checkRole(['administrador', 'supervisor']), controller.pagoForm);
+router.post('/:id/pago', checkRole(['administrador', 'supervisor']), controller.procesarPago);
 
-// Recibos
-router.get('/:id/recibo/:pagoId', validateId, controller.recibo);
+// Ruta de recibo
+router.get('/:id/recibo/:pagoId', controller.recibo);
 
 module.exports = router;

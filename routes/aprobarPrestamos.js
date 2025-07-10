@@ -1,55 +1,73 @@
-// routes/aprobaciones.js
 const express = require('express');
 const router = express.Router();
 const ApprovalController = require('../controllers/aprobacionesController');
 const { checkRole } = require('../middlewares/roles');
+const { param } = require('express-validator');
 
+// Validaciones comunes
+const validateLoanParams = [
+  param('type').isIn(['normal', 'special']).withMessage('Tipo de préstamo inválido'),
+  param('id').isInt().withMessage('ID debe ser un número entero')
+];
 
-// Ruta para listar todos los préstamos pendientes (unificada)
-router.get('/', checkRole(['administrador', 'supervisor']), ApprovalController.listPending);
-
-// Rutas para acciones de aprobación/rechazo (unificadas)
-router.post('/aprobar/:type/:id', 
+// Ruta para listar todos los préstamos pendientes
+router.get('/', 
   checkRole(['administrador', 'supervisor']), 
+  ApprovalController.listPending
+);
+
+// Rutas unificadas principales
+router.post('/:type/:id/aprobar',
+  checkRole(['administrador', 'supervisor']),
+  validateLoanParams,
   ApprovalController.approveLoan
 );
 
-router.post('/rechazar/:type/:id', 
-  checkRole(['administrador', 'supervisor']), 
+router.post('/:type/:id/rechazar',
+  checkRole(['administrador', 'supervisor']),
+  validateLoanParams,
   ApprovalController.rejectLoan
 );
 
-// Rutas alternativas para compatibilidad con frontend si es necesario
-router.post('/prestamos/aprobar/:id', 
-  checkRole(['administrador', 'supervisor']), 
-  (req, res) => {
+// Rutas alternativas (legacy)
+router.post('/prestamos/:id/aprobar',
+  checkRole(['administrador', 'supervisor']),
+  param('id').isInt(),
+  (req, res, next) => {
     req.params.type = 'normal';
-    ApprovalController.approveLoan(req, res);
-  }
+    next();
+  },
+  ApprovalController.approveLoan
 );
 
-router.post('/prestamos/rechazar/:id', 
-  checkRole(['administrador', 'supervisor']), 
-  (req, res) => {
+router.post('/prestamos/:id/rechazar',
+  checkRole(['administrador', 'supervisor']),
+  param('id').isInt(),
+  (req, res, next) => {
     req.params.type = 'normal';
-    ApprovalController.rejectLoan(req, res);
-  }
+    next();
+  },
+  ApprovalController.rejectLoan
 );
 
-router.post('/prestamos-especiales/aprobar/:id', 
-  checkRole(['administrador', 'supervisor']), 
-  (req, res) => {
+router.post('/prestamos-especiales/:id/aprobar',
+  checkRole(['administrador', 'supervisor']),
+  param('id').isInt(),
+  (req, res, next) => {
     req.params.type = 'special';
-    ApprovalController.approveLoan(req, res);
-  }
+    next();
+  },
+  ApprovalController.approveLoan
 );
 
-router.post('/prestamos-especiales/rechazar/:id', 
-  checkRole(['administrador', 'supervisor']), 
-  (req, res) => {
+router.post('/prestamos-especiales/:id/rechazar',
+  checkRole(['administrador', 'supervisor']),
+  param('id').isInt(),
+  (req, res, next) => {
     req.params.type = 'special';
-    ApprovalController.rejectLoan(req, res);
-  }
+    next();
+  },
+  ApprovalController.rejectLoan
 );
 
 module.exports = router;

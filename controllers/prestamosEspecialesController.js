@@ -81,29 +81,43 @@ module.exports = {
   },
 
   // Crear nuevo préstamo
-  async create(req, res) {
-    try {
-      const { cliente_id, monto_solicitado, interes_porcentaje, forma_pago, observaciones } = req.body;
-      
-      const prestamoId = await PrestamoEspecial.create({
-        cliente_id,
-        monto_solicitado: formatHelpers.safeFloat(monto_solicitado),
-        monto_aprobado: 0, // Se establece en aprobación
-        interes_porcentaje: formatHelpers.safeFloat(interes_porcentaje),
-        forma_pago,
-        observaciones,
-        estado: 'pendiente'
+// En tu método create, asegúrate de manejar correctamente la creación:
+async create(req, res) {
+  try {
+    const { cliente_id, monto_solicitado, interes_porcentaje, forma_pago, observaciones } = req.body;
+    
+    // Validación básica
+    if (!cliente_id || !monto_solicitado) {
+      return res.status(400).json({ 
+        error: 'Datos incompletos',
+        required: ['cliente_id', 'monto_solicitado']
       });
-
-      req.flash('success', 'Préstamo especial creado exitosamente');
-      res.redirect(`/prestamos-especiales/${prestamoId}`);
-    } catch (error) {
-      console.error('Error al crear préstamo:', error);
-      req.flash('error', `Error al crear préstamo: ${error.message}`);
-      res.redirect('/prestamos-especiales/create');
     }
-  },
 
+    const prestamoId = await PrestamoEspecial.create({
+      cliente_id,
+      monto_solicitado: formatHelpers.safeFloat(monto_solicitado),
+      monto_aprobado: 0,
+      interes_porcentaje: formatHelpers.safeFloat(interes_porcentaje),
+      forma_pago,
+      observaciones,
+      estado: 'pendiente'
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Préstamo especial creado exitosamente',
+      prestamoId
+    });
+    
+  } catch (error) {
+    console.error('Error al crear préstamo:', error);
+    res.status(500).json({
+      error: 'Error interno del servidor',
+      details: error.message
+    });
+  }
+},
   // Mostrar detalles
   async show(req, res) {
     try {
