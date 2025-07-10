@@ -32,75 +32,33 @@ const dashboardController = {
         WHERE estado = 'aprobado'
       `);
 
-      // CONSULTA CORREGIDA PARA MOROSIDAD (incluye cálculo de mora del 5% después de 3 días)
       const [morosidadRes] = await db.query(`
-        SELECT 
-          COALESCE(SUM(
-            CASE 
-              WHEN c.fecha_vencimiento < CURRENT_DATE - INTERVAL '3 days' THEN c.monto * 1.05
-              WHEN c.fecha_vencimiento < CURRENT_DATE THEN c.monto
-              ELSE 0
-            END
-          ), 0) AS total_moras_calculadas,
-          COALESCE(SUM(p.moras), 0) AS total_moras_registradas
-        FROM cuotas c
-        JOIN solicitudes_prestamos p ON c.prestamo_id = p.id
-        WHERE (c.pagado = 0 OR c.estado = 'pendiente')
-        AND c.fecha_vencimiento < CURRENT_DATE
-      `, { type: QueryTypes.SELECT });
+        SELECT SUM(monto) AS total FROM cuotas 
+        WHERE pagado = 0 AND fecha_vencimiento < CURRENT_DATE
+      `);
 
       const [recuperadoRes] = await db.query(`
         SELECT SUM(monto) AS total FROM pagos
       `);
 
-      // CONSULTA MEJORADA PARA PRÉSTAMOS RECIENTES (incluye más datos relevantes)
       const prestamosRecientes = await db.query(`
-        SELECT 
-          p.id, 
-          p.monto_aprobado, 
-          c.nombre,
-          c.cedula,
-          p.estado,
-          p.created_at
+        SELECT p.id, p.monto_aprobado, c.nombre 
         FROM solicitudes_prestamos p
         JOIN clientes c ON p.cliente_id = c.id
-        WHERE p.estado = 'aprobado'
         ORDER BY p.created_at DESC
         LIMIT 5
       `, { type: QueryTypes.SELECT });
 
-      // CONSULTA MEJORADA PARA PAGOS PENDIENTES (incluye cálculo de mora)
       const pagosPendientes = await db.query(`
-        SELECT 
-          cu.id AS cuota_id,
-          cu.monto,
-          CASE
-            WHEN cu.fecha_vencimiento < CURRENT_DATE - INTERVAL '3 days' THEN cu.monto * 1.05
-            WHEN cu.fecha_vencimiento < CURRENT_DATE THEN cu.monto
-            ELSE cu.monto
-          END AS monto_con_mora,
-          cu.fecha_vencimiento, 
-          cu.prestamo_id, 
-          cl.nombre,
-          cl.telefono1,
-          p.monto_aprobado
+        SELECT cu.monto, cu.fecha_vencimiento, cu.prestamo_id, cl.nombre
         FROM cuotas cu
         JOIN solicitudes_prestamos p ON cu.prestamo_id = p.id
         JOIN clientes cl ON p.cliente_id = cl.id
-        WHERE (cu.pagado = 0 OR cu.estado = 'pendiente')
-        AND cu.fecha_vencimiento <= CURRENT_DATE + INTERVAL '7 days'
-        ORDER BY 
-          CASE
-            WHEN cu.fecha_vencimiento < CURRENT_DATE THEN 0
-            ELSE 1
-          END,
-          cu.fecha_vencimiento ASC
-        LIMIT 10
+        WHERE cu.pagado = 0
+        AND cu.fecha_vencimiento <= CURRENT_DATE + INTERVAL '2 days'
+        ORDER BY cu.fecha_vencimiento ASC
+        LIMIT 5
       `, { type: QueryTypes.SELECT });
-
-      // Cálculo de morosidad total (calculada + registrada)
-      const morosidadTotal = parseFloat(morosidadRes[0].total_moras_calculadas || 0) + 
-                           parseFloat(morosidadRes[0].total_moras_registradas || 0);
 
       return {
         total_clientes: clientesRes[0].total,
@@ -109,7 +67,7 @@ const dashboardController = {
         pagos_hoy: pagosHoyRes[0].total || 0,
         capital_prestado: capitalRes[0].total || 0,
         intereses_generados: interesRes[0].total || 0,
-        morosidad: morosidadTotal,
+        morosidad: morosidadRes[0].total || 0,
         recuperado: recuperadoRes[0].total || 0,
         prestamosRecientes,
         pagosPendientes
