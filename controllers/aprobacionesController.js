@@ -7,39 +7,66 @@ const moment = require('moment');
 
 class ApprovalController {
   // Método unificado para listar pendientes
-  static async listPending(req, res) {
-    try {
-      const [normalLoans, specialLoans] = await Promise.all([
-        ApprovalController._getNormalLoans(),
-        ApprovalController._getSpecialLoans()
-      ]);
+// Método unificado para listar pendientes
+static async listPending(req, res) {
+  try {
+    console.log('🔍 [ApprovalController] Iniciando listado de préstamos pendientes...');
+    
+    const [normalLoans, specialLoans] = await Promise.all([
+      ApprovalController._getNormalLoans(),
+      ApprovalController._getSpecialLoans()
+    ]);
 
-      const allLoans = [...normalLoans, ...specialLoans]
-        .sort((a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion));
-
-      res.render('approval/pending', {
-        loans: allLoans,
-        helpers: ApprovalController._getTemplateHelpers(),
-        messages: req.flash()
-      });
-    } catch (error) {
-      ApprovalController._handleError(req, res, error);
+    console.log('📊 [ApprovalController] Resultados obtenidos:');
+    console.log(`- Préstamos normales: ${normalLoans.length} registros`);
+    console.log(`- Préstamos especiales: ${specialLoans.length} registros`);
+    
+    if (normalLoans.length > 0) {
+      console.log('📝 Ejemplo de préstamo normal:', JSON.stringify(normalLoans[0], null, 2));
     }
+    
+    if (specialLoans.length > 0) {
+      console.log('📝 Ejemplo de préstamo especial:', JSON.stringify(specialLoans[0], null, 2));
+    }
+
+    const allLoans = [...normalLoans, ...specialLoans]
+      .sort((a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion));
+
+    console.log('🔄 [ApprovalController] Total de préstamos combinados:', allLoans.length);
+    console.log('📅 Préstamos ordenados por fecha (nuevos primero):');
+    allLoans.forEach((loan, index) => {
+      console.log(`${index + 1}. ${loan.loanType} - ${loan.cliente_nombre} - ${loan.fecha_creacion}`);
+    });
+
+    console.log('🎨 [ApprovalController] Renderizando vista con datos...');
+    res.render('approval/pending', {
+      loans: allLoans,
+      helpers: ApprovalController._getTemplateHelpers(),
+      messages: req.flash()
+    });
+
+  } catch (error) {
+    console.error('❌ [ApprovalController] Error en listPending:', error);
+    ApprovalController._handleError(req, res, error);
   }
+}
 
   // Métodos privados
-  static async _getNormalLoans() {
-    const loans = await Prestamo.findAllWithClientes('pendiente');
-    return loans.map(loan => ({
-      ...loan,
-      loanType: 'normal',
-      displayType: 'Préstamo Normal',
-      icon: 'fa-file-invoice-dollar'
-    }));
-  }
-
+static async _getNormalLoans() {
+  console.log('🔎 Buscando préstamos normales pendientes...');
+  const loans = await Prestamo.findAllWithClientes('pendiente');
+  console.log(`✅ Encontrados ${loans.length} préstamos normales`);
+  return loans.map(loan => ({
+    ...loan,
+    loanType: 'normal',
+    displayType: 'Préstamo Normal',
+    icon: 'fa-file-invoice-dollar'
+  }));
+}
 static async _getSpecialLoans() {
-  const loans = await PrestamoEspecial.findAllWithClienteYRuta('pendiente'); // ✅ correcto
+  console.log('🔎 Buscando préstamos especiales pendientes...');
+  const loans = await PrestamoEspecial.findAllWithClienteYRuta('pendiente');
+  console.log(`✅ Encontrados ${loans.length} préstamos especiales`);
   return loans.map(loan => ({
     ...loan,
     loanType: 'special',

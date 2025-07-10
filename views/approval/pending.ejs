@@ -208,7 +208,9 @@
     background-color: #f8f9fa;
   }
 </style>
-
+<script>
+  console.log('Datos recibidos en la vista:', <%- JSON.stringify(loans) %>);
+</script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const approvalModal = new bootstrap.Modal(document.getElementById('approvalModal'));
