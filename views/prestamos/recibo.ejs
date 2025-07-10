@@ -273,7 +273,14 @@
     </div>
 
     <div class="double-divider"></div>
-
+    <!-- Agregar después del doble divisor -->
+    <div class="details" style="font-weight: 900; background-color: #f8f9fa; padding: 8px; border-radius: 4px;">
+      <h4 class="text-center" style="margin-bottom: 10px;">DETALLE DEL PAGO ACTUAL</h4>
+      <p><span>Capital abonado:</span> <span class="text-success">RD$ <%= Number(pago.capital || 0).toFixed(2) %></span></p>
+      <p><span>Interés pagado:</span> <span class="text-danger">RD$ <%= Number(pago.interes || 0).toFixed(2) %></span></p>
+      <p><span>Saldo anterior:</span> <span>RD$ <%= Number((prestamo.saldo_actual || 0) + (pago.capital || 0)).toFixed(2) %></span></p>
+      <p><span>Nuevo saldo:</span> <span class="bold">RD$ <%= Number(prestamo.saldo_actual || 0).toFixed(2) %></span></p>
+    </div>
     <div class="details">
       <p><span>Saldo anterior:</span> <span>RD$ <%= Number((prestamo.saldo_actual || 0) + (pago.monto || 0)).toFixed(2) %></span></p>
       <p><span>Resta por pagar:</span> <span class="bold text-success">RD$ <%= Number(restante || 0).toFixed(2) %></span></p>
@@ -281,36 +288,41 @@
 
     <div class="double-divider"></div>
 
-    <h3 class="text-center">HISTORIAL DE PAGOS</h3>
-    <table style="font-weight: 900;">
-      <thead>
+   <!-- Reemplazar la tabla actual del historial -->
+<h3 class="text-center">HISTORIAL RECIENTE</h3>
+<table style="font-weight: 900;">
+  <thead>
+    <tr>
+      <th>Fecha</th>
+      <th class="text-right">Monto</th>
+      <th>Método</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% if (historialPagos.length > 0) { %>
+      <% historialPagos.slice(0, 3).forEach(p => { %>
         <tr>
-          <th>Fecha</th>
-          <th class="text-right">Monto</th>
-          <th>Método</th>
+          <td><%= new Date(p.fecha || Date.now()).toLocaleDateString('es-DO', {day: '2-digit', month: '2-digit'}) %></td>
+          <td class="text-right">RD$ <%= Number(p.monto || 0).toFixed(2) %></td>
+          <td class="uppercase"><%= (p.metodo || 'EFE').substring(0, 3) %></td>
         </tr>
-      </thead>
-      <tbody>
-        <% if (historialPagos.length > 0) { %>
-          <% historialPagos.slice(0, 5).forEach(p => { %>
-            <tr>
-              <td><%= new Date(p.fecha || Date.now()).toLocaleDateString('es-DO', {day: '2-digit', month: '2-digit'}) %></td>
-              <td class="text-right">RD$ <%= Number(p.monto || 0).toFixed(2) %></td>
-              <td class="uppercase"><%= (p.metodo || 'EFE').substring(0, 3) %></td>
-            </tr>
-          <% }); %>
-          <% if (historialPagos.length > 5) { %>
-            <tr>
-              <td colspan="3" class="text-center">+ <%= historialPagos.length - 5 %> pagos más</td>
-            </tr>
-          <% } %>
-        <% } else { %>
-          <tr>
-            <td colspan="3" class="text-center">No hay pagos registrados</td>
-          </tr>
-        <% } %>
-      </tbody>
-    </table>
+      <% }); %>
+      <% if (historialPagos.length > 3) { %>
+        <tr>
+          <td colspan="3" class="text-center">
+            <a href="/prestamos/<%= prestamo.id %>/pagos" style="color: #007bff; text-decoration: none;">
+              Ver completo (<%= historialPagos.length - 3 %> más)
+            </a>
+          </td>
+        </tr>
+      <% } %>
+    <% } else { %>
+      <tr>
+        <td colspan="3" class="text-center">No hay pagos registrados</td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>
 
     <div class="double-divider"></div>
 
@@ -319,6 +331,7 @@
       <p>Este documento no es válido como factura</p>
       <p>Impreso el: <%= new Date().toLocaleDateString('es-DO') %> a las <%= new Date().toLocaleTimeString('es-DO', {hour: '2-digit', minute:'2-digit'}) %></p>
     </div>
+    
   </div>
 <!-- Botones -->
   <div class="no-print" style="text-align: center; margin-top: 15px;">
