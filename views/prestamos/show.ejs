@@ -3,9 +3,13 @@
   // Función helper para formatear montos
   function formatMoney(value) {
     const num = parseFloat(value) || 0;
-    return num.toFixed(2);
+    return num.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
+
+  // Determinar tipo de préstamo
+  const esAbierto = prestamo.tipo_prestamo === 'abierto';
 %>
+
 <div class="container-fluid px-4 mt-4">
   <!-- Tarjeta Principal -->
   <div class="card border-0 shadow-sm">
@@ -15,32 +19,13 @@
         <h2 class="mb-0">
           <i class="fas fa-hand-holding-usd me-2"></i>Préstamo #<%= prestamo.id %>
           <span class="badge bg-light text-dark ms-2"><%= prestamo.estado.toUpperCase() %></span>
+          <% if (esAbierto) { %>
+            <span class="badge bg-info ms-2">ABIERTO</span>
+          <% } %>
         </h2>
 
         <div class="d-flex mt-2 mt-md-0">
-          <!-- Botón de Pago Rápido -->
-          <!-- <button class="btn btn-success btn-sm me-2" data-bs-toggle="modal" data-bs-target="#modalPago">
-            <i class="fas fa-money-bill-wave me-1"></i> Nuevo Pago
-          </button> -->
-
-          <!-- Dropdown de Impresión -->
-          <!-- <div class="dropdown me-2">
-            <button class="btn btn-info btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-              <i class="fas fa-print me-1"></i> Imprimir
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-              <li><a class="dropdown-item" href="#" onclick="imprimirTicket('completo')"><i class="fas fa-receipt me-2"></i>Recibo Completo</a></li>
-              <li><a class="dropdown-item" href="#" onclick="imprimirRecibo('simple')"><i class="fas fa-file-invoice me-2"></i>Recibo Simple</a></li>
-              <li><a class="dropdown-item" href="#" onclick="imprimirRecibo('contrato')"><i class="fas fa-file-contract me-2"></i>Contrato</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="#" onclick="imprimirDirecto()"><i class="fas fa-print me-2"></i>Imprimir Directo</a></li>
-            </ul>
-          </div> -->
-
-          <!-- Datos  -->
-
-          <!-- Botón de Edición -->
-       <a href="/prestamos/<%= prestamo.id %>/imprimir" class="btn btn-success btn-sm me-2">
+          <a href="/prestamos/<%= prestamo.id %>/imprimir" class="btn btn-success btn-sm me-2">
             <i class="fas fa-file me-1"></i> Imprimir Contrato
           </a>
 
@@ -67,6 +52,10 @@
           <td><strong>Total:</strong> RD$ <%= formatMoney(prestamo.monto_total) %></td>
           <span class="mx-2">|</span>
           <td><strong>Saldo:</strong> RD$ <%= formatMoney(prestamo.saldo_actual) %></td>
+          <% if (esAbierto) { %>
+            <span class="mx-2">|</span>
+            <td><strong>Interés Actual (10%):</strong> RD$ <%= formatMoney(prestamo.saldo_actual * 0.10) %></td>
+          <% } %>
         </div>
       </div>
       <!-- Sección de Información en Tabs -->
@@ -76,11 +65,13 @@
             <i class="fas fa-info-circle me-1"></i> Resumen
           </button>
         </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="cuotas-tab" data-bs-toggle="tab" data-bs-target="#cuotas" type="button">
-            <i class="fas fa-calendar-alt me-1"></i> Plan de Pagos
-          </button>
-        </li>
+        <% if (!esAbierto) { %>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="cuotas-tab" data-bs-toggle="tab" data-bs-target="#cuotas" type="button">
+              <i class="fas fa-calendar-alt me-1"></i> Plan de Pagos
+            </button>
+          </li>
+        <% } %>
         <li class="nav-item" role="presentation">
           <button class="nav-link" id="pagos-tab" data-bs-toggle="tab" data-bs-target="#pagos" type="button">
             <i class="fas fa-history me-1"></i> Historial
@@ -107,16 +98,22 @@
                   <div class="table-responsive">
                     <table class="table table-sm table-borderless">
                       <tbody>
-                    <tr>
-                    <th>Ruta Asignada:</th>
-                    <td>
-                      <%= prestamo.ruta_nombre ? `${prestamo.ruta_zona} - ${prestamo.ruta_nombre}` : 'No asignada' %>
-                    </td>
-                  </tr>
-
-
                         <tr>
-                          <th width="40%">Fecha de Solicitud:</th>
+                          <th width="40%">Tipo de Préstamo:</th>
+                          <td>
+                            <span class="badge <%= esAbierto ? 'bg-info' : 'bg-primary' %>">
+                              <%= esAbierto ? 'Abierto' : 'Por Cuotas' %>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Ruta Asignada:</th>
+                          <td>
+                            <%= prestamo.ruta_nombre ? `${prestamo.ruta_zona} - ${prestamo.ruta_nombre}` : 'No asignada' %>
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Fecha de Solicitud:</th>
                           <td><%= prestamo.created_at ? new Date(prestamo.created_at).toLocaleDateString('es-DO') : 'N/A' %></td>
                         </tr>
                         <tr>
@@ -127,21 +124,34 @@
                           <th>Monto Aprobado:</th>
                           <td class="fw-bold">RD$ <%= formatMoney(prestamo.monto_aprobado) %></td>
                         </tr>
-                       <tr>
-                        <th>Mora Acumulada:</th>
-                        <td class="text-danger fw-bold">RD$ <%= formatMoney(prestamo.mora_total) %></td>
-                      </tr>
-                      <tr>
-                          <th>Forma de Pago:</th>
-                          <td>
-                            <span class="badge bg-primary">
-                              <%= prestamo.forma_pago === 'diario' ? 'Diario' :
-                                prestamo.forma_pago === 'semanal' ? 'Semanal' :
-                                prestamo.forma_pago === 'quincenal' ? 'Quincenal' :
-                                prestamo.forma_pago === 'mensual' ? 'Mensual' : 'Personalizado' %>
-                            </span>
-                          </td>
+                        <% if (esAbierto) { %>
+                          <tr>
+                            <th>Interés Inicial:</th>
+                            <td class="fw-bold">RD$ <%= formatMoney(prestamo.monto_interes) %></td>
+                          </tr>
+                        <% } else { %>
+                          <tr>
+                            <th>Tasa de Interés:</th>
+                            <td><%= prestamo.interes_porcentaje %>%</td>
+                          </tr>
+                        <% } %>
+                        <tr>
+                          <th>Mora Acumulada:</th>
+                          <td class="text-danger fw-bold">RD$ <%= formatMoney(prestamo.mora_total) %></td>
                         </tr>
+                        <% if (!esAbierto) { %>
+                          <tr>
+                            <th>Forma de Pago:</th>
+                            <td>
+                              <span class="badge bg-primary">
+                                <%= prestamo.forma_pago === 'diario' ? 'Diario' :
+                                  prestamo.forma_pago === 'semanal' ? 'Semanal' :
+                                  prestamo.forma_pago === 'quincenal' ? 'Quincenal' :
+                                  prestamo.forma_pago === 'mensual' ? 'Mensual' : 'Personalizado' %>
+                              </span>
+                            </td>
+                          </tr>
+                        <% } %>
                         <tr>
                           <th>Total a Pagar:</th>
                           <td class="fw-bold text-success">RD$ <%= formatMoney(prestamo.monto_total) %></td>
@@ -170,36 +180,38 @@
                           <th>Saldo Pendiente:</th>
                           <td class="text-danger fw-bold">RD$ <%= formatMoney(prestamo.saldo_actual) %></td>
                         </tr>
-                        <tr>
-                          <th>Próxima Cuota:</th>
-                          <td>
-                            <% const proximaCuota = cuotas.find(c => c.estado === 'pendiente'); %>
-                            <% if (proximaCuota) { %>
-                              <%- moment(proximaCuota.fecha_vencimiento).format('DD/MM/YYYY') %> -
-                              RD$ <%= formatMoney(proximaCuota.monto) %>
-                            <% } else { %>
-                              <span class="text-muted">No hay cuotas pendientes</span>
-                            <% } %>
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Cuotas Pagadas:</th>
-                          <td>
-                            <%
-                              const totalCuotas = cuotas.length;
-                              const cuotasPagadas = cuotas.filter(c => c.estado === 'pagada').length;
-                            %>
-                            <div class="progress" style="height: 20px;">
-                              <div class="progress-bar bg-success" role="progressbar"
-                                   style="width: <%= totalCuotas > 0 ? (cuotasPagadas / totalCuotas) * 100 : 0 %>%"
-                                   aria-valuenow="<%= cuotasPagadas %>"
-                                   aria-valuemin="0"
-                                   aria-valuemax="<%= totalCuotas %>">
-                                <%= cuotasPagadas %>/<%= totalCuotas %>
+                        <% if (!esAbierto) { %>
+                          <tr>
+                            <th>Próxima Cuota:</th>
+                            <td>
+                              <% const proximaCuota = cuotas.find(c => c.estado === 'pendiente'); %>
+                              <% if (proximaCuota) { %>
+                                <%- moment(proximaCuota.fecha_vencimiento).format('DD/MM/YYYY') %> -
+                                RD$ <%= formatMoney(proximaCuota.monto) %>
+                              <% } else { %>
+                                <span class="text-muted">No hay cuotas pendientes</span>
+                              <% } %>
+                            </td>
+                          </tr>
+                          <tr>
+                            <th>Cuotas Pagadas:</th>
+                            <td>
+                              <%
+                                const totalCuotas = cuotas.length;
+                                const cuotasPagadas = cuotas.filter(c => c.estado === 'pagada').length;
+                              %>
+                              <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-success" role="progressbar"
+                                     style="width: <%= totalCuotas > 0 ? (cuotasPagadas / totalCuotas) * 100 : 0 %>%"
+                                     aria-valuenow="<%= cuotasPagadas %>"
+                                     aria-valuemin="0"
+                                     aria-valuemax="<%= totalCuotas %>">
+                                  <%= cuotasPagadas %>/<%= totalCuotas %>
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                        </tr>
+                            </td>
+                          </tr>
+                        <% } %>
                         <tr>
                           <th>Último Pago:</th>
                           <td>
@@ -219,92 +231,95 @@
             </div>
           </div>
         </div>
-        <!-- Tab de Cuotas -->
-       <div class="tab-pane fade" id="cuotas" role="tabpanel">
-  <div class="card">
-    <div class="card-header bg-light d-flex justify-content-between align-items-center">
-      <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Plan de Pagos</h5>
-      <div>
-        <%
-          const cp = cuotas.filter(c => c.estado === 'pagada').length;
-          const cup = cuotas.length - cp;
-        %>
-        <span class="badge bg-success me-2">Pagadas: <%= cp %></span>
-        <span class="badge bg-warning text-dark">Pendientes: <%= cup %></span>
-      </div>
-    </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>#</th>
-              <th>Monto</th>
-              <th>Vencimiento</th>
-              <th>Mora</th>
-              <th>Estado</th>
-              <th>Pago</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% if (cuotas.length > 0) { %>
-              <% cuotas.forEach(cuota => { %>
-                <% const esVencida = new Date(cuota.fecha_vencimiento) < new Date() && cuota.estado !== 'pagada'; %>
-                <tr class="<%= esVencida ? 'table-danger' : '' %>">
-                  <td><%= cuota.numero_cuota %></td>
-                  <td>RD$ <%= formatMoney(cuota.monto) %></td>
-                  <td>
-                    <%- moment(cuota.fecha_vencimiento).format('DD/MM/YYYY') %>
-                    <% if (esVencida) { %>
-                      <span class="badge bg-danger ms-2">Vencida</span>
-                    <% } %>
-                  </td>
-                  <td>
-                    RD$ <%= formatMoney(cuota.monto) %>
-                    <% if (cuota.mora && cuota.mora > 0) { %>
-                      <br><small class="text-danger">+ RD$ <%= formatMoney(cuota.mora) %> mora</small>
-                    <% } %>
-                  </td>
-                  <td>
-                    <span class="badge <%= cuota.estado === 'pagada' ? 'bg-success' :
-                                              cuota.estado === 'parcial' ? 'bg-info' : 'bg-secondary' %>">
-                      <%= cuota.estado %>
-                    </span>
-                  </td>
-                  <td>
-                    <%- cuota.fecha_pago ? moment(cuota.fecha_pago).format('DD/MM/YYYY') : '—' %>
-                  </td>
-                  <td>
-                    <% if (cuota.estado !== 'pagada') { %>
-                      <button class="btn btn-sm btn-outline-primary btn-pagar-cuota"
-                        data-cuota-id="<%= cuota.id %>"
-                        data-cuota-numero="<%= cuota.numero_cuota %>"
-                        data-monto="<%= cuota.total_a_pagar || cuota.monto %>">
-                        <i class="fas fa-money-bill-wave me-1"></i> Pagar
-                      </button>
-                    <% } else { %>
-                      <button class="btn btn-sm btn-outline-secondary btn-ver-recibo"
-                        data-pago-id="<%= historialPagos.find(p => p.cuota_id === cuota.id)?.id || '' %>">
-                        <i class="fas fa-receipt me-1"></i> Completado
-                      </button>
-                    <% } %>
-                  </td>
-                </tr>
-              <% }); %>
-            <% } else { %>
-              <tr>
-                <td colspan="7" class="text-center py-4 text-muted">
-                  No hay cuotas registradas para este préstamo
-                </td>
-              </tr>
-            <% } %>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
+
+        <!-- Tab de Cuotas (solo para préstamos cerrados) -->
+        <% if (!esAbierto) { %>
+          <div class="tab-pane fade" id="cuotas" role="tabpanel">
+            <div class="card">
+              <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Plan de Pagos</h5>
+                <div>
+                  <%
+                    const cp = cuotas.filter(c => c.estado === 'pagada').length;
+                    const cup = cuotas.length - cp;
+                  %>
+                  <span class="badge bg-success me-2">Pagadas: <%= cp %></span>
+                  <span class="badge bg-warning text-dark">Pendientes: <%= cup %></span>
+                </div>
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>#</th>
+                        <th>Monto</th>
+                        <th>Vencimiento</th>
+                        <th>Mora</th>
+                        <th>Estado</th>
+                        <th>Pago</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% if (cuotas.length > 0) { %>
+                        <% cuotas.forEach(cuota => { %>
+                          <% const esVencida = new Date(cuota.fecha_vencimiento) < new Date() && cuota.estado !== 'pagada'; %>
+                          <tr class="<%= esVencida ? 'table-danger' : '' %>">
+                            <td><%= cuota.numero_cuota %></td>
+                            <td>RD$ <%= formatMoney(cuota.monto) %></td>
+                            <td>
+                              <%- moment(cuota.fecha_vencimiento).format('DD/MM/YYYY') %>
+                              <% if (esVencida) { %>
+                                <span class="badge bg-danger ms-2">Vencida</span>
+                              <% } %>
+                            </td>
+                            <td>
+                              RD$ <%= formatMoney(cuota.monto) %>
+                              <% if (cuota.mora && cuota.mora > 0) { %>
+                                <br><small class="text-danger">+ RD$ <%= formatMoney(cuota.mora) %> mora</small>
+                              <% } %>
+                            </td>
+                            <td>
+                              <span class="badge <%= cuota.estado === 'pagada' ? 'bg-success' :
+                                                    cuota.estado === 'parcial' ? 'bg-info' : 'bg-secondary' %>">
+                                <%= cuota.estado %>
+                              </span>
+                            </td>
+                            <td>
+                              <%- cuota.fecha_pago ? moment(cuota.fecha_pago).format('DD/MM/YYYY') : '—' %>
+                            </td>
+                            <td>
+                              <% if (cuota.estado !== 'pagada') { %>
+                                <button class="btn btn-sm btn-outline-primary btn-pagar-cuota"
+                                  data-cuota-id="<%= cuota.id %>"
+                                  data-cuota-numero="<%= cuota.numero_cuota %>"
+                                  data-monto="<%= cuota.total_a_pagar || cuota.monto %>">
+                                  <i class="fas fa-money-bill-wave me-1"></i> Pagar
+                                </button>
+                              <% } else { %>
+                                <button class="btn btn-sm btn-outline-secondary btn-ver-recibo"
+                                  data-pago-id="<%= historialPagos.find(p => p.cuota_id === cuota.id)?.id || '' %>">
+                                  <i class="fas fa-receipt me-1"></i> Completado
+                                </button>
+                              <% } %>
+                            </td>
+                          </tr>
+                        <% }); %>
+                      <% } else { %>
+                        <tr>
+                          <td colspan="7" class="text-center py-4 text-muted">
+                            No hay cuotas registradas para este préstamo
+                          </td>
+                        </tr>
+                      <% } %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% } %>
 
         <!-- Tab de Historial de Pagos -->
         <div class="tab-pane fade" id="pagos" role="tabpanel">
@@ -325,7 +340,12 @@
                       <th>Fecha</th>
                       <th>Método</th>
                       <th>Monto</th>
-                      <th>Cuota</th>
+                      <% if (esAbierto) { %>
+                        <th>Interés</th>
+                        <th>Capital</th>
+                      <% } else { %>
+                        <th>Cuota</th>
+                      <% } %>
                       <th>Registrado por</th>
                       <th>Acciones</th>
                     </tr>
@@ -343,13 +363,18 @@
                             </span>
                           </td>
                           <td class="fw-bold">RD$ <%= formatMoney(pago.monto) %></td>
-                          <td>
-                            <% if (pago.cuota_id) { %>
-                              <span class="badge bg-primary">#<%= pago.numero_cuota %></span>
-                            <% } else { %>
-                              <span class="text-muted">Adicional</span>
-                            <% } %>
-                          </td>
+                          <% if (esAbierto) { %>
+                            <td>RD$ <%= formatMoney(pago.interes) %></td>
+                            <td>RD$ <%= formatMoney(pago.capital) %></td>
+                          <% } else { %>
+                            <td>
+                              <% if (pago.cuota_id) { %>
+                                <span class="badge bg-primary">#<%= pago.numero_cuota %></span>
+                              <% } else { %>
+                                <span class="text-muted">Adicional</span>
+                              <% } %>
+                            </td>
+                          <% } %>
                           <td><%= pago.registrado_por %></td>
                           <td>
                             <div class="btn-group btn-group-sm" role="group">
@@ -363,7 +388,7 @@
                       <% }); %>
                     <% } else { %>
                       <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">
+                        <td colspan="<%= esAbierto ? '7' : '6' %>" class="text-center py-4 text-muted">
                           No hay pagos registrados para este préstamo
                         </td>
                       </tr>
@@ -374,6 +399,7 @@
             </div>
           </div>
         </div>
+
         <!-- Tab de Documentos -->
         <div class="tab-pane fade" id="documentos" role="tabpanel">
           <div class="card">
@@ -458,87 +484,58 @@
           </div>
         </div>
       </div>
-    </div>
-  </div>
-</div>
 
-<!-- Modal para Pago General -->
-<div class="modal fade" id="modalPago" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title"><i class="fas fa-money-bill-wave me-2"></i>Registrar Pago</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form id="formPagoGeneral">
-        <div class="modal-body">
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Monto a Pagar *</label>
-              <div class="input-group">
-                <span class="input-group-text">RD$</span>
-                <input type="number" class="form-control" name="monto" step="0.01" min="0.01" required
-                       value="<%= cuotas.find(c => c.estado === 'pendiente')?.monto.toFixed(2) || '' %>">
+      <!-- Sección especial para préstamos abiertos -->
+      <% if (esAbierto) { %>
+        <div class="card mt-4">
+          <div class="card-header bg-info text-white">
+            <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Registrar Pago</h5>
+          </div>
+          <div class="card-body">
+            <form id="formPagoAbierto" action="/prestamos/<%= prestamo.id %>/pagar-abierto" method="POST">
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Saldo Actual</label>
+                  <input type="text" class="form-control bg-light" value="RD$ <%= formatMoney(prestamo.saldo_actual) %>" readonly>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Interés Actual (10%)</label>
+                  <input type="text" class="form-control bg-light" value="RD$ <%= formatMoney(prestamo.saldo_actual * 0.10) %>" readonly>
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Monto a Pagar *</label>
+                  <div class="input-group">
+                    <span class="input-group-text">RD$</span>
+                    <input type="number" class="form-control" name="monto" step="0.01" min="<%= (prestamo.saldo_actual * 0.10).toFixed(2) %>" 
+                           value="<%= (prestamo.saldo_actual * 0.10).toFixed(2) %>" required>
+                  </div>
+                  <small class="text-muted">Mínimo: RD$ <%= formatMoney(prestamo.saldo_actual * 0.10) %></small>
+                </div>
               </div>
-            </div>
-
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Método de Pago *</label>
-              <select class="form-select" name="metodo" required>
-                <option value="">Seleccionar...</option>
-                <option value="efectivo">Efectivo</option>
-                <option value="transferencia">Transferencia</option>
-                <option value="tarjeta">Tarjeta</option>
-                <option value="cheque">Cheque</option>
-                <option value="otro">Otro</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Aplicar a Cuota</label>
-              <select class="form-select" name="cuota_id">
-                <option value="">Pago adicional (no aplica a cuota)</option>
-                <% cuotas.forEach(cuota => { %>
-                  <% if (cuota.estado !== 'pagada') { %>
-                    <option value="<%= cuota.id %>">
-                      Cuota #<%= cuota.numero_cuota %> -
-                      <%- moment(cuota.fecha_vencimiento).format('DD/MM/YYYY') %> -
-                      RD$ <%= cuota.monto.toFixed(2) %>
-                    </option>
-                  <% } %>
-                <% }); %>
-              </select>
-            </div>
-
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Referencia (opcional)</label>
-              <input type="text" class="form-control" name="referencia" placeholder="Número de transacción, cheque, etc.">
-            </div>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Notas (opcional)</label>
-            <textarea class="form-control" name="notas" rows="2" placeholder="Detalles adicionales del pago..."></textarea>
-          </div>
-
-          <div class="form-check form-switch mb-3">
-            <input class="form-check-input" type="checkbox" name="imprimir_recibo" id="imprimirRecibo" checked>
-            <label class="form-check-label" for="imprimirRecibo">
-              Imprimir recibo automáticamente
-            </label>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Método de Pago *</label>
+                  <select class="form-select" name="metodo" required>
+                    <option value="">Seleccionar...</option>
+                    <option value="efectivo">Efectivo</option>
+                    <option value="transferencia">Transferencia</option>
+                    <option value="tarjeta">Tarjeta</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Referencia (opcional)</label>
+                  <input type="text" class="form-control" name="referencia" placeholder="Número de transacción, cheque, etc.">
+                </div>
+              </div>
+              <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-check me-1"></i> Registrar Pago
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-            <i class="fas fa-times me-1"></i> Cancelar
-          </button>
-          <button type="submit" class="btn btn-success">
-            <i class="fas fa-check me-1"></i> Registrar Pago
-          </button>
-        </div>
-      </form>
+      <% } %>
     </div>
   </div>
 </div>
@@ -593,18 +590,17 @@
     </div>
   </div>
 </div>
+
 <script>
   // Variables globales necesarias para el JS externo
   window.prestamoData = {
     id: '<%= prestamo.id %>',
+    tipo: '<%= prestamo.tipo_prestamo %>',
     ultimoPagoId: <%= historialPagos.length > 0 ? historialPagos[0].id : 'null' %>,
-    cuotas: <%= JSON.stringify(cuotas) %>,
+    cuotas: <%= !esAbierto ? JSON.stringify(cuotas) : '[]' %>,
     historialPagos: <%= JSON.stringify(historialPagos) %>
   };
-</script>
 
-<!-- Scripts -->
-<script>
   // Función para obtener el token de autenticación
   function getAuthToken() {
     // Buscar token en localStorage (para SPA)
@@ -636,41 +632,7 @@
     }, 5000);
   }
 
-  // Función para imprimir recibos
-  function imprimirRecibo(tipo, pagoId = null) {
-    let url = `/prestamos/<%= prestamo.id %>/recibo?tipo=${tipo}&print=1`;
-    if (pagoId) url += `&pago=${pagoId}`;
-
-    const ventana = window.open(url, '_blank', 'width=800,height=600');
-
-    ventana.onload = function() {
-      setTimeout(() => {
-        ventana.print();
-        setTimeout(() => ventana.close(), 3000);
-      }, 500);
-    };
-  }
-
-  // Función para impresión directa
-  function imprimirDirecto() {
-    fetch(`/prestamos/<%= prestamo.id %>/recibo?tipo=simple&raw=1`, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getAuthToken()}`
-      }
-    })
-    .then(handleResponse)
-    .then(data => {
-      if(data.success) {
-        showAlert('success', 'Recibo enviado a la impresora térmica');
-      } else {
-        throw new Error(data.message || 'Error al imprimir');
-      }
-    })
-    .catch(handleError);
-  }
-
-  // Función para manejar pagos de cuotas
+  // Función para pagar cuota específica
   function pagarCuota(cuotaId, cuotaNumero, monto) {
     document.getElementById('cuotaId').value = cuotaId;
     document.getElementById('numeroCuota').textContent = cuotaNumero;
@@ -697,61 +659,9 @@
     }
   }
 
-  // Función para procesar pagos (unificada y corregida)
-  async function processPayment(form, isSpecificPayment = false) {
-    // Validar montos antes de enviar
-    let montoPago;
-    try {
-      montoPago = parseFloat(isSpecificPayment ?
-        document.getElementById('montoCuotaInput').value :
-        form.monto.value);
-
-      if (isNaN(montoPago)) throw new Error('Monto inválido');
-      if (montoPago <= 0) throw new Error('El monto debe ser mayor que cero');
-    } catch (error) {
-      showAlert('danger', error.message);
-      return;
-    }
-
-    const formData = {
-      monto: montoPago,
-      metodo: form.metodo.value,
-      referencia: form.referencia.value || '',
-      notas: form.notas.value || '',
-      cuota_id: isSpecificPayment ? form.cuota_id.value : form.cuota_id.value || null
-    };
-
-    try {
-      const response = await fetch(`/prestamos/<%= prestamo.id %>/pagar`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-      });
-
-      const data = await handleResponse(response);
-      showAlert('success', 'Pago registrado correctamente');
-
-      // Cerrar modales después de éxito
-      const modal = bootstrap.Modal.getInstance(isSpecificPayment ?
-        document.getElementById('modalPagoCuota') :
-        document.getElementById('modalPago'));
-      modal.hide();
-
-      if (form.imprimir_recibo?.checked) {
-        imprimirRecibo('simple', data.pagoId);
-      }
-
-      setTimeout(() => window.location.reload(), 1000);
-    } catch (error) {
-      handleError(error);
-    }
-  }
-
   // Configuración de eventos cuando el DOM está listo
   document.addEventListener('DOMContentLoaded', function() {
-    // Configurar botones de pago de cuotas
+    // Configurar botones de pago de cuotas (solo para préstamos cerrados)
     const btnsPagarCuota = document.querySelectorAll('.btn-pagar-cuota');
     btnsPagarCuota.forEach(btn => {
       btn.addEventListener('click', function() {
@@ -762,83 +672,135 @@
       });
     });
 
-    // Configurar formulario de pago general
-    const formPagoGeneral = document.getElementById('formPagoGeneral');
-    if (formPagoGeneral) {
-      formPagoGeneral.addEventListener('submit', function(e) {
-        e.preventDefault();
-        processPayment(this);
-      });
-    }
-
     // Configurar formulario de pago de cuota
     const formPagoCuota = document.getElementById('formPagoCuota');
     if (formPagoCuota) {
       formPagoCuota.addEventListener('submit', function(e) {
         e.preventDefault();
-        processPayment(this, true);
-      });
-    }
-  });
-  document.querySelectorAll('.btn-subir-doc').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const tipo = btn.dataset.tipo;
-    const input = document.querySelector(`#upload${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
-    input.click();
+        
+        const formData = {
+          cuota_id: this.cuota_id.value,
+          monto: parseFloat(this.monto.value),
+          metodo: this.metodo.value,
+          referencia: this.referencia.value || '',
+          notas: this.notas.value || ''
+        };
 
-    input.onchange = async () => {
-      const formData = new FormData();
-      formData.append('archivo', input.files[0]);
-      formData.append('tipo', tipo);
-
-      try {
-        const res = await fetch(`/documentos/<%= prestamo.id %>/subir`, {
+        fetch(`/prestamos/<%= prestamo.id %>/pagar`, {
           method: 'POST',
-          body: formData
-        });
-
-        const data = await res.json();
-        if (data.success) {
-          showAlert('success', 'Documento subido');
-          setTimeout(() => window.location.reload(), 800);
-        } else {
-          throw new Error(data.message);
-        }
-      } catch (err) {
-        handleError(err);
-      }
-    };
-  });
-});
-
-document.querySelectorAll('.btn-eliminar-doc').forEach(btn => {
-  btn.addEventListener('click', async () => {
-    const tipo = btn.dataset.tipo;
-
-    if (!confirm(`¿Eliminar el documento "${tipo}"?`)) return;
-
-    try {
-      const res = await fetch(`/documentos/<%= prestamo.id %>/eliminar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tipo })
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData)
+        })
+        .then(handleResponse)
+        .then(data => {
+          showAlert('success', 'Pago registrado correctamente');
+          bootstrap.Modal.getInstance(document.getElementById('modalPagoCuota')).hide();
+          setTimeout(() => window.location.reload(), 1000);
+        })
+        .catch(handleError);
       });
-
-      const data = await res.json();
-      if (data.success) {
-        showAlert('success', 'Documento eliminado');
-        setTimeout(() => window.location.reload(), 800);
-      } else {
-        throw new Error(data.message);
-      }
-    } catch (err) {
-      handleError(err);
     }
-  });
-});
 
+    // Configurar formulario de pago abierto
+    const formPagoAbierto = document.getElementById('formPagoAbierto');
+    if (formPagoAbierto) {
+      formPagoAbierto.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const monto = parseFloat(this.monto.value);
+        const interesMinimo = parseFloat('<%= prestamo.saldo_actual * 0.10 %>');
+        
+        if (monto < interesMinimo) {
+          showAlert('warning', `El monto debe cubrir al menos el interés de RD$ ${interesMinimo.toFixed(2)}`);
+          return;
+        }
+
+        this.querySelector('button[type="submit"]').disabled = true;
+        
+        fetch(this.action, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            monto: monto,
+            metodo: this.metodo.value,
+            referencia: this.referencia.value || ''
+          })
+        })
+        .then(handleResponse)
+        .then(data => {
+          showAlert('success', 'Pago registrado correctamente');
+          setTimeout(() => window.location.reload(), 800);
+        })
+        .catch(handleError)
+        .finally(() => {
+          this.querySelector('button[type="submit"]').disabled = false;
+        });
+      });
+    }
+
+    // Configurar subida de documentos
+    document.querySelectorAll('.btn-subir-doc').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tipo = btn.dataset.tipo;
+        const input = document.querySelector(`#upload${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+        input.click();
+
+        input.onchange = async () => {
+          const formData = new FormData();
+          formData.append('archivo', input.files[0]);
+          formData.append('tipo', tipo);
+
+          try {
+            const res = await fetch(`/documentos/<%= prestamo.id %>/subir`, {
+              method: 'POST',
+              body: formData
+            });
+
+            const data = await res.json();
+            if (data.success) {
+              showAlert('success', 'Documento subido');
+              setTimeout(() => window.location.reload(), 800);
+            } else {
+              throw new Error(data.message);
+            }
+          } catch (err) {
+            handleError(err);
+          }
+        };
+      });
+    });
+
+    // Configurar eliminación de documentos
+    document.querySelectorAll('.btn-eliminar-doc').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const tipo = btn.dataset.tipo;
+
+        if (!confirm(`¿Eliminar el documento "${tipo}"?`)) return;
+
+        try {
+          const res = await fetch(`/documentos/<%= prestamo.id %>/eliminar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tipo })
+          });
+
+          const data = await res.json();
+          if (data.success) {
+            showAlert('success', 'Documento eliminado');
+            setTimeout(() => window.location.reload(), 800);
+          } else {
+            throw new Error(data.message);
+          }
+        } catch (err) {
+          handleError(err);
+        }
+      });
+    });
+  });
 </script>
 
-
 <%- include('../partials/footer') %>
-

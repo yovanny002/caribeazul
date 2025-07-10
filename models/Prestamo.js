@@ -137,6 +137,7 @@ findCuotasByPrestamo: async (prestamoId) => {
     });
   },
 
+// En el método create
 create: async (data) => {
   const {
     cliente_id,
@@ -148,26 +149,33 @@ create: async (data) => {
     forma_pago,
     estado,
     moras,
-    ruta_id
+    ruta_id,
+    tipo_prestamo, // 'abierto' o 'cerrado' (cuotas)
+    interes_manual // Solo para préstamos abiertos
   } = data;
-
-  const numeroCuotas = parseInt(cuotas);
-  if (isNaN(numeroCuotas) || numeroCuotas <= 0) {
-    throw new Error('Número de cuotas no válido');
-  }
 
   const montoAprobadoVal = safeParseFloat(monto_aprobado || monto_solicitado);
   const interes = safeParseFloat(interes_porcentaje, 43);
-  const montoInteres = montoAprobadoVal * (interes / 100);
-  const montoTotal = montoAprobadoVal + montoInteres;
-  const monto_por_cuota = parseFloat((montoTotal / numeroCuotas).toFixed(2));
+  
+  // Calcular montos según tipo de préstamo
+  let montoInteres, montoTotal;
+  
+  if (tipo_prestamo === 'abierto') {
+    // Para préstamo abierto, el interés manual es el total a cobrar
+    montoInteres = safeParseFloat(interes_manual);
+    montoTotal = montoAprobadoVal + montoInteres;
+  } else {
+    // Para préstamo cerrado (cuotas), cálculo normal
+    montoInteres = montoAprobadoVal * (interes / 100);
+    montoTotal = montoAprobadoVal + montoInteres;
+  }
 
-  // Insert con RETURNING para obtener el ID
+  // Insertar préstamo
   const [result] = await db.query(`
     INSERT INTO solicitudes_prestamos 
     (cliente_id, ingresos_mensuales, monto_solicitado, monto_aprobado, 
-     interes_porcentaje, cuotas, monto_por_cuota, forma_pago, estado, moras, ruta_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     interes_porcentaje, cuotas, monto_por_cuota, forma_pago, estado, moras, ruta_id, tipo_prestamo, monto_interes)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     RETURNING id
   `, {
     replacements: [
@@ -176,25 +184,70 @@ create: async (data) => {
       monto_solicitado,
       montoAprobadoVal,
       interes,
-      numeroCuotas,
-      monto_por_cuota,
+      tipo_prestamo === 'abierto' ? 1 : cuotas, // Para abierto solo 1 "cuota"
+      tipo_prestamo === 'abierto' ? montoTotal : (montoTotal / cuotas), // Para abierto el monto total
       forma_pago,
       estado || 'pendiente',
       safeParseFloat(moras, 0),
-      ruta_id
+      ruta_id,
+      tipo_prestamo,
+      montoInteres
     ],
     type: QueryTypes.INSERT
   });
 
   const prestamoId = result[0].id;
 
-  // Aquí llama generateCuotas con el monto total correcto (montoTotal) y el número de cuotas
-  await Prestamo.generateCuotas(prestamoId, montoTotal, numeroCuotas, forma_pago);
+  // Generar cuotas solo si no es abierto
+  if (tipo_prestamo !== 'abierto') {
+    await Prestamo.generateCuotas(prestamoId, montoTotal, cuotas, forma_pago);
+  }
 
   return prestamoId;
 },
 
+// Nuevo método para registrar pagos de préstamos abiertos
+registrarPagoAbierto: async (prestamoId, montoPago) => {
+  const prestamo = await Prestamo.findById(prestamoId);
+  
+  if (!prestamo || prestamo.tipo_prestamo !== 'abierto') {
+    throw new Error('Préstamo no encontrado o no es de tipo abierto');
+  }
 
+  // Calcular interés actual (10% del capital actual)
+  const interesActual = prestamo.saldo_actual * 0.10;
+  const capitalPagado = Math.max(0, montoPago - interesActual);
+  
+  // Registrar el pago
+  const [result] = await db.query(`
+    INSERT INTO pagos_abiertos 
+    (prestamo_id, monto, interes, capital, saldo_anterior, saldo_posterior)
+    VALUES (?, ?, ?, ?, ?, ?)
+    RETURNING id
+  `, {
+    replacements: [
+      prestamoId,
+      montoPago,
+      interesActual,
+      capitalPagado,
+      prestamo.saldo_actual,
+      prestamo.saldo_actual - capitalPagado
+    ],
+    type: QueryTypes.INSERT
+  });
+
+  // Actualizar saldo del préstamo
+  await db.query(`
+    UPDATE solicitudes_prestamos 
+    SET saldo_actual = saldo_actual - ?
+    WHERE id = ?
+  `, {
+    replacements: [capitalPagado, prestamoId],
+    type: QueryTypes.UPDATE
+  });
+
+  return result[0].id;
+},
 
   update: async (id, data) => {
     await db.query(`

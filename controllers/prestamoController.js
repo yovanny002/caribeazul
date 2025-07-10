@@ -22,54 +22,71 @@
       res.redirect('/');
     }
   };
-
-  // Mostrar formulario para crear préstamo
+// En el método createForm
 exports.createForm = async (req, res) => {
   try {
     const clientes = await Cliente.findAll();
-    const rutas = await Ruta.findAll(); // <-- Asegúrate de que devuelve [{ id, zona, nombre }, ...]
-
+    const rutas = await Ruta.findAll();
+    
     res.render('prestamos/create', {
       clientes,
-      rutas
+      rutas,
+      tiposPrestamo: [
+        { value: 'cerrado', label: 'Préstamo por Cuotas' },
+        { value: 'abierto', label: 'Préstamo Abierto' }
+      ]
     });
   } catch (error) {
-    console.error('❌ Error cargando formulario de préstamo:', error.message);
+    console.error('Error cargando formulario de préstamo:', error);
     req.flash('error', 'No se pudo cargar el formulario de préstamo');
     res.redirect('/prestamos');
   }
 };
 
-
-  // Crear un nuevo préstamo
-  exports.create = async (req, res) => {
-    try {
-      console.log('POST recibido en /prestamos/create');
-      console.log(req.body);
-
-      const prestamoId = await Prestamo.create(req.body);
-      console.log('🆔 Préstamo creado con ID:', prestamoId);
-
-        const montoBase = parseFloat(req.body.monto_aprobado || req.body.monto_solicitado);
-        const interes = parseFloat(req.body.interes_porcentaje || 20);
-        const montoTotal = parseFloat((montoBase * (1 + interes / 100)).toFixed(2));
-
-        await Prestamo.generateCuotas(
-          prestamoId,
-          montoTotal,
-          parseInt(req.body.cuotas),
-          req.body.forma_pago
+// En el método create
+exports.create = async (req, res) => {
+  try {
+    const prestamoId = await Prestamo.create(req.body);
+    
+    // Solo generar cuotas si es préstamo cerrado
+    if (req.body.tipo_prestamo === 'cerrado') {
+      const montoBase = parseFloat(req.body.monto_aprobado || req.body.monto_solicitado);
+      const interes = parseFloat(req.body.interes_porcentaje || 43);
+      const montoTotal = parseFloat((montoBase * (1 + interes / 100)).toFixed(2));
+      
+      await Prestamo.generateCuotas(
+        prestamoId,
+        montoTotal,
+        parseInt(req.body.cuotas),
+        req.body.forma_pago
       );
-
-      req.flash('success', 'Préstamo creado correctamente');
-      res.redirect('/prestamos');
-    } catch (error) {
-      console.error('❌ Error al crear préstamo:', error.message);
-      req.flash('error', `Error al crear préstamo: ${error.message}`);
-      res.redirect('/prestamos/create');
     }
-  };
 
+    req.flash('success', 'Préstamo creado correctamente');
+    res.redirect('/prestamos');
+  } catch (error) {
+    console.error('Error al crear préstamo:', error);
+    req.flash('error', `Error al crear préstamo: ${error.message}`);
+    res.redirect('/prestamos/create');
+  }
+};
+
+// Nuevo método para pagos de préstamos abiertos
+exports.pagarAbierto = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { monto } = req.body;
+    
+    const pagoId = await Prestamo.registrarPagoAbierto(id, parseFloat(monto));
+    
+    req.flash('success', 'Pago registrado correctamente');
+    res.redirect(`/prestamos/${id}/recibo?pago=${pagoId}`);
+  } catch (error) {
+    console.error('Error al registrar pago:', error);
+    req.flash('error', error.message);
+    res.redirect(`/prestamos/${req.params.id}`);
+  }
+};
 
 exports.pendientes = async (req, res) => {
   try {
