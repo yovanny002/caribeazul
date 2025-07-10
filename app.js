@@ -79,7 +79,7 @@ const cobradoresRoutes = require('./routes/cobradores');
 const rutasRoutes = require('./routes/rutas');
 const reportesRoutes = require('./routes/reportes');
 const documentosRoutes = require('./routes/documentos');
-const prestamosEspecialesRoutes = require('./routes/prestamosEspeciales');
+
 
 app.use('/auth', authRoutes);
 app.use('/dashboard', authMiddleware.ensureAuthenticated, dashboardRoutes);
@@ -90,7 +90,7 @@ app.use('/cobradores', authMiddleware.ensureAuthenticated, cobradoresRoutes);
 app.use('/rutas', authMiddleware.ensureAuthenticated, rutasRoutes);
 // Ruta para subir documentos
 app.use('/documentos', authMiddleware.ensureAuthenticated, documentosRoutes);
-app.use('/prestamos-especiales',authMiddleware.ensureAuthenticated, prestamosEspecialesRoutes);
+
 
 
 app.get('/logout', (req, res) => {
