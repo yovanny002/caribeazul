@@ -8,74 +8,77 @@ const moment = require('moment');
 class ApprovalController {
   // Método unificado para listar pendientes
 // Método unificado para listar pendientes
-static async listPending(req, res) {
-  try {
-    console.log('🔍 [ApprovalController] Iniciando listado de préstamos pendientes...');
-    
-    const [normalLoans, specialLoans] = await Promise.all([
-      ApprovalController._getNormalLoans(),
-      ApprovalController._getSpecialLoans()
-    ]);
+  static async listPending(req, res) {
+    try {
+      console.log('🔍 [ApprovalController] Iniciando listado de préstamos pendientes...');
+      
+      const [normalLoans, specialLoans] = await Promise.all([
+        ApprovalController._getNormalLoans(),
+        ApprovalController._getSpecialLoans()
+      ]);
 
-    console.log('📊 [ApprovalController] Resultados obtenidos:');
-    console.log(`- Préstamos normales: ${normalLoans.length} registros`);
-    console.log(`- Préstamos especiales: ${specialLoans.length} registros`);
-    
-    if (normalLoans.length > 0) {
-      console.log('📝 Ejemplo de préstamo normal:', JSON.stringify(normalLoans[0], null, 2));
+      // Formatear y unificar los datos
+      const formattedNormalLoans = normalLoans.map(loan => ({
+        ...loan,
+        loanType: 'normal',
+        displayType: 'Préstamo Normal',
+        icon: 'fa-file-invoice-dollar',
+        fecha_creacion: loan.created_at, // Mapear created_at a fecha_creacion
+        detalles: `${loan.cuotas} cuotas de ${loan.monto_por_cuota}`
+      }));
+
+      const formattedSpecialLoans = specialLoans.map(loan => ({
+        ...loan,
+        loanType: 'special',
+        displayType: 'Préstamo Especial',
+        icon: 'fa-star',
+        fecha_creacion: loan.fecha_creacion || loan.created_at, // Usar fecha_creacion si existe
+        detalles: loan.observaciones || 'Préstamo especial'
+      }));
+
+      // Combinar y ordenar
+      const allLoans = [...formattedNormalLoans, ...formattedSpecialLoans]
+        .sort((a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion));
+
+      console.log('🔄 [ApprovalController] Total de préstamos combinados:', allLoans.length);
+      
+      res.render('approval/pending', {
+        loans: allLoans,
+        helpers: ApprovalController._getTemplateHelpers(),
+        messages: req.flash()
+      });
+
+    } catch (error) {
+      console.error('❌ [ApprovalController] Error en listPending:', error);
+      ApprovalController._handleError(req, res, error);
     }
-    
-    if (specialLoans.length > 0) {
-      console.log('📝 Ejemplo de préstamo especial:', JSON.stringify(specialLoans[0], null, 2));
-    }
-
-    const allLoans = [...normalLoans, ...specialLoans]
-      .sort((a, b) => new Date(b.fecha_creacion) - new Date(a.fecha_creacion));
-
-    console.log('🔄 [ApprovalController] Total de préstamos combinados:', allLoans.length);
-    console.log('📅 Préstamos ordenados por fecha (nuevos primero):');
-    allLoans.forEach((loan, index) => {
-      console.log(`${index + 1}. ${loan.loanType} - ${loan.cliente_nombre} - ${loan.fecha_creacion}`);
-    });
-
-    console.log('🎨 [ApprovalController] Renderizando vista con datos...');
-    res.render('approval/pending', {
-      loans: allLoans,
-      helpers: ApprovalController._getTemplateHelpers(),
-      messages: req.flash()
-    });
-
-  } catch (error) {
-    console.error('❌ [ApprovalController] Error en listPending:', error);
-    ApprovalController._handleError(req, res, error);
   }
-}
+  // Obtener préstamos normales
+  static async _getNormalLoans() {
+    try {
+      console.log('🔎 Buscando préstamos normales pendientes...');
+      const loans = await Prestamo.findAllWithClientes('pendiente');
+      console.log(`✅ Encontrados ${loans.length} préstamos normales`);
+      return loans;
+    } catch (error) {
+      console.error('Error al obtener préstamos normales:', error);
+      return [];
+    }
+  }
 
-  // Métodos privados
-static async _getNormalLoans() {
-  console.log('🔎 Buscando préstamos normales pendientes...');
-  const loans = await Prestamo.findAllWithClientes('pendiente');
-  console.log(`✅ Encontrados ${loans.length} préstamos normales`);
-  return loans.map(loan => ({
-    ...loan,
-    loanType: 'normal',
-    displayType: 'Préstamo Normal',
-    icon: 'fa-file-invoice-dollar',
-    fecha_creacion: loan.created_at // Añadir esta línea
-  }));
-}
-static async _getSpecialLoans() {
-  console.log('🔎 Buscando préstamos especiales pendientes...');
-  const loans = await PrestamoEspecial.findAllWithClienteYRuta('pendiente');
-  console.log(`✅ Encontrados ${loans.length} préstamos especiales`);
-  return loans.map(loan => ({
-    ...loan,
-    loanType: 'special',
-    displayType: 'Préstamo Especial',
-    icon: 'fa-star',
-    echa_creacion: loan.fecha_creacion // Ya existe, pero para consistencia
-  }));
-}
+  // Obtener préstamos especiales
+  static async _getSpecialLoans() {
+    try {
+      console.log('🔎 Buscando préstamos especiales pendientes...');
+      const loans = await PrestamoEspecial.findAllWithClienteYRuta('pendiente');
+      console.log(`✅ Encontrados ${loans.length} préstamos especiales`);
+      return loans;
+    } catch (error) {
+      console.error('Error al obtener préstamos especiales:', error);
+      return [];
+    }
+  }
+  // Helpers para la vista
   static _getTemplateHelpers() {
     return {
       formatCurrency: (amount) => new Intl.NumberFormat('es-DO', {
@@ -83,11 +86,16 @@ static async _getSpecialLoans() {
         currency: 'DOP'
       }).format(amount || 0),
 
-      formatDate: (dateString) =>
-        dateString ? moment(dateString).format('DD/MM/YYYY') : 'Sin fecha'
+      formatDate: (dateString) => 
+        dateString ? moment(dateString).format('DD/MM/YYYY HH:mm') : 'Sin fecha',
+
+      getLoanIcon: (loanType) => 
+        loanType === 'normal' ? 'fa-file-invoice-dollar' : 'fa-star',
+
+      getLoanType: (loanType) =>
+        loanType === 'normal' ? 'Préstamo Normal' : 'Préstamo Especial'
     };
   }
-
   static async approveNormal(req, res) {
     try {
       const { id } = req.params;

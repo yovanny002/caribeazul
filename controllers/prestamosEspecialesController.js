@@ -100,7 +100,7 @@ module.exports = {
     } catch (error) {
       console.error('Error al crear préstamo:', error);
       req.flash('error', `Error al crear préstamo: ${error.message}`);
-      res.redirect('/prestamos-especiales/nuevo');
+      res.redirect('/prestamos-especiales/create');
     }
   },
 
