@@ -200,6 +200,88 @@ exports.calcularInteres = async (req, res) => {
     });
   }
 };
+// Nuevo método para registrar pagos en préstamos abiertos
+exports.registrarPagoAbierto = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { monto, metodo } = req.body;
+    const registrado_por = req.user?.nombre || 'Sistema';
+
+    // Obtener el préstamo
+    const prestamo = await Prestamo.findById(id);
+    if (!prestamo || prestamo.tipo_prestamo !== 'abierto') {
+      return res.status(400).json({ success: false, message: 'Préstamo no válido' });
+    }
+
+    // Calcular interés acumulado
+    const ultimoPago = await db.query(
+      `SELECT fecha FROM pagos WHERE prestamo_id = ? ORDER BY fecha DESC LIMIT 1`,
+      { replacements: [id], type: QueryTypes.SELECT }
+    );
+
+    const fechaInicio = ultimoPago.length > 0 ? 
+      new Date(ultimoPago[0].fecha) : 
+      new Date(prestamo.created_at);
+    
+    const dias = Math.max(1, Math.floor((new Date() - fechaInicio) / (1000 * 60 * 60 * 24)));
+    const interesDiario = (prestamo.saldo_actual * (prestamo.interes_porcentaje / 100)) / 30;
+    const interesAcumulado = parseFloat((interesDiario * dias).toFixed(2));
+
+    // Distribuir el pago
+    let pagoInteres = 0;
+    let pagoCapital = 0;
+
+    if (monto >= interesAcumulado) {
+      pagoInteres = interesAcumulado;
+      pagoCapital = parseFloat((monto - interesAcumulado).toFixed(2));
+    } else {
+      pagoInteres = monto;
+      pagoCapital = 0;
+    }
+
+    // Registrar el pago
+    await db.query(
+      `INSERT INTO pagos (prestamo_id, monto, interes, capital, metodo, registrado_por, fecha)
+       VALUES (?, ?, ?, ?, ?, ?, NOW())`,
+      {
+        replacements: [
+          id,
+          monto,
+          pagoInteres,
+          pagoCapital,
+          metodo,
+          registrado_por
+        ],
+        type: QueryTypes.INSERT
+      }
+    );
+
+    // Actualizar saldo del préstamo
+    const nuevoSaldo = parseFloat((prestamo.saldo_actual - pagoCapital).toFixed(2));
+    
+    await db.query(
+      `UPDATE solicitudes_prestamos 
+       SET saldo_actual = ?, total_pagado = total_pagado + ?
+       WHERE id = ?`,
+      {
+        replacements: [nuevoSaldo, monto, id],
+        type: QueryTypes.UPDATE
+      }
+    );
+
+    res.json({ 
+      success: true,
+      message: 'Pago registrado correctamente',
+      nuevoSaldo,
+      pagoInteres,
+      pagoCapital
+    });
+
+  } catch (error) {
+    console.error('Error en registrarPagoAbierto:', error);
+    res.status(500).json({ success: false, message: 'Error interno del servidor' });
+  }
+};
   exports.pagarCuota = async (req, res) => {
     const cuotaId = req.params.id;
     await db.query(`
