@@ -1,4 +1,5 @@
-  const db = require('../models/db');
+// File: controllers/prestamoController.js
+const db = require('../models/db');
   const Prestamo = require('../models/Prestamo');
   const Cliente = require('../models/Cliente');
   const Cuota = require('../models/Cuota');
