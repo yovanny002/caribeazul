@@ -39,9 +39,7 @@ class ApprovalController {
   }
 
   static async _getSpecialLoans() {
-    const loans = await PrestamoEspecial.findAllWithClienteYRuta({ 
-      where: { estado: 'pendiente' } 
-    });
+    const loans = await PrestamoEspecial.findAllWithClienteYRuta('pendiente');
     return loans.map(loan => ({
       ...loan,
       loanType: 'special',
