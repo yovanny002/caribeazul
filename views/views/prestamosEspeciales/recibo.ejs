@@ -1,0 +1,139 @@
+<%- include('../partials/header', { title: 'Recibo de Pago' }) %>
+
+<style>
+  .recibo-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    background-color: white;
+  }
+  .recibo-header {
+    text-align: center;
+    margin-bottom: 30px;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+  }
+  .recibo-title {
+    color: #007bff;
+    font-weight: bold;
+  }
+  .recibo-body {
+    margin-bottom: 30px;
+  }
+  .recibo-footer {
+    text-align: center;
+    margin-top: 50px;
+    border-top: 1px dashed #ddd;
+    padding-top: 20px;
+    font-size: 0.9em;
+    color: #666;
+  }
+  .recibo-details {
+    margin-bottom: 20px;
+  }
+  .recibo-details strong {
+    display: inline-block;
+    width: 150px;
+  }
+  .recibo-table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+  }
+  .recibo-table th, .recibo-table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+  .recibo-table th {
+    background-color: #f8f9fa;
+  }
+  .text-right {
+    text-align: right;
+  }
+  .total-row {
+    font-weight: bold;
+    background-color: #f8f9fa;
+  }
+  @media print {
+    body {
+      background-color: white;
+    }
+    .no-print {
+      display: none;
+    }
+    .recibo-container {
+      border: none;
+      box-shadow: none;
+      padding: 0;
+    }
+  }
+</style>
+
+<div class="container my-5">
+  <div class="recibo-container">
+    <div class="recibo-header">
+      <h2 class="recibo-title">RECIBO DE PAGO</h2>
+      <h4>Préstamo Especial</h4>
+      <p class="mb-0">Fecha: <%= pago.fecha %></p>
+    </div>
+
+    <div class="recibo-body">
+      <div class="recibo-details">
+        <p><strong>Número de Recibo:</strong> <%= pago.id %></p>
+        <p><strong>Cliente:</strong> <%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></p>
+        <p><strong>Cédula:</strong> <%= prestamo.cliente_cedula %></p>
+        <p><strong>Préstamo No.:</strong> <%= prestamo.id %></p>
+      </div>
+
+      <table class="recibo-table">
+        <thead>
+          <tr>
+            <th>Concepto</th>
+            <th class="text-right">Monto (RD$)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Interés (<%= prestamo.interes_porcentaje %>%)</td>
+            <td class="text-right"><%= pago.interes_pagado.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+          </tr>
+          <tr>
+            <td>Capital</td>
+            <td class="text-right"><%= pago.capital_pagado.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+          </tr>
+          <tr class="total-row">
+            <td><strong>TOTAL PAGADO</strong></td>
+            <td class="text-right"><strong><%= pago.monto.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></strong></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="mt-4">
+        <p><strong>Método de Pago:</strong> <%= pago.metodo.charAt(0).toUpperCase() + pago.metodo.slice(1) %></p>
+        <% if (pago.referencia) { %>
+          <p><strong>Referencia:</strong> <%= pago.referencia %></p>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="recibo-footer">
+      <p>¡Gracias por su pago!</p>
+      <p>Este documento es un comprobante de pago válido.</p>
+      <p class="mb-0">Generado el: <%= moment().format('DD/MM/YYYY HH:mm:ss') %></p>
+    </div>
+  </div>
+
+  <div class="text-center mt-4 no-print">
+    <button onclick="window.print()" class="btn btn-primary me-2">
+      <i class="fas fa-print me-2"></i>Imprimir Recibo
+    </button>
+    <a href="/prestamos-especiales/<%= prestamo.id %>" class="btn btn-secondary">
+      <i class="fas fa-arrow-left me-2"></i>Volver al Préstamo
+    </a>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

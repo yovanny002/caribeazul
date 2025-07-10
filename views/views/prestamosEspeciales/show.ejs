@@ -1,0 +1,329 @@
+<%- include('../partials/header', { title: 'Detalle del Préstamo Especial' }) %>
+
+<div class="container-fluid py-4 px-4">
+  <div class="card shadow-lg border-0 rounded-3 mb-4">
+    <div class="card-header bg-gradient-primary text-white py-4">
+      <div class="d-flex justify-content-between align-items-center">
+        <h2 class="mb-0 text-center flex-grow-1">
+          <i class="fas fa-hand-holding-usd me-3 fa-lg"></i>Detalle del Préstamo Especial #<%= prestamo.id %>
+        </h2>
+        <div>
+          <a href="/prestamos-especiales/<%= prestamo.id %>/editar" class="btn btn-light btn-lg text-primary fw-bold shadow-sm me-2" title="Editar Préstamo">
+            <i class="fas fa-edit me-2"></i>Editar Préstamo
+          </a>
+          <a href="/prestamos-especiales" class="btn btn-outline-light btn-lg fw-bold shadow-sm" title="Volver a la lista">
+            <i class="fas fa-arrow-left me-2"></i>Volver
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body p-4">
+      <% if (typeof messages !== 'undefined' && messages.success) { %>
+        <div class="alert alert-success alert-dismissible fade show border-0 rounded-pill text-center" role="alert">
+          <i class="fas fa-check-circle me-2"></i><%= messages.success %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      <% } %>
+      <% if (typeof messages !== 'undefined' && messages.error) { %>
+        <div class="alert alert-danger alert-dismissible fade show border-0 rounded-pill text-center" role="alert">
+          <i class="fas fa-exclamation-triangle me-2"></i><%= messages.error %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      <% } %>
+
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="card shadow-sm border-0 mb-4 h-100">
+            <div class="card-header bg-info text-white py-3">
+              <h4 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i>Información del Préstamo</h4>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <p class="mb-1 text-muted small">ID del Préstamo:</p>
+                  <h5 class="fw-bold text-primary"><%= prestamo.id %></h5>
+                </div>
+                <div class="col-md-6 text-md-end">
+                  <p class="mb-1 text-muted small">Estado Actual:</p>
+                  <%
+                    let estadoBadgeClass = '';
+                    let estadoTextDisplay = '';
+                    switch (prestamo.estado) {
+                      case 'pendiente':
+                        estadoBadgeClass = 'bg-warning text-dark';
+                        estadoTextDisplay = 'Pendiente';
+                        break;
+                      case 'aprobado':
+                        estadoBadgeClass = 'bg-success';
+                        estadoTextDisplay = 'Aprobado';
+                        break;
+                      case 'rechazado':
+                        estadoBadgeClass = 'bg-danger';
+                        estadoTextDisplay = 'Rechazado';
+                        break;
+                      case 'pagado':
+                        estadoBadgeClass = 'bg-primary';
+                        estadoTextDisplay = 'Pagado';
+                        break;
+                      default:
+                        estadoBadgeClass = 'bg-secondary';
+                        estadoTextDisplay = prestamo.estado ? prestamo.estado.charAt(0).toUpperCase() + prestamo.estado.slice(1) : 'Desconocido';
+                    }
+                  %>
+                  <span class="badge <%= estadoBadgeClass %> fs-6 px-3 py-2"><%= estadoTextDisplay %></span>
+                </div>
+              </div>
+
+              <hr class="my-4">
+
+              <div class="row mb-4">
+                <div class="col-md-6">
+                  <h5 class="mb-3 text-primary"><i class="fas fa-user-tie me-2"></i>Información del Cliente</h5>
+                  <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted">Nombre:</dt>
+                    <dd class="col-sm-8 fw-bold"><%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></dd>
+
+                    <dt class="col-sm-4 text-muted">Cédula:</dt>
+                    <dd class="col-sm-8 fw-bold"><%= prestamo.cliente_cedula %></dd>
+
+                    <dt class="col-sm-4 text-muted">Ruta/Zona:</dt>
+                    <dd class="col-sm-8">
+                      <%= prestamo.ruta_zona && prestamo.ruta_nombre ? `${prestamo.ruta_zona} - ${prestamo.ruta_nombre}` : 'No asignada' %>
+                    </dd>
+                  </dl>
+                </div>
+
+                <div class="col-md-6">
+                  <h5 class="mb-3 text-primary"><i class="fas fa-chart-line me-2"></i>Términos del Préstamo</h5>
+                  <dl class="row mb-0">
+                    <dt class="col-sm-5 text-muted">Monto Solicitado:</dt>
+                    <dd class="col-sm-7 fw-bold">RD$ <%= (prestamo.monto_solicitado || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></dd>
+
+                    <dt class="col-sm-5 text-muted">Monto Aprobado:</dt>
+                    <dd class="col-sm-7 fw-bold text-success">RD$ <%= (prestamo.monto_aprobado || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></dd>
+
+                    <dt class="col-sm-5 text-muted">Tasa de Interés:</dt>
+                    <dd class="col-sm-7 fw-bold"><%= prestamo.interes_porcentaje %>%</dd>
+
+                    <dt class="col-sm-5 text-muted">Forma de Pago:</dt>
+                    <dd class="col-sm-7"><%= prestamo.forma_pago ? prestamo.forma_pago.charAt(0).toUpperCase() + prestamo.forma_pago.slice(1) : 'N/A' %></dd>
+
+                    <dt class="col-sm-5 text-muted">Fecha Creación:</dt>
+                    <dd class="col-sm-7"><%= prestamo.fecha_creacion %></dd>
+                  </dl>
+                </div>
+              </div>
+
+              <hr class="my-4">
+
+              <h4 class="mb-3 text-primary"><i class="fas fa-calculator me-2"></i>Resumen Financiero</h4>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="card bg-light border-0 shadow-sm mb-3">
+                    <div class="card-header bg-dark text-white fw-bold">Detalles del Préstamo</div>
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between mb-2">
+                        <span>Monto Aprobado:</span>
+                        <strong class="text-success">RD$ <%= (prestamo.monto_aprobado || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></strong>
+                      </div>
+                      <div class="d-flex justify-content-between mb-2">
+                        <span>Interés Generado:</span>
+                        <strong class="text-info">RD$ <%= (prestamo.monto_aprobado * prestamo.interes_porcentaje / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></strong>
+                      </div>
+                      <div class="d-flex justify-content-between">
+                        <span class="fs-5">Total a Pagar:</span>
+                        <strong class="fs-5 text-primary">RD$ <%= (prestamo.monto_aprobado * (1 + prestamo.interes_porcentaje / 100)).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="card bg-light border-0 shadow-sm mb-3">
+                    <div class="card-header bg-dark text-white fw-bold">Estado de Pagos Actual</div>
+                    <div class="card-body">
+                      <div class="d-flex justify-content-between mb-2">
+                        <span>Total Pagado:</span>
+                        <strong class="text-success">RD$ <%= (totalPagado || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></strong>
+                      </div>
+                      <div class="d-flex justify-content-between mb-2">
+                        <span>Capital Pagado:</span>
+                        <strong class="text-success">RD$ <%= (capitalPagado || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></strong>
+                      </div>
+                      <div class="d-flex justify-content-between mb-2">
+                        <span>Interés Pagado:</span>
+                        <strong class="text-success">RD$ <%= (interesPagado || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></strong>
+                      </div>
+                      <div class="d-flex justify-content-between border-top pt-2 mt-2">
+                        <span class="fs-5">Capital Restante:</span>
+                        <strong class="fs-5 text-danger">RD$ <%= (prestamo.capital_restante || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-success text-white py-3">
+              <h4 class="mb-0 text-center"><i class="fas fa-money-bill-wave me-2"></i>Gestión de Pagos</h4>
+            </div>
+            <div class="card-body text-center">
+              <%
+                const puedePagar = prestamo.estado === 'aprobado' &&
+                                   !isNaN(parseFloat(prestamo.capital_restante)) &&
+                                   parseFloat(prestamo.capital_restante) > 0;
+
+                const estaPagadoCompletamente = !isNaN(parseFloat(prestamo.capital_restante)) &&
+                                                 parseFloat(prestamo.capital_restante) <= 0.01; // Allow for tiny floating point errors
+              %>
+
+              <% if (puedePagar) { %>
+                <a href="/prestamos-especiales/<%= prestamo.id %>/pago" class="btn btn-success w-100 btn-lg shadow-sm">
+                  <i class="fas fa-plus-circle me-2"></i>Registrar Nuevo Pago
+                </a>
+                <div class="mt-3">
+                  <span class="badge bg-danger fs-6 py-2 px-3">Capital Restante: RD$ <%= (parseFloat(prestamo.capital_restante) || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span>
+                </div>
+              <% } else if (estaPagadoCompletamente) { %>
+                <div class="alert alert-success d-flex align-items-center justify-content-center py-3 rounded-pill border-0" role="alert">
+                  <i class="fas fa-check-circle me-2 fa-lg"></i>
+                  <strong class="ms-2">¡Préstamo Completamente Pagado!</strong>
+                </div>
+              <% } else { %>
+                <div class="alert alert-warning d-flex align-items-center justify-content-center py-3 rounded-pill border-0" role="alert">
+                  <i class="fas fa-exclamation-triangle me-2 fa-lg"></i>
+                  <strong class="ms-2">
+                    <% if (prestamo.estado !== 'aprobado') { %>
+                      Préstamo no está **Aprobado**. Estado actual: <%= estadoTextDisplay %>
+                    <% } else { %>
+                      No se pueden registrar pagos. Capital restante es 0 o negativo.
+                    <% } %>
+                  </strong>
+                </div>
+              <% } %>
+            </div>
+          </div>
+
+          <% if (pagos && pagos.length > 0) { %>
+            <div class="card shadow-sm border-0 mb-4">
+              <div class="card-header bg-info text-white py-3">
+                <h4 class="mb-0 text-center"><i class="fas fa-clock me-2"></i>Último Pago Registrado</h4>
+              </div>
+              <div class="card-body">
+                <dl class="row">
+                  <dt class="col-sm-5 text-muted">Fecha:</dt>
+                  <dd class="col-sm-7 fw-bold"><%= pagos[0].fecha %></dd>
+
+                  <dt class="col-sm-5 text-muted">Monto Total:</dt>
+                  <dd class="col-sm-7 fw-bold text-success">RD$ <%= (pagos[0].monto || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></dd>
+
+                  <dt class="col-sm-5 text-muted">Capital Pagado:</dt>
+                  <dd class="col-sm-7 fw-bold text-primary">RD$ <%= (pagos[0].capital_pagado || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></dd>
+
+                  <dt class="col-sm-5 text-muted">Interés Pagado:</dt>
+                  <dd class="col-sm-7 fw-bold text-info">RD$ <%= (pagos[0].interes_pagado || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></dd>
+
+                  <dt class="col-sm-5 text-muted">Método:</dt>
+                  <dd class="col-sm-7"><%= pagos[0].metodo ? pagos[0].metodo.charAt(0).toUpperCase() + pagos[0].metodo.slice(1) : 'N/A' %></dd>
+
+                  <dt class="col-sm-5 text-muted">Registrado por:</dt>
+                  <dd class="col-sm-7"><%= pagos[0].registrado_por %></dd>
+                </dl>
+                <a href="/prestamos-especiales/<%= prestamo.id %>/recibo/<%= pagos[0].id %>" class="btn btn-primary w-100 mt-3 btn-lg shadow-sm">
+                  <i class="fas fa-receipt me-2"></i>Ver Recibo de Último Pago
+                </a>
+              </div>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      ---
+
+      <div class="card shadow-lg border-0 mt-4">
+        <div class="card-header bg-dark text-white py-3">
+          <h4 class="mb-0"><i class="fas fa-history me-2"></i>Historial Detallado de Pagos</h4>
+        </div>
+        <div class="card-body p-0">
+          <% if (pagos && pagos.length > 0) { %>
+            <div class="table-responsive">
+              <table class="table table-hover table-striped table-bordered align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col">ID Pago</th>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Monto Total</th>
+                    <th scope="col">Interés Pagado</th>
+                    <th scope="col">Capital Pagado</th>
+                    <th scope="col">Método</th>
+                    <th scope="col">Registrado por</th>
+                    <th scope="col" class="text-center">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% pagos.forEach(pago => { %>
+                    <tr>
+                      <td><span class="badge bg-secondary fw-normal"><%= pago.id %></span></td>
+                      <td><%= pago.fecha %></td>
+                      <td><span class="fw-bold text-success">RD$ <%= (pago.monto || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span></td>
+                      <td><span class="text-info">RD$ <%= (pago.interes_pagado || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span></td>
+                      <td><span class="text-primary">RD$ <%= (pago.capital_pagado || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></span></td>
+                      <td><%= pago.metodo ? pago.metodo.charAt(0).toUpperCase() + pago.metodo.slice(1) : 'N/A' %></td>
+                      <td><%= pago.registrado_por %></td>
+                      <td class="text-center">
+                        <a href="/prestamos-especiales/<%= prestamo.id %>/recibo/<%= pago.id %>"
+                           class="btn btn-sm btn-outline-primary" title="Ver Recibo">
+                          <i class="fas fa-receipt me-1"></i> Recibo
+                        </a>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } else { %>
+            <div class="alert alert-info text-center m-4 py-3 rounded-3 border-0">
+              <i class="fas fa-info-circle me-2"></i> No se han registrado pagos para este préstamo especial.
+            </div>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
+
+<style>
+  /* Estilos adicionales para un toque profesional */
+  .bg-gradient-primary {
+    background: linear-gradient(45deg, #007bff, #0056b3); /* Primary blue gradient */
+  }
+  .bg-gradient-success {
+    background: linear-gradient(45deg, #28a745, #1e7e34); /* Green gradient */
+  }
+  .bg-gradient-info {
+    background: linear-gradient(45deg, #17a2b8, #117a8b); /* Info blue gradient */
+  }
+  .card-header h2, .card-header h3, .card-header h4 {
+    font-weight: 600; /* Slightly bolder headers */
+  }
+  .table-hover tbody tr:hover {
+    background-color: #e9ecef; /* Lighter hover background */
+  }
+  .badge {
+    font-size: 0.8em; /* Slightly smaller badges for detail */
+    padding: 0.4em 0.7em;
+    font-weight: 600;
+  }
+  dl.row dt {
+    font-weight: 500;
+  }
+  dl.row dd {
+    margin-bottom: 0.5rem;
+  }
+</style>
