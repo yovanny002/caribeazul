@@ -468,59 +468,87 @@ exports.recibo = async (req, res) => {
   };
 
   // Formulario para editar un préstamo
-  exports.editForm = async (req, res) => {
-    const id = req.params.id;
-    try {
-      const prestamo = await Prestamo.findById(id);
-      if (!prestamo) {
-        req.flash('error', 'Préstamo no encontrado');
-        return res.redirect('/prestamos');
-      }
-
-      if (Prestamo.findCuotasByPrestamo) {
-        prestamo.cuotas = await Prestamo.findCuotasByPrestamo(id);
-      }
-
-      res.render('prestamos/edit', {
-        prestamo,
-        user: req.user || {},
-        moment
-      });
-    } catch (error) {
-      console.error('Error al cargar el formulario de edición:', error);
-      req.flash('error', 'No se pudo cargar el préstamo');
-      res.redirect('/prestamos');
+exports.editForm = async (req, res) => {
+  const id = req.params.id;
+  try {
+    const prestamo = await Prestamo.findById(id);
+    if (!prestamo) {
+      req.flash('error', 'Préstamo no encontrado');
+      return res.redirect('/prestamos');
     }
-  };
+
+    // Obtener cuotas solo si el préstamo está aprobado
+    if (prestamo.estado === 'aprobado') {
+      prestamo.cuotas = await Prestamo.findCuotasByPrestamo(id);
+    }
+
+    // Obtener rutas para el select
+    const rutas = await Ruta.findAll();
+
+    res.render('prestamos/edit', {
+      prestamo,
+      rutas,
+      user: req.user || {},
+      moment,
+      messages: req.flash()
+    });
+  } catch (error) {
+    console.error('Error al cargar el formulario de edición:', error);
+    req.flash('error', 'No se pudo cargar el préstamo');
+    res.redirect('/prestamos');
+  }
+};
 
   // Actualizar préstamo existente
-  exports.update = async (req, res) => {
-    const id = req.params.id;
-    const {
+// Actualizar préstamo existente
+exports.update = async (req, res) => {
+  const id = req.params.id;
+  try {
+    const { 
       monto_solicitado,
       monto_aprobado,
       interes_porcentaje,
       forma_pago,
-      estado
+      estado,
+      ruta_id
     } = req.body;
 
-    try {
-      await Prestamo.update(id, {
-        monto_solicitado,
-        monto_aprobado,
-        interes_porcentaje,
-        forma_pago,
-        estado
-      });
-
-      req.flash('success', 'Préstamo actualizado correctamente');
-      res.redirect('/prestamos');
-    } catch (err) {
-      console.error('Error al actualizar préstamo:', err.message);
-      req.flash('error', 'No se pudo actualizar el préstamo');
-      res.redirect(`/prestamos/${id}/edit`);
+    // Validaciones básicas
+    if (!monto_solicitado || isNaN(monto_solicitado)) {
+      throw new Error('Monto solicitado no válido');
     }
-  };
+
+    // Si el préstamo se aprueba y no tiene monto aprobado, usar el monto solicitado
+    const montoAprobado = estado === 'aprobado' 
+      ? monto_aprobado || monto_solicitado 
+      : monto_aprobado;
+
+    await Prestamo.update(id, {
+      monto_solicitado,
+      monto_aprobado: montoAprobado,
+      interes_porcentaje,
+      forma_pago,
+      estado,
+      ruta_id
+    });
+
+    // Si se aprueba y no tiene cuotas, generarlas
+    if (estado === 'aprobado') {
+      const cuotas = await Prestamo.findCuotasByPrestamo(id);
+      if (!cuotas || cuotas.length === 0) {
+        const montoTotal = parseFloat(montoAprobado) * (1 + parseFloat(interes_porcentaje || 43) / 100);
+        await Prestamo.generateCuotas(id, montoTotal, req.body.cuotas || 3, forma_pago);
+      }
+    }
+
+    req.flash('success', 'Préstamo actualizado correctamente');
+    res.redirect(`/prestamos/${id}`);
+  } catch (error) {
+    console.error('Error al actualizar préstamo:', error.message);
+    req.flash('error', `No se pudo actualizar el préstamo: ${error.message}`);
+    res.redirect(`/prestamos/${id}/edit`);
+  }
+};
   // En prestamoController.js
   exports.imprimirTicketApi = async (req, res) => {
     const { prestamoId, pagoId } = req.body;
