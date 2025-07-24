@@ -126,6 +126,7 @@
                       <option value="diario">Diario</option>
                       <option value="semanal">Semanal</option>
                       <option value="quincenal">Quincenal</option>
+                      <option value="quincenal2">Quincenal2</option>
                       <option value="mensual" selected>Mensual</option>
                     </select>
                     <div class="invalid-feedback">Seleccione una forma de pago</div>
@@ -252,6 +253,10 @@
         case 'quincenal':
           numCuotas = 7;
           plazoTexto = '7 quincenas';
+          break;
+        case 'quincenal2':
+          numCuotas = 17;
+          plazoTexto = '17 quincenas';
           break;
         case 'mensual':
           numCuotas = 21;
