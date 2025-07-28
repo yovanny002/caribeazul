@@ -86,7 +86,7 @@ app.use('/auth', authRoutes);
 app.use('/dashboard', authMiddleware.ensureAuthenticated, dashboardRoutes);
 app.use('/clientes', authMiddleware.ensureAuthenticated, clientesRoutes);
 app.use('/prestamos', authMiddleware.ensureAuthenticated, prestamosRoutes);
-app.use('/prestamos-intereses', authMiddleware.ensureAuthenticated, prestamosInteresRoutes);
+app.use('/prestamos_intereses', authMiddleware.ensureAuthenticated, prestamosInteresRoutes);
 app.use('/reportes', authMiddleware.ensureAuthenticated, reportesRoutes);
 app.use('/cobradores', authMiddleware.ensureAuthenticated, cobradoresRoutes);
 app.use('/rutas', authMiddleware.ensureAuthenticated, rutasRoutes);
