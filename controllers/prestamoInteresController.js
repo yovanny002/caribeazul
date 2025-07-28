@@ -23,7 +23,7 @@ exports.show = async (req, res) => {
     const prestamo = await PrestamoInteres.findById(req.params.id);
     if (!prestamo) {
       req.flash('error', 'Préstamo no encontrado');
-      return res.redirect('/prestamos-interes');
+      return res.redirect('/prestamos_interes');
     }
 
     const pagos = await PrestamoInteres.getHistorialPagos(req.params.id);
@@ -36,7 +36,7 @@ exports.show = async (req, res) => {
   } catch (error) {
     console.error('Error al mostrar préstamo:', error);
     req.flash('error', 'Error al mostrar préstamo');
-    res.redirect('/prestamos-interes');
+    res.redirect('/prestamos_interes');
   }
 };
 
@@ -53,11 +53,11 @@ exports.create = async (req, res) => {
     
     const prestamoId = await PrestamoInteres.create(req.body);
     req.flash('success', 'Préstamo creado exitosamente');
-    res.redirect(`/prestamos-interes/${prestamoId}`);
+    res.redirect(`/prestamos_interes/${prestamoId}`);
   } catch (error) {
     console.error('Error al crear préstamo:', error);
     req.flash('error', 'Error al crear préstamo: ' + error.message);
-    res.redirect('/prestamos-interes/create');
+    res.redirect('/prestamos_interes/create');
   }
 };
 
@@ -66,14 +66,14 @@ exports.pagoForm = async (req, res) => {
     const prestamo = await PrestamoInteres.findById(req.params.id);
     if (!prestamo) {
       req.flash('error', 'Préstamo no encontrado');
-      return res.redirect('/prestamos-interes');
+      return res.redirect('/prestamos_interes');
     }
     
     res.render('prestamos_interes/pago', { prestamo });
   } catch (error) {
     console.error('Error al mostrar formulario de pago:', error);
     req.flash('error', 'Error al cargar formulario de pago');
-    res.redirect(`/prestamos-interes/${req.params.id}`);
+    res.redirect(`/prestamos_interes/${req.params.id}`);
   }
 };
 
@@ -87,11 +87,11 @@ exports.registrarPago = async (req, res) => {
     
     await PrestamoInteres.registrarPago(pagoData);
     req.flash('success', 'Pago registrado exitosamente');
-    res.redirect(`/prestamos-interes/${req.params.id}`);
+    res.redirect(`/prestamos_interes/${req.params.id}`);
   } catch (error) {
     console.error('Error al registrar pago:', error);
     req.flash('error', 'Error al registrar pago: ' + error.message);
-    res.redirect(`/prestamos-interes/${req.params.id}/pago`);
+    res.redirect(`/prestamos_interes/${req.params.id}/pago`);
   }
 };
 
@@ -113,7 +113,7 @@ exports.recibo = async (req, res) => {
 
     if (!pago) {
       req.flash('error', 'Recibo no encontrado');
-      return res.redirect('/prestamos-interes');
+      return res.redirect('/prestamos_interes');
     }
 
     res.render('prestamos_interes/recibo', {
@@ -124,6 +124,6 @@ exports.recibo = async (req, res) => {
   } catch (error) {
     console.error('Error al generar recibo:', error);
     req.flash('error', 'Error al generar recibo');
-    res.redirect(`/prestamos-interes/${req.params.id}`);
+    res.redirect(`/prestamos_interes/${req.params.id}`);
   }
 };
