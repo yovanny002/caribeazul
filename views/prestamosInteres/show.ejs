@@ -1,0 +1,221 @@
+<%- include('../partials/header') %>
+<%- include('../partials/flash') %>
+
+<div class="container mt-4">
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h3>Detalle del Préstamo por Interés</h3>
+      <div>
+        <% if (prestamo.estado === 'pendiente') { %>
+          <a href="/prestamos-interes/<%= prestamo.id %>/pago" class="btn btn-success mr-2">
+            <i class="fas fa-money-bill-wave"></i> Registrar Pago
+          </a>
+        <% } %>
+        <a href="/prestamos-interes" class="btn btn-secondary">
+          <i class="fas fa-arrow-left"></i> Volver
+        </a>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+              <h5 class="mb-0">Información del Cliente</h5>
+            </div>
+            <div class="card-body">
+              <p><strong>Nombre:</strong> <%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></p>
+              <p><strong>Cédula:</strong> <%= prestamo.cliente_cedula %></p>
+              <p><strong>Profesión:</strong> <%= prestamo.cliente_profesion || 'No especificada' %></p>
+              <p><strong>Ruta:</strong> <%= prestamo.ruta_nombre || 'No asignada' %></p>
+              <p><strong>Zona:</strong> <%= prestamo.ruta_zona || 'No especificada' %></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="card mb-3">
+            <div class="card-header bg-primary text-white">
+              <h5 class="mb-0">Detalles del Préstamo</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Monto Aprobado:</strong> <%= prestamo.monto_aprobado_formatted %></p>
+                  <p><strong>Fecha de Creación:</strong> <%= moment(prestamo.created_at).format('DD/MM/YYYY') %></p>
+                  <p><strong>Plazo:</strong> <%= prestamo.plazo_meses %> meses</p>
+                  <p><strong>Frecuencia de Interés:</strong> 
+                    <%= prestamo.frecuencia_interes === 'quincenal' ? 'Quincenal' : 'Mensual' %>
+                  </p>
+                </div>
+                <div class="col-md-6">
+                  <% if (prestamo.interes_manual) { %>
+                    <p><strong>Interés <%= prestamo.frecuencia_interes === 'quincenal' ? 'Quincenal' : 'Mensual' %>:</strong> 
+                      RD$ <%= prestamo.interes_manual.toFixed(2) %>
+                    </p>
+                  <% } else { %>
+                    <p><strong>Tasa de Interés:</strong> <%= prestamo.interes_porcentaje %>%</p>
+                  <% } %>
+                  <p><strong>Forma de Pago:</strong> <%= prestamo.forma_pago %></p>
+                  <p><strong>Estado:</strong> 
+                    <span class="badge <%= prestamo.estado === 'pendiente' ? 'bg-warning' : 'bg-success' %>">
+                      <%= prestamo.estado === 'pendiente' ? 'Pendiente' : 'Pagado' %>
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header bg-info text-white">
+              <h5 class="mb-0">Estado Actual</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <p><strong>Saldo Capital:</strong> <%= prestamo.saldo_capital_formatted %></p>
+                  <p><strong>Interés Acumulado:</strong> <%= prestamo.intereses_acumulados_formatted %></p>
+                </div>
+                <div class="col-md-6">
+                  <p><strong>Total Pagado:</strong> <%= prestamo.total_pagado_formatted %></p>
+                  <p><strong>Saldo Total:</strong> 
+                    <span class="<%= prestamo.saldo_total > 0 ? 'text-danger fw-bold' : 'text-success' %>">
+                      <%= prestamo.saldo_total_formatted %>
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <% if (prestamo.proximo_interes) { %>
+                <hr>
+                <p><strong>Próximo Interés:</strong> 
+                  <%= prestamo.proximo_interes.fecha %> 
+                  (<%= prestamo.proximo_interes.dias_restantes %> días)
+                </p>
+                <p><strong>Monto:</strong> RD$ <%= prestamo.proximo_interes.monto.toFixed(2) %></p>
+              <% } %>
+
+              <% if (prestamo.mora) { %>
+                <hr>
+                <div class="alert alert-warning">
+                  <p class="mb-1"><strong>Mora:</strong> RD$ <%= prestamo.mora.monto.toFixed(2) %></p>
+                  <p class="mb-0"><small><%= prestamo.mora.dias %> días de atraso</small></p>
+                </div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header bg-info text-white">
+              <h5 class="mb-0">Distribución de Pagos</h5>
+            </div>
+            <div class="card-body">
+              <canvas id="pagosChart" height="200"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h5 class="mt-4 mb-3">Historial de Pagos</h5>
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead class="table-dark">
+            <tr>
+              <th>Fecha</th>
+              <th>Monto</th>
+              <th>Interés</th>
+              <th>Capital</th>
+              <th>Método</th>
+              <th>Referencia</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (pagos.length > 0) { %>
+              <% pagos.forEach(pago => { %>
+                <tr>
+                  <td><%= pago.fecha_display %></td>
+                  <td>RD$ <%= pago.monto.toFixed(2) %></td>
+                  <td>RD$ <%= pago.interes_pagado.toFixed(2) %></td>
+                  <td>RD$ <%= pago.capital_pagado.toFixed(2) %></td>
+                  <td><%= pago.metodo %></td>
+                  <td><%= pago.referencia || 'N/A' %></td>
+                  <td>
+                    <a href="/prestamos-interes/<%= prestamo.id %>/recibo/<%= pago.id %>" 
+                       class="btn btn-sm btn-info" title="Ver recibo" target="_blank">
+                      <i class="fas fa-receipt"></i>
+                    </a>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="7" class="text-center">No se han registrado pagos</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart.js para gráfico de distribución -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Gráfico de distribución de pagos
+  const ctx = document.getElementById('pagosChart').getContext('2d');
+  const pagosChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Capital Pagado', 'Interés Pagado', 'Saldo Capital', 'Interés Pendiente'],
+      datasets: [{
+        data: [
+          <%= prestamo.total_capital_pagado %>,
+          <%= prestamo.total_intereses_pagados %>,
+          <%= prestamo.saldo_capital %>,
+          <%= prestamo.saldo_intereses %>
+        ],
+        backgroundColor: [
+          '#4e73df',
+          '#1cc88a',
+          '#f6c23e',
+          '#e74a3b'
+        ],
+        hoverBackgroundColor: [
+          '#2e59d9',
+          '#17a673',
+          '#dda20a',
+          '#be2617'
+        ],
+        hoverBorderColor: "rgba(234, 236, 244, 1)",
+      }],
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.label + ': RD$ ' + context.raw.toFixed(2);
+            }
+          }
+        }
+      },
+      cutout: '70%',
+    },
+  });
+</script>
+
+<%- include('../partials/footer') %>

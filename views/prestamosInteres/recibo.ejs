@@ -1,0 +1,97 @@
+<%- include('../partials/header') %>
+
+<div class="container mt-4">
+  <div class="card">
+    <div class="card-header text-center">
+      <h3>Recibo de Pago</h3>
+      <h5>Sistema de Préstamos</h5>
+    </div>
+    <div class="card-body">
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <p><strong>Cliente:</strong> <%= pago.cliente_nombre %> <%= pago.cliente_apellidos %></p>
+          <p><strong>Cédula:</strong> <%= pago.cliente_cedula %></p>
+        </div>
+        <div class="col-md-6 text-right">
+          <p><strong>Fecha:</strong> <%= moment(pago.fecha).format('DD/MM/YYYY hh:mm A') %></p>
+          <p><strong>Recibo #:</strong> <%= pago.id %></p>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-bordered">
+          <thead>
+            <tr>
+              <th>Concepto</th>
+              <th>Monto (RD$)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Pago de Interés</td>
+              <td><%= formatCurrency(pago.interes_pagado) %></td>
+            </tr>
+            <tr>
+              <td>Pago a Capital</td>
+              <td><%= formatCurrency(pago.capital_pagado) %></td>
+            </tr>
+            <tr class="table-active">
+              <td><strong>Total Pagado</strong></td>
+              <td><strong><%= formatCurrency(pago.monto) %></strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="row mt-4">
+        <div class="col-md-6">
+          <p><strong>Método de Pago:</strong> <%= pago.metodo %></p>
+          <% if (pago.referencia) { %>
+            <p><strong>Referencia:</strong> <%= pago.referencia %></p>
+          <% } %>
+        </div>
+        <div class="col-md-6">
+          <div class="signature-box float-right mt-4">
+            <p class="text-center border-top pt-2">Firma del Cliente</p>
+          </div>
+        </div>
+      </div>
+
+      <% if (pago.notas) { %>
+        <div class="mt-4">
+          <p><strong>Notas:</strong> <%= pago.notas %></p>
+        </div>
+      <% } %>
+    </div>
+    <div class="card-footer text-center">
+      <button class="btn btn-primary" onclick="window.print()">Imprimir Recibo</button>
+      <a href="/prestamos-interes/<%= pago.prestamo_id %>" class="btn btn-secondary">Volver</a>
+    </div>
+  </div>
+</div>
+
+<style>
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    .card, .card * {
+      visibility: visible;
+    }
+    .card {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      border: none;
+    }
+    .card-footer {
+      display: none;
+    }
+  }
+  .signature-box {
+    width: 250px;
+  }
+</style>
+
+<%- include('../partials/footer') %>
