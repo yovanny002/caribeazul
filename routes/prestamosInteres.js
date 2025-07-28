@@ -1,27 +1,27 @@
 const express = require('express');
 const router = express.Router();
 const prestamoInteresController = require('../controllers/prestamoInteresController');
-const { ensureAuthenticated } = require('../middleware/auth');
+const { checkRole } = require('../middlewares/roles');
 
 // Listado de préstamos
-router.get('/', ensureAuthenticated, prestamoInteresController.index);
+router.get('/', checkRole(['administrador', 'supervisor', 'servicio']), prestamoInteresController.index);
 
 // Formulario de creación
-router.get('/create', ensureAuthenticated, prestamoInteresController.createForm);
+router.get('/create', checkRole(['administrador', 'supervisor', 'servicio']), prestamoInteresController.createForm);
 
 // Crear nuevo préstamo
-router.post('/', ensureAuthenticated, prestamoInteresController.create);
+router.post('/', checkRole(['administrador', 'supervisor', 'servicio']), prestamoInteresController.create);
 
 // Detalle de préstamo
-router.get('/:id', ensureAuthenticated, prestamoInteresController.show);
+router.get('/:id', checkRole(['administrador', 'supervisor', 'servicio']), prestamoInteresController.show);
 
 // Formulario de pago
-router.get('/:id/pago', ensureAuthenticated, prestamoInteresController.pagoForm);
+router.get('/:id/pago', checkRole(['administrador', 'supervisor', 'servicio']), prestamoInteresController.pagoForm);
 
 // Registrar pago
-router.post('/:id/pago', ensureAuthenticated, prestamoInteresController.registrarPago);
+router.post('/:id/pago', checkRole(['administrador', 'supervisor', 'servicio']), prestamoInteresController.registrarPago);
 
 // Recibo de pago
-router.get('/:id/recibo/:pagoId', ensureAuthenticated, prestamoInteresController.recibo);
+router.get('/:id/recibo/:pagoId', checkRole(['administrador', 'supervisor', 'servicio']), prestamoInteresController.recibo);
 
 module.exports = router;
