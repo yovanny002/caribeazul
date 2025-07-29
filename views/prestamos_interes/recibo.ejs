@@ -1,97 +1,80 @@
 <%- include('../partials/header') %>
 
-<div class="container mt-4">
-  <div class="card">
-    <div class="card-header text-center">
-      <h3>Recibo de Pago</h3>
-      <h5>Sistema de Préstamos</h5>
-    </div>
-    <div class="card-body">
-      <div class="row mb-4">
-        <div class="col-md-6">
-          <p><strong>Cliente:</strong> <%= pago.cliente_nombre %> <%= pago.cliente_apellidos %></p>
-          <p><strong>Cédula:</strong> <%= pago.cliente_cedula %></p>
-        </div>
-        <div class="col-md-6 text-right">
-          <p><strong>Fecha:</strong> <%= moment(pago.fecha).format('DD/MM/YYYY hh:mm A') %></p>
-          <p><strong>Recibo #:</strong> <%= pago.id %></p>
-        </div>
-      </div>
-
-      <div class="table-responsive">
-        <table class="table table-bordered">
-          <thead>
-            <tr>
-              <th>Concepto</th>
-              <th>Monto (RD$)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Pago de Interés</td>
-              <td><%= formatCurrency(pago.interes_pagado) %></td>
-            </tr>
-            <tr>
-              <td>Pago a Capital</td>
-              <td><%= formatCurrency(pago.capital_pagado) %></td>
-            </tr>
-            <tr class="table-active">
-              <td><strong>Total Pagado</strong></td>
-              <td><strong><%= formatCurrency(pago.monto) %></strong></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="row mt-4">
-        <div class="col-md-6">
-          <p><strong>Método de Pago:</strong> <%= pago.metodo %></p>
-          <% if (pago.referencia) { %>
-            <p><strong>Referencia:</strong> <%= pago.referencia %></p>
-          <% } %>
-        </div>
-        <div class="col-md-6">
-          <div class="signature-box float-right mt-4">
-            <p class="text-center border-top pt-2">Firma del Cliente</p>
-          </div>
-        </div>
-      </div>
-
-      <% if (pago.notas) { %>
-        <div class="mt-4">
-          <p><strong>Notas:</strong> <%= pago.notas %></p>
-        </div>
-      <% } %>
-    </div>
-    <div class="card-footer text-center">
-      <button class="btn btn-primary" onclick="window.print()">Imprimir Recibo</button>
-      <a href="/prestamos_interes/<%= pago.prestamo_id %>" class="btn btn-secondary">Volver</a>
-    </div>
-  </div>
-</div>
-
 <style>
   @media print {
-    body * {
-      visibility: hidden;
-    }
-    .card, .card * {
-      visibility: visible;
-    }
-    .card {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      border: none;
-    }
-    .card-footer {
+    .no-print {
       display: none;
     }
+    .card {
+      box-shadow: none;
+      border: none;
+    }
   }
-  .signature-box {
-    width: 250px;
+  .recibo {
+    max-width: 800px;
+    margin: 0 auto;
+    border: 1px solid #ccc;
+    padding: 20px;
+    font-size: 15px;
   }
 </style>
+
+<div class="container mt-4 recibo">
+  <div class="text-center mb-3">
+    <h4 class="fw-bold">CARIBE AZUL- RECIBO DE PAGO</h4>
+    <p><strong>Dirección: Calle H #15 Andres Boca Chica</strong></p>
+    <p><strong>Teléfono:</strong> (829) 651-4261</p>
+    <p><strong>Email: cristianvargas2025rd@gmail.com</strong>
+    <p><strong>Fecha:</strong> <%= pago.fecha_display %></p>
+  </div>
+
+  <div class="mb-3">
+    <h5>Información del Cliente</h5>
+    <p><strong>Nombre:</strong> <%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></p>
+    <p><strong>Cédula:</strong> <%= prestamo.cliente_cedula %></p>
+    <p><strong>Profesión:</strong> <%= prestamo.cliente_profesion || 'No especificada' %></p>
+    <p><strong>Ruta:</strong> <%= prestamo.ruta_nombre || 'No asignada' %></p>
+  </div>
+
+  <hr>
+
+  <div class="mb-3">
+    <h5>Detalles del Préstamo</h5>
+    <p><strong>Préstamo ID:</strong> <%= prestamo.id %></p>
+    <p><strong>Saldo Capital Actual:</strong> RD$ <%= prestamo.saldo_capital.toFixed(2) %></p>
+    <p><strong>Interés Acumulado:</strong> RD$ <%= prestamo.intereses_acumulados.toFixed(2) %></p>
+    <p><strong>Mora:</strong> RD$ <%= prestamo.mora.toFixed(2) %></p>
+  </div>
+
+  <hr>
+
+  <div class="mb-3">
+    <h5>Detalle del Pago</h5>
+    <p><strong>Monto Pagado:</strong> RD$ <%= pago.monto.toFixed(2) %></p>
+    <p><strong>Interés Pagado:</strong> RD$ <%= pago.interes_pagado.toFixed(2) %></p>
+    <p><strong>Capital Pagado:</strong> RD$ <%= pago.capital_pagado.toFixed(2) %></p>
+    <p><strong>Método:</strong> <%= pago.metodo %></p>
+    <p><strong>Referencia:</strong> <%= pago.referencia || 'N/A' %></p>
+    <p><strong>Registrado por:</strong> <%= pago.registrado_por %></p>
+  </div>
+
+  <hr>
+
+  <div class="row mt-4">
+    <div class="col-6 text-center">
+      <p>__________________________</p>
+      <p>Firma del Cliente</p>
+    </div>
+    <div class="col-6 text-center">
+      <p>__________________________</p>
+      <p>Recibido por</p>
+    </div>
+  </div>
+
+  <div class="text-center mt-4 no-print">
+    <button onclick="window.print()" class="btn btn-primary"><i class="fas fa-print"></i> Imprimir</button>
+    <a href="/prestamos_interes/<%= prestamo.id %>" class="btn btn-secondary">Volver</a>
+  </div>
+</div>
 
 <%- include('../partials/footer') %>

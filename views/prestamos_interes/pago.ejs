@@ -28,7 +28,7 @@
         </div>
 
         <div class="row mt-3">
-          <div class="col-md-6">
+          <div class="col-md-4">
             <div class="form-group">
               <label>Interés Acumulado</label>
               <p class="form-control-static">
@@ -36,11 +36,19 @@
               </p>
             </div>
           </div>
-          <div class="col-md-6">
+          <div class="col-md-4">
             <div class="form-group">
-              <label>Total a Pagar</label>
-              <p class="form-control-static">
-                RD$ <%= (prestamo.saldo_capital + prestamo.intereses_acumulados).toFixed(2) %>
+              <label>Mora (2% por atraso)</label>
+              <p class="form-control-static text-danger">
+                RD$ <%= prestamo.mora.toFixed(2) %>
+              </p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-group">
+              <label>Total Sugerido</label>
+              <p class="form-control-static fw-bold">
+                RD$ <%= prestamo.total_sugerido.toFixed(2) %>
               </p>
             </div>
           </div>
@@ -54,7 +62,7 @@
               <label for="monto">Monto a Pagar (RD$)</label>
               <input type="number" step="0.01" class="form-control" id="monto" 
                      name="monto" required min="0.01"
-                     max="<%= (prestamo.saldo_capital + prestamo.intereses_acumulados) %>">
+                     max="<%= prestamo.total_sugerido %>">
             </div>
           </div>
           <div class="col-md-4">
