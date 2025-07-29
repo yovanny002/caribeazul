@@ -32,14 +32,25 @@ exports.show = async (req, res) => {
       return res.redirect('/prestamos_interes');
     }
 
-    // Obtener historial de pagos con manejo de errores
     let pagos = [];
     try {
       pagos = await PrestamoInteres.getHistorialPagos(req.params.id) || [];
     } catch (error) {
       console.error('Error al obtener pagos (puede que no existan aún):', error);
-      // No es fatal si no hay pagos aún
     }
+
+    // ENRIQUECER el objeto prestamo
+    prestamo.monto_aprobado_formatted = `RD$ ${prestamo.monto_aprobado.toFixed(2)}`;
+    prestamo.saldo_capital_formatted = `RD$ ${prestamo.saldo_capital.toFixed(2)}`;
+    prestamo.total_pagado = pagos.reduce((sum, p) => sum + p.monto, 0);
+    prestamo.total_pagado_formatted = `RD$ ${prestamo.total_pagado.toFixed(2)}`;
+    prestamo.intereses_acumulados = pagos.reduce((sum, p) => sum + p.interes_pagado, 0);
+    prestamo.intereses_acumulados_formatted = `RD$ ${prestamo.intereses_acumulados.toFixed(2)}`;
+    prestamo.saldo_total = prestamo.saldo_capital + prestamo.intereses_acumulados;
+    prestamo.saldo_total_formatted = `RD$ ${prestamo.saldo_total.toFixed(2)}`;
+    prestamo.total_capital_pagado = pagos.reduce((sum, p) => sum + p.capital_pagado, 0);
+    prestamo.total_intereses_pagados = pagos.reduce((sum, p) => sum + p.interes_pagado, 0);
+    prestamo.saldo_intereses = prestamo.intereses_acumulados - prestamo.total_intereses_pagados;
 
     res.render('prestamos_interes/show', {
       prestamo,
@@ -53,6 +64,7 @@ exports.show = async (req, res) => {
     res.redirect('/prestamos-interes');
   }
 };
+
 exports.createForm = async (req, res) => {
   try {
     // Obtener listado de clientes y rutas desde la base de datos
