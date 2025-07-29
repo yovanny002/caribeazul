@@ -26,45 +26,92 @@ exports.index = async (req, res) => {
 
 exports.show = async (req, res) => {
   try {
-    const prestamo = await PrestamoInteres.findById(req.params.id);
+    const id = req.params.id;
+    const prestamo = await PrestamoInteres.findById(id);
     if (!prestamo) {
       req.flash('error', 'Préstamo no encontrado');
       return res.redirect('/prestamos_interes');
     }
 
+    // Obtener historial de pagos
     let pagos = [];
     try {
-      pagos = await PrestamoInteres.getHistorialPagos(req.params.id) || [];
+      pagos = await PrestamoInteres.getHistorialPagos(id) || [];
     } catch (error) {
-      console.error('Error al obtener pagos (puede que no existan aún):', error);
+      console.error('Error al obtener pagos:', error);
     }
 
-    // ENRIQUECER el objeto prestamo
-    prestamo.monto_aprobado_formatted = `RD$ ${prestamo.monto_aprobado.toFixed(2)}`;
-    prestamo.saldo_capital_formatted = `RD$ ${prestamo.saldo_capital.toFixed(2)}`;
-    prestamo.total_pagado = pagos.reduce((sum, p) => sum + p.monto, 0);
-    prestamo.total_pagado_formatted = `RD$ ${prestamo.total_pagado.toFixed(2)}`;
-    prestamo.intereses_acumulados = pagos.reduce((sum, p) => sum + p.interes_pagado, 0);
-    prestamo.intereses_acumulados_formatted = `RD$ ${prestamo.intereses_acumulados.toFixed(2)}`;
-    prestamo.saldo_total = prestamo.saldo_capital + prestamo.intereses_acumulados;
-    prestamo.saldo_total_formatted = `RD$ ${prestamo.saldo_total.toFixed(2)}`;
-    prestamo.total_capital_pagado = pagos.reduce((sum, p) => sum + p.capital_pagado, 0);
-    prestamo.total_intereses_pagados = pagos.reduce((sum, p) => sum + p.interes_pagado, 0);
-    prestamo.saldo_intereses = prestamo.intereses_acumulados - prestamo.total_intereses_pagados;
+    const fechaInicio = moment(prestamo.created_at);
+    const hoy = moment();
 
+    // Siempre cuenta al menos 1 periodo (interés inicial inmediato)
+    let periodosTranscurridos = 1;
+
+    if (prestamo.frecuencia_interes === 'quincenal') {
+      const dias = hoy.diff(fechaInicio, 'days');
+      periodosTranscurridos += Math.floor(dias / 15);
+    } else {
+      const meses = hoy.diff(fechaInicio, 'months');
+      periodosTranscurridos += meses;
+    }
+
+    const interesPorPeriodo = prestamo.monto_aprobado * (prestamo.interes_porcentaje / 100);
+    const interesAcumulado = prestamo.frecuencia_interes === 'quincenal'
+      ? (interesPorPeriodo / 2) * periodosTranscurridos
+      : interesPorPeriodo * periodosTranscurridos;
+
+    // Pagos realizados
+    const totalCapitalPagado = pagos.reduce((sum, p) => sum + (p.capital_pagado || 0), 0);
+    const totalInteresPagado = pagos.reduce((sum, p) => sum + (p.interes_pagado || 0), 0);
+
+    const saldoCapital = prestamo.monto_aprobado - totalCapitalPagado;
+    const saldoInteres = interesAcumulado - totalInteresPagado;
+
+    // Cálculo de mora si pasaron más de 2 días desde último vencimiento
+    let mora = null;
+    const diasDesdeInicio = hoy.diff(fechaInicio, 'days');
+    const diasPorPeriodo = prestamo.frecuencia_interes === 'quincenal' ? 15 : 30;
+    const fechaUltimoVencimiento = moment(fechaInicio).add(Math.floor(diasDesdeInicio / diasPorPeriodo) * diasPorPeriodo, 'days');
+    const diasAtraso = hoy.diff(fechaUltimoVencimiento, 'days');
+
+    if (diasAtraso > 2) {
+      mora = {
+        monto: saldoCapital * 0.02, // 2% de capital
+        dias: diasAtraso
+      };
+    }
+
+    const totalPagado = totalCapitalPagado + totalInteresPagado;
+    const saldoTotal = saldoCapital + saldoInteres + (mora ? mora.monto : 0);
+
+    // Formateo de campos para vista
+    prestamo.monto_aprobado_formatted = `RD$ ${prestamo.monto_aprobado.toFixed(2)}`;
+    prestamo.saldo_capital = saldoCapital;
+    prestamo.saldo_capital_formatted = `RD$ ${saldoCapital.toFixed(2)}`;
+    prestamo.intereses_acumulados = interesAcumulado;
+    prestamo.intereses_acumulados_formatted = `RD$ ${interesAcumulado.toFixed(2)}`;
+    prestamo.total_intereses_pagados = totalInteresPagado;
+    prestamo.total_capital_pagado = totalCapitalPagado;
+    prestamo.total_pagado = totalPagado;
+    prestamo.total_pagado_formatted = `RD$ ${totalPagado.toFixed(2)}`;
+    prestamo.saldo_total = saldoTotal;
+    prestamo.saldo_total_formatted = `RD$ ${saldoTotal.toFixed(2)}`;
+    prestamo.saldo_intereses = saldoInteres;
+    prestamo.mora = mora;
+
+    // Enviar a la vista
     res.render('prestamos_interes/show', {
       prestamo,
       pagos,
-      moment,
-      formatCurrency: (amount) => `RD$ ${parseFloat(amount).toFixed(2)}`
+      moment
     });
+
   } catch (error) {
-    console.error('Error al mostrar préstamo:', error);
+    console.error('Error al mostrar el préstamo:', error);
     req.flash('error', 'Error al cargar los detalles del préstamo');
-    res.redirect('/prestamos-interes');
+    res.redirect('/prestamos_interes');
   }
 };
-
 exports.createForm = async (req, res) => {
   try {
     // Obtener listado de clientes y rutas desde la base de datos
