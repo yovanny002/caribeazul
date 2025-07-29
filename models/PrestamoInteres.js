@@ -1,6 +1,6 @@
 // models/PrestamoInteres.js
 const { DataTypes, QueryTypes } = require('sequelize');
-const db = require('../db'); // asegúrate de que esto devuelve directamente la instancia de Sequelize
+const db = require('./db'); // asegúrate de que esto devuelve directamente la instancia de Sequelize
 
 const PrestamoInteres = db.define('prestamos_interes', {
   cliente_id: { type: DataTypes.INTEGER, allowNull: false },

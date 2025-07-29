@@ -1,4 +1,4 @@
-const db = require('../db');
+const db = require('../models/db');
 const { QueryTypes } = require('sequelize');
 const PrestamoInteres = require('../models/PrestamoInteres');
 const moment = require('moment');
