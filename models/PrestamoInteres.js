@@ -24,7 +24,7 @@ PrestamoInteres.findAllWithClientes = async (estado = null) => {
     JOIN clientes c ON pi.cliente_id = c.id
   `;
   if (estado) query += ` WHERE pi.estado = :estado`;
-  query += ` ORDER BY pi.createdAt DESC`;
+  query += ` ORDER BY pi.created_at DESC`;
 
   return await db.query(query, {
     type: QueryTypes.SELECT,
