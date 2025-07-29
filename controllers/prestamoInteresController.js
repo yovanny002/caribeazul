@@ -32,20 +32,27 @@ exports.show = async (req, res) => {
       return res.redirect('/prestamos_interes');
     }
 
-    const pagos = await PrestamoInteres.getHistorialPagos(req.params.id);
-    
+    // Obtener historial de pagos con manejo de errores
+    let pagos = [];
+    try {
+      pagos = await PrestamoInteres.getHistorialPagos(req.params.id) || [];
+    } catch (error) {
+      console.error('Error al obtener pagos (puede que no existan aún):', error);
+      // No es fatal si no hay pagos aún
+    }
+
     res.render('prestamos_interes/show', {
       prestamo,
       pagos,
-      moment
+      moment,
+      formatCurrency: (amount) => `RD$ ${parseFloat(amount).toFixed(2)}`
     });
   } catch (error) {
     console.error('Error al mostrar préstamo:', error);
-    req.flash('error', 'Error al mostrar préstamo');
-    res.redirect('/prestamos_interes');
+    req.flash('error', 'Error al cargar los detalles del préstamo');
+    res.redirect('/prestamos-interes');
   }
 };
-
 exports.createForm = async (req, res) => {
   try {
     // Obtener listado de clientes y rutas desde la base de datos
