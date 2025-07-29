@@ -1,6 +1,12 @@
+const db = require('../db');
+const { QueryTypes } = require('sequelize');
 const PrestamoInteres = require('../models/PrestamoInteres');
 const moment = require('moment');
 
+function safeParseFloat(valor) {
+  const num = parseFloat(valor);
+  return isNaN(num) ? 0 : num;
+}
 exports.index = async (req, res) => {
   try {
     const estado = req.query.estado || null;
