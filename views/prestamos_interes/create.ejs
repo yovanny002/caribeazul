@@ -1,6 +1,5 @@
 <%- include('../partials/header', { title: 'Nuevo Préstamo por Interés' }) %>
 
-<!-- SweetAlert2 CSS -->
 <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
 
 <style>
@@ -32,7 +31,6 @@
     <div class="card-body">
       <form id="prestamo-form" action="/prestamos_interes" method="POST" class="needs-validation" novalidate>
         <div class="row g-4">
-          <!-- Datos del Cliente -->
           <div class="col-md-6">
             <div class="card h-100 border-primary">
               <div class="card-header bg-primary text-white">
@@ -70,7 +68,6 @@
             </div>
           </div>
 
-          <!-- Detalles del Préstamo -->
           <div class="col-md-6">
             <div class="card h-100 border-primary">
               <div class="card-header bg-primary text-white">
@@ -117,7 +114,7 @@
                              value="<%= body.interes_manual || '' %>">
                     </div>
                     <small class="text-muted" id="interesManualHelp">
-                      Ingrese el monto total del interés para el período seleccionado
+                      Ingrese el monto de interés para el período seleccionado (mensual o quincenal).
                     </small>
                   </div>
 
@@ -168,12 +165,11 @@
   </div>
 </div>
 
-<!-- SweetAlert2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
-    // Actualizar ayuda del interés manual según frecuencia *66
+    // Actualizar ayuda del interés manual según frecuencia
     document.getElementById('frecuencia_interes').addEventListener('change', function() {
       const frecuencia = this.value;
       const helpText = document.getElementById('interesManualHelp');
@@ -184,6 +180,9 @@
         helpText.textContent = 'Ingrese el monto de interés mensual (ej: 2000 para RD$2,000 al mes)';
       }
     });
+
+    // Initial call to set correct help text on page load
+    document.getElementById('frecuencia_interes').dispatchEvent(new Event('change'));
 
     // Validación del formulario
     const form = document.getElementById('prestamo-form');

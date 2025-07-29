@@ -1,80 +1,117 @@
-<%- include('../partials/header') %>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recibo de Pago - Préstamo #<%= prestamo.id %></title>
+    <style>
+        body {
+            font-family: 'Consolas', 'Courier New', monospace; /* Fuente monoespaciada para claridad */
+            font-size: 10px; /* Tamaño de fuente pequeño para caber en el ancho */
+            width: 58mm; /* Ancho común de papel térmico, ajusta si tu impresora usa 80mm */
+            margin: 0 auto; /* Centrar el contenido */
+            padding: 5px;
+            color: #000;
+        }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .mt-5 { margin-top: 5mm; } /* Usar unidades físicas para márgenes */
+        .mb-5 { margin-bottom: 5mm; }
+        .separator {
+            border-top: 1px dashed #000; /* Línea de puntos para separación */
+            margin: 5px 0;
+        }
+        .header h1, .header h2, .header p {
+            margin: 0;
+            line-height: 1.2;
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2px;
+        }
+        .info-item span:first-child {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        .total-line {
+            font-size: 12px;
+            font-weight: bold;
+            border-top: 1px dashed #000;
+            padding-top: 5px;
+            margin-top: 5px;
+        }
+        .footer {
+            font-size: 8px; /* Texto de pie de página aún más pequeño */
+        }
 
-<style>
-  @media print {
-    .no-print {
-      display: none;
-    }
-    .card {
-      box-shadow: none;
-      border: none;
-    }
-  }
-  .recibo {
-    max-width: 800px;
-    margin: 0 auto;
-    border: 1px solid #ccc;
-    padding: 20px;
-    font-size: 15px;
-  }
-</style>
+        /* Ocultar elementos para la impresión si es necesario */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
 
-<div class="container mt-4 recibo">
-  <div class="text-center mb-3">
-    <h4 class="fw-bold">CARIBE AZUL- RECIBO DE PAGO</h4>
-    <p><strong>Dirección: Calle H #15 Andres Boca Chica</strong></p>
-    <p><strong>Teléfono:</strong> (829) 651-4261</p>
-    <p><strong>Email: cristianvargas2025rd@gmail.com</strong>
-    <p><strong>Fecha:</strong> <%= pago.fecha_display %></p>
-  </div>
-
-  <div class="mb-3">
-    <h5>Información del Cliente</h5>
-    <p><strong>Nombre:</strong> <%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></p>
-    <p><strong>Cédula:</strong> <%= prestamo.cliente_cedula %></p>
-    <p><strong>Profesión:</strong> <%= prestamo.cliente_profesion || 'No especificada' %></p>
-    <p><strong>Ruta:</strong> <%= prestamo.ruta_nombre || 'No asignada' %></p>
-  </div>
-
-  <hr>
-
-  <div class="mb-3">
-    <h5>Detalles del Préstamo</h5>
-    <p><strong>Préstamo ID:</strong> <%= prestamo.id %></p>
-    <p><strong>Saldo Capital Actual:</strong> RD$ <%= prestamo.saldo_capital.toFixed(2) %></p>
-    <p><strong>Interés Acumulado:</strong> RD$ <%= prestamo.intereses_acumulados.toFixed(2) %></p>
-    <p><strong>Mora:</strong> RD$ <%= prestamo.mora.toFixed(2) %></p>
-  </div>
-
-  <hr>
-
-  <div class="mb-3">
-    <h5>Detalle del Pago</h5>
-    <p><strong>Monto Pagado:</strong> RD$ <%= pago.monto.toFixed(2) %></p>
-    <p><strong>Interés Pagado:</strong> RD$ <%= pago.interes_pagado.toFixed(2) %></p>
-    <p><strong>Capital Pagado:</strong> RD$ <%= pago.capital_pagado.toFixed(2) %></p>
-    <p><strong>Método:</strong> <%= pago.metodo %></p>
-    <p><strong>Referencia:</strong> <%= pago.referencia || 'N/A' %></p>
-    <p><strong>Registrado por:</strong> <%= pago.registrado_por %></p>
-  </div>
-
-  <hr>
-
-  <div class="row mt-4">
-    <div class="col-6 text-center">
-      <p>__________________________</p>
-      <p>Firma del Cliente</p>
+    <div class="text-center header">
+        <h1>TU EMPRESA S.R.L.</h1>
+        <p>RNC: 123456789</p>
+        <p>Calle Principal #123, Ciudad, País</p>
+        <p>Tel: 809-XXX-XXXX</p>
     </div>
-    <div class="col-6 text-center">
-      <p>__________________________</p>
-      <p>Recibido por</p>
+
+    <div class="separator"></div>
+
+    <div class="text-center">
+        <h2>RECIBO DE PAGO</h2>
+        <p><strong>Recibo #:</strong> <%= pago.id %></p>
+        <p><strong>Fecha:</strong> <%= pago.fecha_display %></p>
     </div>
-  </div>
 
-  <div class="text-center mt-4 no-print">
-    <button onclick="window.print()" class="btn btn-primary"><i class="fas fa-print"></i> Imprimir</button>
-    <a href="/prestamos_interes/<%= prestamo.id %>" class="btn btn-secondary">Volver</a>
-  </div>
-</div>
+    <div class="separator"></div>
 
-<%- include('../partials/footer') %>
+    <h3>DATOS DEL PRÉSTAMO</h3>
+    <div class="info-group">
+        <div class="info-item"><span>Préstamo ID:</span><span><%= prestamo.id %></span></div>
+        <div class="info-item"><span>Cliente:</span><span><%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></span></div>
+        <div class="info-item"><span>Cédula:</span><span><%= prestamo.cliente_cedula %></span></div>
+        <div class="info-item"><span>Monto Aprobado:</span><span>RD$ <%= prestamo.monto_aprobado.toFixed(2) %></span></div>
+    </div>
+
+    <div class="separator"></div>
+
+    <h3>DETALLE DEL PAGO</h3>
+    <div class="info-group">
+        <div class="info-item"><span>Monto Pagado:</span><span>RD$ <%= pago.monto.toFixed(2) %></span></div>
+        <div class="info-item"><span>Interés Pagado:</span><span>RD$ <%= pago.interes_pagado.toFixed(2) %></span></div>
+        <div class="info-item"><span>Capital Pagado:</span><span>RD$ <%= pago.capital_pagado.toFixed(2) %></span></div>
+        <div class="info-item"><span>Método de Pago:</span><span><%= pago.metodo %></span></div>
+        <% if (pago.referencia) { %>
+            <div class="info-item"><span>Referencia:</span><span><%= pago.referencia %></span></div>
+        <% } %>
+    </div>
+
+    <div class="separator"></div>
+
+    <div class="info-group">
+        <div class="info-item total-line"><span>NUEVO SALDO CAPITAL:</span><span>RD$ <%= prestamo.saldo_capital.toFixed(2) %></span></div>
+        <% if (prestamo.intereses_acumulados > 0) { %>
+            <div class="info-item"><span>Interés Pendiente:</span><span>RD$ <%= prestamo.intereses_acumulados.toFixed(2) %></span></div>
+        <% } %>
+        <% if (prestamo.mora > 0) { %>
+            <div class="info-item"><span>Mora Pendiente:</span><span>RD$ <%= prestamo.mora.toFixed(2) %></span></div>
+        <% } %>
+    </div>
+
+    <div class="separator mt-5"></div>
+
+    <div class="text-center footer">
+        <p>Gracias por su preferencia.</p>
+        <p>Sistema de Préstamos v1.0</p>
+    </div>
+
+</body>
+</html>

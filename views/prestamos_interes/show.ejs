@@ -6,8 +6,8 @@
     <div class="card-header d-flex justify-content-between align-items-center">
       <h3>Detalle del Préstamo por Interés</h3>
       <div>
-        <% if (prestamo.estado === 'pendiente') { %>
-          <a href="/prestamos_interes/<%= prestamo.id %>/pago" class="btn btn-success mr-2">
+        <% if (prestamo.estado === 'activo' || prestamo.estado === 'pendiente') { %>
+          <a href="/prestamos_interes/<%= prestamo.id %>/pago" class="btn btn-success me-2">
             <i class="fas fa-money-bill-wave"></i> Registrar Pago
           </a>
         <% } %>
@@ -42,7 +42,7 @@
             <div class="card-body">
               <div class="row">
                 <div class="col-md-6">
-                  <p><strong>Monto Aprobado:</strong> <%= prestamo.monto_aprobado_formatted %></p>
+                  <p><strong>Monto Aprobado:</strong> RD$ <%= prestamo.monto_aprobado.toFixed(2) %></p>
                   <p><strong>Fecha de Creación:</strong> <%= moment(prestamo.created_at).format('DD/MM/YYYY') %></p>
                   <p><strong>Plazo:</strong> <%= prestamo.plazo_meses %> meses</p>
                   <p><strong>Frecuencia de Interés:</strong> 
@@ -50,7 +50,7 @@
                   </p>
                 </div>
                 <div class="col-md-6">
-                  <% if (prestamo.interes_manual) { %>
+                  <% if (prestamo.interes_manual && prestamo.interes_manual > 0) { %>
                     <p><strong>Interés <%= prestamo.frecuencia_interes === 'quincenal' ? 'Quincenal' : 'Mensual' %>:</strong> 
                       RD$ <%= prestamo.interes_manual.toFixed(2) %>
                     </p>
@@ -59,8 +59,8 @@
                   <% } %>
                   <p><strong>Forma de Pago:</strong> <%= prestamo.forma_pago %></p>
                   <p><strong>Estado:</strong> 
-                    <span class="badge <%= prestamo.estado === 'pendiente' ? 'bg-warning' : 'bg-success' %>">
-                      <%= prestamo.estado === 'pendiente' ? 'Pendiente' : 'Pagado' %>
+                    <span class="badge bg-<%= prestamo.estado === 'activo' ? 'success' : prestamo.estado === 'pendiente' ? 'warning' : 'secondary' %>">
+                      <%= prestamo.estado %>
                     </span>
                   </p>
                 </div>
@@ -80,7 +80,7 @@
               <div class="row">
                 <div class="col-md-6">
                   <p><strong>Saldo Capital:</strong> <%= prestamo.saldo_capital_formatted %></p>
-                  <p><strong>Interés Acumulado:</strong> <%= prestamo.intereses_acumulados_formatted %></p>
+                  <p><strong>Interés Pendiente:</strong> <%= prestamo.intereses_acumulados_formatted %></p>
                 </div>
                 <div class="col-md-6">
                   <p><strong>Total Pagado:</strong> <%= prestamo.total_pagado_formatted %></p>
@@ -91,15 +91,6 @@
                   </p>
                 </div>
               </div>
-
-              <% if (prestamo.proximo_interes) { %>
-                <hr>
-                <p><strong>Próximo Interés:</strong> 
-                  <%= prestamo.proximo_interes.fecha %> 
-                  (<%= prestamo.proximo_interes.dias_restantes %> días)
-                </p>
-                <p><strong>Monto:</strong> RD$ <%= prestamo.proximo_interes.monto.toFixed(2) %></p>
-              <% } %>
 
               <% if (prestamo.mora) { %>
                 <hr>
@@ -131,8 +122,8 @@
             <tr>
               <th>Fecha</th>
               <th>Monto</th>
-              <th>Interés</th>
-              <th>Capital</th>
+              <th>Interés Pagado</th>
+              <th>Capital Pagado</th>
               <th>Método</th>
               <th>Referencia</th>
               <th>Acciones</th>
@@ -168,7 +159,6 @@
   </div>
 </div>
 
-<!-- Chart.js para gráfico de distribución -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   // Gráfico de distribución de pagos
@@ -182,7 +172,7 @@
           <%= prestamo.total_capital_pagado %>,
           <%= prestamo.total_intereses_pagados %>,
           <%= prestamo.saldo_capital %>,
-          <%= prestamo.saldo_intereses %>
+          <%= prestamo.intereses_acumulados %> // Use intereses_acumulados (total pending interest)
         ],
         backgroundColor: [
           '#4e73df',

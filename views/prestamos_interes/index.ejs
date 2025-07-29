@@ -12,9 +12,9 @@
       <div class="row">
         <div class="col-md-6">
           <form class="form-inline">
-            <select name="estado" class="form-control mr-2" onchange="this.form.submit()">
+            <select name="estado" class="form-control me-2" onchange="this.form.submit()">
               <option value="">Todos los estados</option>
-              <option value="pendiente" <%= estadoFiltro === 'pendiente' ? 'selected' : '' %>>Pendientes</option>
+              <option value="activo" <%= estadoFiltro === 'activo' ? 'selected' : '' %>>Activos</option>
               <option value="pagado" <%= estadoFiltro === 'pagado' ? 'selected' : '' %>>Pagados</option>
             </select>
           </form>
@@ -30,10 +30,10 @@
               <th>ID</th>
               <th>Cliente</th>
               <th>Cédula</th>
-              <th>Monto</th>
-              <th>Interés</th>
-              <th>Saldo</th>
-              <th>Fecha</th>
+              <th>Monto Aprobado</th>
+              <th>Tasa Interés</th>
+              <th>Saldo Capital</th>
+              <th>Fecha Creación</th>
               <th>Estado</th>
               <th>Acciones</th>
             </tr>
@@ -45,8 +45,14 @@
                 <td><%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></td>
                 <td><%= prestamo.cliente_cedula %></td>
                 <td>RD$ <%= parseFloat(prestamo.monto_aprobado).toFixed(2) %></td>
-                <td><%= parseFloat(prestamo.interes_porcentaje).toFixed(2) %>%</td>
-                <td>RD$ <%= parseFloat(prestamo.saldo_capital || prestamo.monto_aprobado).toFixed(2) %></td>
+                <td>
+                  <% if (prestamo.interes_manual && prestamo.interes_manual > 0) { %>
+                    RD$ <%= parseFloat(prestamo.interes_manual).toFixed(2) %> (<%= prestamo.frecuencia_interes %>)
+                  <% } else { %>
+                    <%= parseFloat(prestamo.interes_porcentaje).toFixed(2) %>% (<%= prestamo.frecuencia_interes %>)
+                  <% } %>
+                </td>
+                <td>RD$ <%= parseFloat(prestamo.saldo_capital).toFixed(2) %></td>
                 <td><%= moment(prestamo.created_at).format('DD/MM/YYYY') %></td>
                 <td>
                   <span class="badge bg-<%= prestamo.estado === 'activo' ? 'success' : prestamo.estado === 'pendiente' ? 'warning' : 'secondary' %>">
