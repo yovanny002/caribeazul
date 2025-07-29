@@ -17,7 +17,7 @@ const PrestamoInteres = db.define('prestamos_interes', {
   frecuencia_interes: { type: DataTypes.STRING, defaultValue: 'mensual' },
   plazo_meses: { type: DataTypes.INTEGER, allowNull: false },
   forma_pago: { type: DataTypes.STRING, allowNull: false },
-  estado: { type: DataTypes.STRING, defaultValue: 'pendiente' },
+  estado: { type: DataTypes.STRING, defaultValue: 'aprobado' },
   ruta_id: { type: DataTypes.INTEGER },
   saldo_capital: { type: DataTypes.DECIMAL(10, 2), allowNull: false }
 }, {
