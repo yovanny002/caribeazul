@@ -72,21 +72,66 @@ exports.createForm = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    // Convertir el interés manual a quincenal si es necesario
-    if (req.body.frecuencia_interes === 'quincenal' && req.body.interes_manual) {
-      req.body.interes_manual = safeParseFloat(req.body.interes_manual) / 2;
+    // 1. Validación de datos básicos
+    if (!req.body.cliente_id || !req.body.monto_solicitado) {
+      throw new Error('Debe seleccionar un cliente y especificar el monto solicitado');
     }
+
+    // 2. Procesamiento de datos
+    const prestamoData = {
+      ...req.body,
+      monto_aprobado: req.body.monto_aprobado || req.body.monto_solicitado,
+      estado: 'pendiente', // Valor por defecto según DB
+      plazo_meses: req.body.plazo_meses || 1,
+      forma_pago: req.body.forma_pago || 'mensual',
+      interes_porcentaje: req.body.interes_porcentaje || 10
+    };
+
+    // 3. Conversión de interés quincenal
+    if (req.body.frecuencia_interes === 'quincenal' && req.body.interes_manual) {
+      prestamoData.interes_manual = safeParseFloat(req.body.interes_manual) / 2;
+    }
+
+    // 4. Debug: Ver datos antes de insertar
+    console.log('Datos del préstamo a crear:', prestamoData);
+
+    // 5. Creación del préstamo
+    const prestamoId = await PrestamoInteres.create(prestamoData);
     
-    const prestamoId = await PrestamoInteres.create(req.body);
+    // 6. Redirección exitosa
     req.flash('success', 'Préstamo creado exitosamente');
-    res.redirect(`/prestamos_interes/${prestamoId}`);
+    return res.redirect(`/prestamos_interes/${prestamoId}`);
+
   } catch (error) {
-    console.error('Error al crear préstamo:', error);
-    req.flash('error', 'Error al crear préstamo: ' + error.message);
-    res.redirect('/prestamos_interes/create');
+    console.error('Error en create controller:', error);
+    
+    // 7. Recargar datos para mostrar el formulario nuevamente
+    try {
+      const [clientes, rutas] = await Promise.all([
+        db.query('SELECT id, nombre, apellidos, cedula FROM clientes ORDER BY nombre', {
+          type: QueryTypes.SELECT
+        }),
+        db.query('SELECT id, nombre, zona FROM rutas ORDER BY nombre', {
+          type: QueryTypes.SELECT
+        })
+      ]);
+
+      // 8. Renderizar con errores y datos previos
+      req.flash('error', `Error al crear préstamo: ${error.message}`);
+      return res.render('prestamos_interes/create', {
+        clientes,
+        rutas,
+        body: req.body, // Mantener datos ingresados
+        messages: req.flash()
+      });
+
+    } catch (err) {
+      console.error('Error al recargar datos del formulario:', err);
+      req.flash('error', 'Error crítico al procesar la solicitud');
+      return res.redirect('/prestamos_interes');
+    }
   }
 };
-
 exports.pagoForm = async (req, res) => {
   try {
     const prestamo = await PrestamoInteres.findById(req.params.id);

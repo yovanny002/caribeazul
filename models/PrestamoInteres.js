@@ -60,24 +60,67 @@ PrestamoInteres.getHistorialPagos = async (id) => {
 
 // Crear préstamo
 PrestamoInteres.create = async (data) => {
-  const [result] = await db.query(`
-    INSERT INTO prestamos_interes (cliente_id, monto_aprobado, interes_porcentaje, frecuencia_interes, estado, createdAt, updatedAt)
-    VALUES (:cliente_id, :monto_aprobado, :interes_porcentaje, :frecuencia_interes, :estado, NOW(), NOW())
-    RETURNING id
-  `, {
-    replacements: {
-      cliente_id: data.cliente_id,
-      monto_aprobado: data.monto_aprobado,
-      interes_porcentaje: data.interes_manual || data.interes_porcentaje,
-      frecuencia_interes: data.frecuencia_interes,
-      estado: 'activo'
-    },
-    type: QueryTypes.INSERT
-  });
+  // Validación de campos obligatorios
+  const requiredFields = ['cliente_id', 'monto_solicitado', 'monto_aprobado', 'interes_porcentaje', 'plazo_meses', 'forma_pago'];
+  const missingFields = requiredFields.filter(field => !data[field]);
+  
+  if (missingFields.length > 0) {
+    throw new Error(`Faltan campos requeridos: ${missingFields.join(', ')}`);
+  }
 
-  return result.id;
+  const query = `
+    INSERT INTO prestamos_interes (
+      cliente_id,
+      monto_solicitado,
+      monto_aprobado,
+      interes_porcentaje,
+      plazo_meses,
+      forma_pago,
+      estado,
+      ruta_id,
+      saldo_capital,
+      frecuencia_interes,
+      created_at,
+      updated_at
+    ) VALUES (
+      :cliente_id,
+      :monto_solicitado,
+      :monto_aprobado,
+      :interes_porcentaje,
+      :plazo_meses,
+      :forma_pago,
+      :estado,
+      :ruta_id,
+      :saldo_capital,
+      :frecuencia_interes,
+      NOW(),
+      NOW()
+    ) RETURNING id
+  `;
+
+  try {
+    const [result] = await db.query(query, {
+      replacements: {
+        cliente_id: data.cliente_id,
+        monto_solicitado: data.monto_solicitado,
+        monto_aprobado: data.monto_aprobado,
+        interes_porcentaje: data.interes_manual || data.interes_porcentaje,
+        plazo_meses: data.plazo_meses,
+        forma_pago: data.forma_pago,
+        estado: data.estado || 'pendiente',
+        ruta_id: data.ruta_id || null,
+        saldo_capital: data.monto_aprobado, // Saldo inicial igual al monto aprobado
+        frecuencia_interes: data.frecuencia_interes || 'mensual'
+      },
+      type: QueryTypes.INSERT
+    });
+
+    return result.id;
+  } catch (error) {
+    console.error('Error en la consulta SQL:', error);
+    throw new Error('Error al crear el préstamo en la base de datos');
+  }
 };
-
 // Registrar pago
 PrestamoInteres.registrarPago = async (pagoData) => {
   return await db.query(`
