@@ -9,6 +9,8 @@ router.get('/', checkRole(['administrador', 'supervisor', 'servicio']), prestamo
 // Formulario de creación
 router.get('/create', checkRole(['administrador', 'supervisor', 'servicio']), prestamoInteresController.createForm);
 
+router.post('/create', controller.create); 
+
 // Crear nuevo préstamo
 router.post('/', checkRole(['administrador', 'supervisor', 'servicio']), prestamoInteresController.create);
 
