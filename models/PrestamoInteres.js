@@ -166,6 +166,7 @@ PrestamoInteres.getHistorialPagos = async (id) => {
 /**
  * Función para calcular el interés para un período completo (quincenal o mensual).
  * Se usa para inicializar el interés del primer período al crear el préstamo.
+ * La tasa de interés (interes_porcentaje) se interpreta como MENSUAL.
  * @param {number} montoCapital - El monto de capital sobre el cual calcular el interés.
  * @param {object} params - Objeto con interes_porcentaje, interes_manual, frecuencia_interes.
  * @returns {number} Monto de interés para un período.
@@ -179,9 +180,9 @@ PrestamoInteres.calculateInterestForPeriod = (montoCapital, params) => {
     if (interesManual > 0) {
         interesPorPeriodo = interesManual;
     } else {
-        // La tasa porcentual se asume anual, la convertimos a mensual
-        const tasaMensual = interesPorcentaje / 100 / 12; 
-        interesPorPeriodo = montoCapital * tasaMensual;
+        // La tasa porcentual (interes_porcentaje) ahora se asume MENSUAL
+        const tasaMensualDecimal = interesPorcentaje / 100; 
+        interesPorPeriodo = montoCapital * tasaMensualDecimal;
         
         if (frecuenciaInteres === 'quincenal') {
             interesPorPeriodo = interesPorPeriodo / 2; // La mitad del interés mensual para una quincena
@@ -193,6 +194,7 @@ PrestamoInteres.calculateInterestForPeriod = (montoCapital, params) => {
 /**
  * Función para calcular el interés que se ha generado desde la última actualización
  * del interés acumulado o desde la creación del préstamo, hasta la fecha actual.
+ * La tasa de interés (interes_porcentaje) se interpreta como MENSUAL.
  * @param {object} prestamo - Objeto del préstamo (debe contener saldo_capital, interes_porcentaje, interes_manual, frecuencia_interes, updated_at).
  * @returns {number} Monto de interés generado.
  */
@@ -201,7 +203,7 @@ PrestamoInteres.calculateAccruedInterest = async (prestamo) => {
   const now = moment();
   const daysPassed = now.diff(lastInterestCalculationDate, 'days');
   
-  // Si no ha pasado ni un día o es el mismo día, no hay interés adicional acumulado en este momento.
+  // Si no ha pasado ni un día completo, no hay interés adicional acumulado.
   if (daysPassed <= 0) { 
       return 0;
   }
@@ -210,13 +212,15 @@ PrestamoInteres.calculateAccruedInterest = async (prestamo) => {
   const interesManual = safeParseFloat(prestamo.interes_manual);
   const interesPorcentaje = safeParseFloat(prestamo.interes_porcentaje);
   const saldoCapital = safeParseFloat(prestamo.saldo_capital);
+  const diasEnMes = 30; // Asumimos 30 días para el cálculo de interés diario a partir de una tasa mensual
 
   if (interesManual > 0) {
       // Si hay interés manual, se usa ese valor por el período y se divide por los días del período
-      dailyInterestRate = interesManual / (prestamo.frecuencia_interes === 'quincenal' ? 15 : 30);
+      dailyInterestRate = interesManual / (prestamo.frecuencia_interes === 'quincenal' ? 15 : diasEnMes);
   } else {
       // Si no hay interés manual, se usa el porcentaje sobre el saldo capital actual
-      const tasaDiaria = (interesPorcentaje / 100) / 365; // Tasa anual a diaria
+      // La tasa porcentual (interes_porcentaje) ahora se asume MENSUAL, la dividimos por 30 días para obtener diaria
+      const tasaDiaria = (interesPorcentaje / 100) / diasEnMes; 
       dailyInterestRate = saldoCapital * tasaDiaria;
   }
   
