@@ -51,11 +51,11 @@
                 </div>
                 <div class="col-md-6">
                   <% if (prestamo.interes_manual && prestamo.interes_manual > 0) { %>
-                    <p><strong>Interés <%= prestamo.frecuencia_interes === 'quincenal' ? 'Quincenal' : 'Mensual' %>:</strong> 
+                    <p><strong>Interés Fijo (<%= prestamo.frecuencia_interes === 'quincenal' ? 'Quincenal' : 'Mensual' %>):</strong> 
                       RD$ <%= prestamo.interes_manual.toFixed(2) %>
                     </p>
                   <% } else { %>
-                    <p><strong>Tasa de Interés:</strong> <%= prestamo.interes_porcentaje %>%</p>
+                    <p><strong>Tasa de Interés Anual:</strong> <%= prestamo.interes_porcentaje %>%</p>
                   <% } %>
                   <p><strong>Forma de Pago:</strong> <%= prestamo.forma_pago %></p>
                   <p><strong>Estado:</strong> 
@@ -121,7 +121,7 @@
           <thead class="table-dark">
             <tr>
               <th>Fecha</th>
-              <th>Monto</th>
+              <th>Monto Total</th>
               <th>Interés Pagado</th>
               <th>Capital Pagado</th>
               <th>Método</th>
@@ -161,50 +161,55 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-  // Gráfico de distribución de pagos
-  const ctx = document.getElementById('pagosChart').getContext('2d');
-  const pagosChart = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels: ['Capital Pagado', 'Interés Pagado', 'Saldo Capital', 'Interés Pendiente'],
-      datasets: [{
-        data: [
-          <%= prestamo.total_capital_pagado %>,
-          <%= prestamo.total_intereses_pagados %>,
-          <%= prestamo.saldo_capital %>,
-          <%= prestamo.intereses_acumulados %> // Use intereses_acumulados (total pending interest)
-        ],
-        backgroundColor: [
-          '#4e73df',
-          '#1cc88a',
-          '#f6c23e',
-          '#e74a3b'
-        ],
-        hoverBackgroundColor: [
-          '#2e59d9',
-          '#17a673',
-          '#dda20a',
-          '#be2617'
-        ],
-        hoverBorderColor: "rgba(234, 236, 244, 1)",
-      }],
-    },
-    options: {
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'right',
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context) {
-              return context.label + ': RD$ ' + context.raw.toFixed(2);
+  document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('pagosChart').getContext('2d');
+    const pagosChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Capital Pagado', 'Interés Pagado', 'Saldo Capital', 'Interés Pendiente'],
+        datasets: [{
+          data: [
+            <%= prestamo.total_capital_pagado %>,
+            <%= prestamo.total_intereses_pagados %>,
+            <%= prestamo.saldo_capital %>,
+            <%= prestamo.intereses_acumulados %> 
+          ],
+          backgroundColor: [
+            '#4e73df', // Azul para Capital Pagado
+            '#1cc88a', // Verde para Interés Pagado
+            '#f6c23e', // Amarillo para Saldo Capital
+            '#e74a3b'  // Rojo para Interés Pendiente
+          ],
+          hoverBackgroundColor: [
+            '#2e59d9',
+            '#17a673',
+            '#dda20a',
+            '#be2617'
+          ],
+          hoverBorderColor: "rgba(234, 236, 244, 1)",
+        }],
+      },
+      options: {
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: {
+                boxWidth: 20, // Ancho de la caja de color
+                padding: 10   // Espacio entre ítems de leyenda
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return context.label + ': RD$ ' + context.raw.toFixed(2);
+              }
             }
           }
-        }
+        },
+        cutout: '70%', // Tamaño del "agujero" en el centro del donut
       },
-      cutout: '70%',
-    },
+    });
   });
 </script>
 

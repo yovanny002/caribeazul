@@ -1,6 +1,6 @@
 const { DataTypes, QueryTypes } = require('sequelize');
-const db = require('./db');
-const moment = require('moment');
+const db = require('./db'); // Asegúrate de que esta ruta sea correcta para tu conexión a la DB
+const moment = require('moment'); // Para manejo de fechas
 
 // Helper para parsear valores numéricos de forma segura
 const safeParseFloat = (value, defaultValue = 0) => {
@@ -8,19 +8,20 @@ const safeParseFloat = (value, defaultValue = 0) => {
   return isNaN(num) ? defaultValue : num;
 };
 
+// Definición del modelo PrestamoInteres
 const PrestamoInteres = db.define('prestamos_interes', {
   cliente_id: { type: DataTypes.INTEGER, allowNull: false },
   monto_solicitado: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
   monto_aprobado: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
   interes_porcentaje: { type: DataTypes.DECIMAL(5, 2), allowNull: false },
-  interes_manual: { type: DataTypes.DECIMAL(10, 2) },
+  interes_manual: { type: DataTypes.DECIMAL(10, 2) }, // Puede ser null
   frecuencia_interes: { type: DataTypes.STRING, defaultValue: 'mensual' },
   plazo_meses: { type: DataTypes.INTEGER, allowNull: false },
   forma_pago: { type: DataTypes.STRING, allowNull: false },
-  estado: { type: DataTypes.STRING, defaultValue: 'aprobado' },
-  ruta_id: { type: DataTypes.INTEGER },
+  estado: { type: DataTypes.STRING, defaultValue: 'activo' }, // Cambiado a 'activo' por defecto
+  ruta_id: { type: DataTypes.INTEGER }, // Puede ser null
   saldo_capital: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
-  // Nueva columna para llevar el control del interés acumulado pendiente
+  // Columna para llevar el control del interés acumulado pendiente
   interes_pendiente_acumulado: { type: DataTypes.DECIMAL(10, 2), defaultValue: 0, allowNull: false }
 }, {
   tableName: 'prestamos_interes',
@@ -29,10 +30,12 @@ const PrestamoInteres = db.define('prestamos_interes', {
   updatedAt: 'updated_at'
 });
 
-// ====================== MÉTODOS PERSONALIZADOS ======================
+// ====================== MÉTODOS PERSONALIZADOS DEL MODELO ======================
 
 /**
  * Listar préstamos con información del cliente
+ * @param {string} estado - Estado del préstamo a filtrar (ej: 'activo', 'pagado', null para todos).
+ * @returns {Array<object>} Lista de préstamos con detalles del cliente y ruta.
  */
 PrestamoInteres.findAllWithClientes = async (estado = null) => {
   let query = `
@@ -62,13 +65,14 @@ PrestamoInteres.findAllWithClientes = async (estado = null) => {
       type: QueryTypes.SELECT
     });
 
+    // Asegurar que los valores numéricos sean floats
     return prestamos.map(p => ({
       ...p,
       monto_aprobado: safeParseFloat(p.monto_aprobado),
       monto_solicitado: safeParseFloat(p.monto_solicitado),
       interes_porcentaje: safeParseFloat(p.interes_porcentaje),
       saldo_capital: safeParseFloat(p.saldo_capital),
-      interes_pendiente_acumulado: safeParseFloat(p.interes_pendiente_acumulado) // Asegurar parseo
+      interes_pendiente_acumulado: safeParseFloat(p.interes_pendiente_acumulado)
     }));
   } catch (error) {
     console.error('Error al listar préstamos:', error);
@@ -77,7 +81,9 @@ PrestamoInteres.findAllWithClientes = async (estado = null) => {
 };
 
 /**
- * Buscar préstamo por ID con información completa
+ * Buscar préstamo por ID con información completa (cliente y ruta).
+ * @param {number} id - ID del préstamo a buscar.
+ * @returns {object|null} Objeto del préstamo o null si no se encuentra.
  */
 PrestamoInteres.findById = async (id) => {
   try {
@@ -101,13 +107,13 @@ PrestamoInteres.findById = async (id) => {
 
     if (!prestamo) return null;
 
-    // Calcular valores numéricos
+    // Asegurar que los valores numéricos sean floats
     prestamo.monto_aprobado = safeParseFloat(prestamo.monto_aprobado);
     prestamo.monto_solicitado = safeParseFloat(prestamo.monto_solicitado);
     prestamo.interes_porcentaje = safeParseFloat(prestamo.interes_porcentaje);
     prestamo.interes_manual = safeParseFloat(prestamo.interes_manual);
     prestamo.saldo_capital = safeParseFloat(prestamo.saldo_capital);
-    prestamo.interes_pendiente_acumulado = safeParseFloat(prestamo.interes_pendiente_acumulado); // Asegurar parseo
+    prestamo.interes_pendiente_acumulado = safeParseFloat(prestamo.interes_pendiente_acumulado);
 
     return prestamo;
   } catch (error) {
@@ -117,7 +123,9 @@ PrestamoInteres.findById = async (id) => {
 };
 
 /**
- * Obtener historial de pagos de un préstamo
+ * Obtener historial de pagos de un préstamo.
+ * @param {number} id - ID del préstamo.
+ * @returns {Array<object>} Lista de pagos asociados al préstamo.
  */
 PrestamoInteres.getHistorialPagos = async (id) => {
   try {
@@ -147,7 +155,7 @@ PrestamoInteres.getHistorialPagos = async (id) => {
       monto: safeParseFloat(pago.monto),
       interes_pagado: safeParseFloat(pago.interes_pagado),
       capital_pagado: safeParseFloat(pago.capital_pagado),
-      fecha_display: moment(pago.fecha).format('DD/MM/YYYY')
+      fecha_display: moment(pago.fecha).format('DD/MM/YYYY HH:mm') // Incluir hora para el recibo
     }));
   } catch (error) {
     console.error(`Error al obtener pagos para préstamo ${id}:`, error);
@@ -156,7 +164,72 @@ PrestamoInteres.getHistorialPagos = async (id) => {
 };
 
 /**
+ * Función para calcular el interés para un período completo (quincenal o mensual).
+ * Se usa para inicializar el interés del primer período al crear el préstamo.
+ * @param {number} montoCapital - El monto de capital sobre el cual calcular el interés.
+ * @param {object} params - Objeto con interes_porcentaje, interes_manual, frecuencia_interes.
+ * @returns {number} Monto de interés para un período.
+ */
+PrestamoInteres.calculateInterestForPeriod = (montoCapital, params) => {
+    let interesPorPeriodo = 0;
+    const interesManual = safeParseFloat(params.interes_manual);
+    const interesPorcentaje = safeParseFloat(params.interes_porcentaje);
+    const frecuenciaInteres = params.frecuencia_interes || 'mensual';
+
+    if (interesManual > 0) {
+        interesPorPeriodo = interesManual;
+    } else {
+        // La tasa porcentual se asume anual, la convertimos a mensual
+        const tasaMensual = interesPorcentaje / 100 / 12; 
+        interesPorPeriodo = montoCapital * tasaMensual;
+        
+        if (frecuenciaInteres === 'quincenal') {
+            interesPorPeriodo = interesPorPeriodo / 2; // La mitad del interés mensual para una quincena
+        }
+    }
+    return interesPorPeriodo;
+};
+
+/**
+ * Función para calcular el interés que se ha generado desde la última actualización
+ * del interés acumulado o desde la creación del préstamo, hasta la fecha actual.
+ * @param {object} prestamo - Objeto del préstamo (debe contener saldo_capital, interes_porcentaje, interes_manual, frecuencia_interes, updated_at).
+ * @returns {number} Monto de interés generado.
+ */
+PrestamoInteres.calculateAccruedInterest = async (prestamo) => {
+  const lastInterestCalculationDate = moment(prestamo.updated_at);
+  const now = moment();
+  const daysPassed = now.diff(lastInterestCalculationDate, 'days');
+  
+  // Si no ha pasado ni un día o es el mismo día, no hay interés adicional acumulado en este momento.
+  if (daysPassed <= 0) { 
+      return 0;
+  }
+
+  let dailyInterestRate = 0;
+  const interesManual = safeParseFloat(prestamo.interes_manual);
+  const interesPorcentaje = safeParseFloat(prestamo.interes_porcentaje);
+  const saldoCapital = safeParseFloat(prestamo.saldo_capital);
+
+  if (interesManual > 0) {
+      // Si hay interés manual, se usa ese valor por el período y se divide por los días del período
+      dailyInterestRate = interesManual / (prestamo.frecuencia_interes === 'quincenal' ? 15 : 30);
+  } else {
+      // Si no hay interés manual, se usa el porcentaje sobre el saldo capital actual
+      const tasaDiaria = (interesPorcentaje / 100) / 365; // Tasa anual a diaria
+      dailyInterestRate = saldoCapital * tasaDiaria;
+  }
+  
+  const accruedInterest = dailyInterestRate * daysPassed;
+  return accruedInterest;
+};
+
+
+/**
  * Crear un nuevo préstamo
+ * @param {object} data - Datos para crear el préstamo.
+ * @returns {number} ID del préstamo recién creado.
+ * @throws {Error} Si faltan campos requeridos o hay un error de base de datos.
  */
 PrestamoInteres.create = async (data) => {
   // Validación de campos obligatorios
@@ -176,17 +249,15 @@ PrestamoInteres.create = async (data) => {
   // Calcular monto aprobado (usar monto_aprobado si existe, sino monto_solicitado)
   const montoAprobado = data.monto_aprobado || data.monto_solicitado;
   
-  // Ajustar interés manual si es quincenal (almacenarlo por el periodo)
-  let interesManual = data.interes_manual;
-  if (data.frecuencia_interes === 'quincenal' && interesManual) {
-    // Si se ingresa un interés manual quincenal, se almacena tal cual
-    interesManual = safeParseFloat(interesManual); 
-  } else if (data.frecuencia_interes === 'mensual' && interesManual) {
-    // Si se ingresa un interés manual mensual, se almacena tal cual
-    interesManual = safeParseFloat(interesManual);
-  } else {
-    interesManual = null; // Si no hay interés manual, se usa el porcentaje
-  }
+  // Calcular el interés del primer período basado en el monto aprobado
+  const interesPrimerPeriodo = PrestamoInteres.calculateInterestForPeriod(
+      safeParseFloat(montoAprobado),
+      {
+          interes_manual: data.interes_manual,
+          interes_porcentaje: data.interes_porcentaje,
+          frecuencia_interes: data.frecuencia_interes
+      }
+  );
 
   const query = `
     INSERT INTO prestamos_interes (
@@ -201,7 +272,7 @@ PrestamoInteres.create = async (data) => {
       estado,
       ruta_id,
       saldo_capital,
-      interes_pendiente_acumulado, -- Inicializar a 0 al crear el préstamo
+      interes_pendiente_acumulado,
       created_at,
       updated_at
     ) VALUES (
@@ -216,7 +287,7 @@ PrestamoInteres.create = async (data) => {
       :estado,
       :ruta_id,
       :saldo_capital,
-      0, -- Interés pendiente acumulado inicial
+      :interes_pendiente_acumulado, -- Inicializado con el interés del primer período
       NOW(),
       NOW()
     ) RETURNING id
@@ -229,13 +300,14 @@ PrestamoInteres.create = async (data) => {
         monto_solicitado: safeParseFloat(data.monto_solicitado),
         monto_aprobado: safeParseFloat(montoAprobado),
         interes_porcentaje: safeParseFloat(data.interes_porcentaje),
-        interes_manual: interesManual,
+        interes_manual: data.interes_manual ? safeParseFloat(data.interes_manual) : null,
         frecuencia_interes: data.frecuencia_interes || 'mensual',
         plazo_meses: parseInt(data.plazo_meses) || 1,
         forma_pago: data.forma_pago,
-        estado: data.estado || 'pendiente',
+        estado: data.estado || 'activo', // 'activo' para préstamos aprobados al crear
         ruta_id: data.ruta_id || null,
-        saldo_capital: safeParseFloat(montoAprobado) // Saldo inicial = monto aprobado
+        saldo_capital: safeParseFloat(montoAprobado), // Saldo inicial = monto aprobado
+        interes_pendiente_acumulado: interesPrimerPeriodo // Interés inicial pendiente
       },
       type: QueryTypes.INSERT
     });
@@ -248,40 +320,11 @@ PrestamoInteres.create = async (data) => {
 };
 
 /**
- * Función para calcular el interés que se ha generado desde la última actualización
- * del interés acumulado o desde la creación del préstamo, hasta la fecha actual.
- * @param {object} prestamo - Objeto del préstamo.
- * @returns {number} Monto de interés generado.
- */
-PrestamoInteres.calculateAccruedInterest = async (prestamo) => {
-  const lastInterestCalculationDate = moment(prestamo.updated_at); // Usamos updated_at como proxy para la última vez que se modificó el interés
-  const now = moment();
-
-  // Si el préstamo es nuevo y aún no tiene updated_at que no sea created_at, o si nunca se ha hecho un pago, 
-  // la fecha de inicio para el cálculo es created_at.
-  // Si ya hubo pagos, la fecha de inicio es la fecha del último cálculo/pago relevante.
-  // Para simplificar, asumiremos que updated_at se actualiza cada vez que se registra un pago
-  // o se actualiza el interés_pendiente_acumulado.
-
-  // Calculamos los días transcurridos desde la última actualización o creación del préstamo
-  const daysPassed = now.diff(lastInterestCalculationDate, 'days');
-  let accruedInterest = 0;
-  
-  const dailyInterestRate = (prestamo.interes_manual 
-    ? prestamo.interes_manual 
-    : (prestamo.saldo_capital * (prestamo.interes_porcentaje / 100))
-  ) / (prestamo.frecuencia_interes === 'quincenal' ? 15 : 30); // Interés por día según la frecuencia
-
-  if (dailyInterestRate > 0) {
-    accruedInterest = dailyInterestRate * daysPassed;
-  }
-  
-  return accruedInterest;
-};
-
-
-/**
- * Registrar un pago para un préstamo
+ * Registrar un pago para un préstamo.
+ * Aplica el monto del pago primero a los intereses pendientes, luego al capital.
+ * @param {object} pagoData - Datos del pago (prestamo_id, monto, metodo, notas, referencia, registrado_por).
+ * @returns {number} ID del pago registrado.
+ * @throws {Error} Si faltan campos requeridos o el préstamo no se encuentra.
  */
 PrestamoInteres.registrarPago = async (pagoData) => {
   const requiredFields = ['prestamo_id', 'monto', 'registrado_por'];
@@ -298,36 +341,38 @@ PrestamoInteres.registrarPago = async (pagoData) => {
       throw new Error('Préstamo no encontrado');
     }
 
-    // Calcular el interés que se ha generado desde la última actualización hasta ahora
-    const interesGeneradoAhora = await PrestamoInteres.calculateAccruedInterest(prestamo);
+    // 2. Calcular el interés que se ha generado desde la última actualización del updated_at
+    const interesGeneradoDesdeUltimaActualizacion = await PrestamoInteres.calculateAccruedInterest(prestamo);
     
-    // Sumar el interés generado ahora al interés pendiente acumulado del préstamo
-    let totalInteresPendiente = prestamo.interes_pendiente_acumulado + interesGeneradoAhora;
+    // 3. Sumar el interés recién generado al total de interés pendiente que ya tenía el préstamo
+    let totalInteresPendiente = prestamo.interes_pendiente_acumulado + interesGeneradoDesdeUltimaActualizacion;
+    totalInteresPendiente = Math.max(0, totalInteresPendiente); // Asegurar que no sea negativo
 
     const montoPago = safeParseFloat(pagoData.monto);
     let interesPagado = 0;
     let capitalPagado = 0;
     let montoRestanteParaPagar = montoPago;
 
-    // 2. Primero, cubrir los intereses pendientes
+    // 4. Primero, cubrir los intereses pendientes
     if (totalInteresPendiente > 0) {
       interesPagado = Math.min(montoRestanteParaPagar, totalInteresPendiente);
       montoRestanteParaPagar -= interesPagado;
-      totalInteresPendiente -= interesPagado; // Actualizar el interés pendiente
+      totalInteresPendiente -= interesPagado; // El interés pendiente se reduce con lo pagado
     }
 
-    // 3. Lo que resta del pago se aplica al capital
+    // 5. Lo que resta del pago se aplica al capital
     if (montoRestanteParaPagar > 0) {
       capitalPagado = Math.min(montoRestanteParaPagar, prestamo.saldo_capital);
       montoRestanteParaPagar -= capitalPagado;
     }
 
-    // Si el capital pagado es mayor que el saldo del capital, ajustarlo para que no sea negativo
+    // Asegurarse de que el capital pagado no exceda el saldo actual y no lo haga negativo
     if (capitalPagado > prestamo.saldo_capital) {
       capitalPagado = prestamo.saldo_capital;
     }
+    capitalPagado = Math.max(0, capitalPagado); // Asegurar que no sea negativo
 
-    // 4. Registrar el pago
+    // 6. Registrar el pago en la tabla pagos_interes
     const [result] = await db.query(`
       INSERT INTO pagos_interes (
         prestamo_id,
@@ -366,20 +411,24 @@ PrestamoInteres.registrarPago = async (pagoData) => {
       type: QueryTypes.INSERT
     });
 
-    // 5. Actualizar saldo del préstamo y el interés pendiente acumulado
+    // 7. Actualizar saldo del préstamo y el interés pendiente acumulado
     let nuevoEstado = prestamo.estado;
     const nuevoSaldoCapital = prestamo.saldo_capital - capitalPagado;
-    if (nuevoSaldoCapital <= 0) {
-      nuevoEstado = 'pagado'; // Marcar como pagado si el capital es 0 o menos
+    
+    // Si el capital ha sido pagado en su totalidad y no hay más interés pendiente
+    if (nuevoSaldoCapital <= 0 && totalInteresPendiente <= 0) {
+      nuevoEstado = 'pagado'; 
+    } else {
+      nuevoEstado = 'activo'; // Mantener como activo si aún hay saldo o interés pendiente
     }
 
     await db.query(`
       UPDATE prestamos_interes 
       SET 
         saldo_capital = :nuevoSaldoCapital,
-        interes_pendiente_acumulado = :totalInteresPendiente,
+        interes_pendiente_acumulado = :totalInteresPendiente, 
         estado = :estado,
-        updated_at = NOW() -- Actualizamos updated_at para el próximo cálculo de interés
+        updated_at = NOW() -- Actualizamos updated_at a la fecha del pago
       WHERE id = :prestamo_id
     `, {
       replacements: {
