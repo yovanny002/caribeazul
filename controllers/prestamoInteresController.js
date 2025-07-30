@@ -183,23 +183,23 @@ exports.registrarPago = async (req, res) => {
     notas,
     referencia
   } = req.body;
-  const registrado_por = req.session.usuario_id;  // <-- Aquí está el valor que da undefined
-  if (!prestamo_id || !monto || !registrado_por) {
+
+  const registradoPor = req.session.user?.id;
+  if (!prestamo_id || !monto || !registradoPor) {
     req.flash('error', 'Datos incompletos para registrar el pago.');
     return res.redirect(`/prestamos_interes/${prestamo_id}`);
   }
-  try {
-    console.log('REQ.BODY antes de destructurar:', req.body);
-    const { monto, prestamo_id } = req.body;
 
+  try {
     const pagoId = await PrestamoInteres.registrarPago({
       prestamo_id,
       monto: safeParseFloat(monto),
       metodo,
       notas,
       referencia,
-      registrado_por
+      registrado_por: registradoPor
     });
+
     req.flash('success', 'Pago registrado correctamente.');
     res.redirect(`/prestamos_interes/${prestamo_id}`);
   } catch (error) {

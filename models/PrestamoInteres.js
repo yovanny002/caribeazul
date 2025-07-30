@@ -31,9 +31,6 @@ const PrestamoInteres = db.define('prestamos_interes', {
 
 // ====================== MÉTODOS PERSONALIZADOS DEL MODELO ======================
 
-/**
- * Listar préstamos con información del cliente
- */
 PrestamoInteres.findAllWithClientes = async (estado = null) => {
   let query = `
     SELECT 
@@ -71,9 +68,6 @@ PrestamoInteres.findAllWithClientes = async (estado = null) => {
   }
 };
 
-/**
- * Buscar préstamo por ID con información completa
- */
 PrestamoInteres.findById = async (id) => {
   try {
     const [prestamo] = await db.query(`
@@ -107,9 +101,6 @@ PrestamoInteres.findById = async (id) => {
   }
 };
 
-/**
- * Obtener historial de pagos de un préstamo
- */
 PrestamoInteres.getHistorialPagos = async (id) => {
   try {
     const pagos = await db.query(`
@@ -145,35 +136,29 @@ PrestamoInteres.getHistorialPagos = async (id) => {
   }
 };
 
-/**
- * Función para calcular el interés para un período completo
- */
 PrestamoInteres.calculateInterestForPeriod = (montoCapital, params) => {
-    let interesPorPeriodo = 0;
-    const interesManual = safeParseFloat(params.interes_manual);
-    const interesPorcentaje = safeParseFloat(params.interes_porcentaje);
-    const frecuenciaInteres = params.frecuencia_interes || 'mensual';
-    if (interesManual > 0) {
-        interesPorPeriodo = interesManual;
-    } else {
-        const tasaMensualDecimal = interesPorcentaje / 100;
-        interesPorPeriodo = montoCapital * tasaMensualDecimal;
-        if (frecuenciaInteres === 'quincenal') {
-            interesPorPeriodo = interesPorPeriodo / 2;
-        }
+  let interesPorPeriodo = 0;
+  const interesManual = safeParseFloat(params.interes_manual);
+  const interesPorcentaje = safeParseFloat(params.interes_porcentaje);
+  const frecuenciaInteres = params.frecuencia_interes || 'mensual';
+  if (interesManual > 0) {
+    interesPorPeriodo = interesManual;
+  } else {
+    const tasaMensualDecimal = interesPorcentaje / 100;
+    interesPorPeriodo = montoCapital * tasaMensualDecimal;
+    if (frecuenciaInteres === 'quincenal') {
+      interesPorPeriodo = interesPorPeriodo / 2;
     }
-    return interesPorPeriodo;
+  }
+  return interesPorPeriodo;
 };
 
-/**
- * Función para calcular el interés que se ha generado de forma diaria
- */
 PrestamoInteres.calculateAccruedInterest = async (prestamo) => {
   const lastInterestCalculationDate = moment(prestamo.updated_at);
   const now = moment();
   const daysPassed = now.diff(lastInterestCalculationDate, 'days');
-  if (daysPassed <= 0) { 
-      return 0;
+  if (daysPassed <= 0) {
+    return 0;
   }
   let dailyInterestRate = 0;
   const interesManual = safeParseFloat(prestamo.interes_manual);
@@ -181,38 +166,36 @@ PrestamoInteres.calculateAccruedInterest = async (prestamo) => {
   const saldoCapital = safeParseFloat(prestamo.saldo_capital);
   const diasEnMes = 30;
   if (interesManual > 0) {
-      dailyInterestRate = interesManual / (prestamo.frecuencia_interes === 'quincenal' ? 15 : diasEnMes);
+    dailyInterestRate = interesManual / (prestamo.frecuencia_interes === 'quincenal' ? 15 : diasEnMes);
   } else {
-      const tasaDiaria = (interesPorcentaje / 100) / diasEnMes;
-      dailyInterestRate = saldoCapital * tasaDiaria;
+    const tasaDiaria = (interesPorcentaje / 100) / diasEnMes;
+    dailyInterestRate = saldoCapital * tasaDiaria;
   }
   const accruedInterest = dailyInterestRate * daysPassed;
   return accruedInterest;
 };
 
-/**
- * Crear un nuevo préstamo
- */
 PrestamoInteres.create = async (data) => {
   const requiredFields = [
-    'cliente_id', 
-    'monto_solicitado', 
-    'interes_porcentaje', 
-    'plazo_meses', 
+    'cliente_id',
+    'monto_solicitado',
+    'interes_porcentaje',
+    'plazo_meses',
     'forma_pago'
   ];
-  const missingFields = requiredFields.filter(field => !data[field]);
+  // Validación para detectar undefined o null explícitamente
+  const missingFields = requiredFields.filter(field => data[field] === undefined || data[field] === null);
   if (missingFields.length > 0) {
     throw new Error(`Faltan campos requeridos: ${missingFields.join(', ')}`);
   }
   const montoAprobado = data.monto_aprobado || data.monto_solicitado;
   const interesPrimerPeriodo = PrestamoInteres.calculateInterestForPeriod(
-      safeParseFloat(montoAprobado),
-      {
-          interes_manual: data.interes_manual,
-          interes_porcentaje: data.interes_porcentaje,
-          frecuencia_interes: data.frecuencia_interes
-      }
+    safeParseFloat(montoAprobado),
+    {
+      interes_manual: data.interes_manual,
+      interes_porcentaje: data.interes_porcentaje,
+      frecuencia_interes: data.frecuencia_interes
+    }
   );
   const query = `
     INSERT INTO prestamos_interes (
@@ -265,7 +248,7 @@ PrestamoInteres.create = async (data) => {
       },
       type: QueryTypes.INSERT
     });
-    return result.id;
+    return result?.id;
   } catch (error) {
     console.error('Error al crear préstamo:', error);
     throw new Error('Error al crear el préstamo en la base de datos');
@@ -275,34 +258,31 @@ PrestamoInteres.create = async (data) => {
 /**
  * Registrar un pago para un préstamo
  */
-// ... (código anterior del modelo) ...
-
-/**
- * Registrar un pago para un préstamo
- */
 PrestamoInteres.registrarPago = async (pagoData) => {
+  // Validación explícita para detectar undefined o null
   const requiredFields = ['prestamo_id', 'monto', 'registrado_por'];
-  const missingFields = requiredFields.filter(field => !pagoData[field]);
+  const missingFields = requiredFields.filter(field => pagoData[field] === undefined || pagoData[field] === null);
   if (missingFields.length > 0) {
     throw new Error(`Faltan campos requeridos: ${missingFields.join(', ')}`);
   }
   try {
     console.log('--- Proceso de Pago desde la App Iniciado ---');
-    
+
     const prestamo = await PrestamoInteres.findById(pagoData.prestamo_id);
     if (!prestamo) {
       console.error('Error: Préstamo no encontrado en la DB.');
       throw new Error('Préstamo no encontrado');
     }
-    
+
     const interesGeneradoDesdeUltimaActualizacion = await PrestamoInteres.calculateAccruedInterest(prestamo);
     let totalInteresPendiente = prestamo.interes_pendiente_acumulado + interesGeneradoDesdeUltimaActualizacion;
     totalInteresPendiente = Math.max(0, totalInteresPendiente);
-    
+
     const montoPago = safeParseFloat(pagoData.monto);
     let interesPagado = 0;
     let capitalPagado = 0;
     let montoRestanteParaPagar = montoPago;
+
     if (totalInteresPendiente > 0) {
       interesPagado = Math.min(montoRestanteParaPagar, totalInteresPendiente);
       montoRestanteParaPagar -= interesPagado;
@@ -313,7 +293,7 @@ PrestamoInteres.registrarPago = async (pagoData) => {
       montoRestanteParaPagar -= capitalPagado;
     }
     capitalPagado = Math.max(0, capitalPagado);
-    
+
     console.log('3. Datos del pago antes de insertar:');
     const paymentData = {
       prestamo_id: pagoData.prestamo_id,
@@ -326,8 +306,7 @@ PrestamoInteres.registrarPago = async (pagoData) => {
       registrado_por: pagoData.registrado_por
     };
     console.log('   - Datos a insertar:', paymentData);
-    
-    // 4. Intentamos registrar el pago
+
     const insertQuery = `
       INSERT INTO pagos_interes (
         prestamo_id, monto, interes_pagado, capital_pagado,
@@ -337,40 +316,40 @@ PrestamoInteres.registrarPago = async (pagoData) => {
         :metodo, :notas, :referencia, :registrado_por, NOW(), NOW()
       ) RETURNING id
     `;
-    
+
     console.log('4.1 - Ejecutando INSERT con query:', insertQuery);
     console.log('4.2 - Con replacements:', paymentData);
-    
+
     const [result] = await db.query(insertQuery, {
       replacements: paymentData,
       type: QueryTypes.INSERT
     });
-    
-    console.log('4.3 - Resultado de la consulta INSERT:', result);
-    
-    if (!result || !result[0] || !result[0].id) {
-      console.error('4.4 - Falla al obtener el ID del pago. El resultado fue:', result);
+
+    // Acceso seguro al ID insertado (varía según versión Sequelize / driver)
+    const pagoId = result?.[0]?.id || result?.id;
+    if (!pagoId) {
+      console.error('4.4 - Falla al obtener el ID del pago. Resultado:', result);
       throw new Error('Fallo al registrar el pago en la base de datos.');
     }
-    
-    const pagoId = result[0].id;
+
     console.log(`✅ Pago insertado con ID: ${pagoId}`);
 
-    // 5. Actualizar saldo del préstamo
+    // Actualizar saldo del préstamo
     let nuevoEstado = prestamo.estado;
     const nuevoSaldoCapital = prestamo.saldo_capital - capitalPagado;
     if (nuevoSaldoCapital <= 0 && totalInteresPendiente <= 0) {
-      nuevoEstado = 'pagado'; 
+      nuevoEstado = 'pagado';
     } else {
       nuevoEstado = 'activo';
     }
-    
+
     const updateData = {
-      nuevoSaldoCapital: nuevoSaldoCapital,
-      totalInteresPendiente: totalInteresPendiente,
+      nuevoSaldoCapital,
+      totalInteresPendiente,
       estado: nuevoEstado,
       prestamo_id: pagoData.prestamo_id
     };
+
     const updateQuery = `
       UPDATE prestamos_interes 
       SET 
@@ -380,15 +359,15 @@ PrestamoInteres.registrarPago = async (pagoData) => {
         updated_at = NOW()
       WHERE id = :prestamo_id
     `;
-    
+
     console.log('5.1 - Ejecutando UPDATE con query:', updateQuery);
     console.log('5.2 - Con replacements:', updateData);
-    
+
     const [resultUpdate, affectedRows] = await db.query(updateQuery, {
       replacements: updateData,
       type: QueryTypes.UPDATE
     });
-    
+
     console.log('   - Préstamo actualizado. Filas afectadas:', affectedRows);
     console.log('--- Proceso de Pago Finalizado ---');
 
@@ -399,5 +378,4 @@ PrestamoInteres.registrarPago = async (pagoData) => {
   }
 };
 
-// ... (resto del modelo) ...
 module.exports = PrestamoInteres;
