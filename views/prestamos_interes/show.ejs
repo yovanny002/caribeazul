@@ -14,9 +14,6 @@
         <a href="/prestamos_interes" class="btn btn-secondary">
           <i class="fas fa-arrow-left"></i> Volver
         </a>
-        <a href="/prestamos_interes/<%= prestamo.id %>/imprimir-contrato" class="btn btn-success btn-sm me-2" target="_blank">
-          <i class="fas fa-file me-1"></i> Imprimir Contrato
-        </a>
       </div>
     </div>
 
@@ -178,10 +175,10 @@
             <%= prestamo.intereses_acumulados %> 
           ],
           backgroundColor: [
-            '#4e73df', // Azul para Capital Pagado
-            '#1cc88a', // Verde para Interés Pagado
-            '#f6c23e', // Amarillo para Saldo Capital
-            '#e74a3b'  // Rojo para Interés Pendiente
+            '#4e73df',
+            '#1cc88a',
+            '#f6c23e',
+            '#e74a3b'
           ],
           hoverBackgroundColor: [
             '#2e59d9',

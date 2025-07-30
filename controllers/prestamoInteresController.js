@@ -1,5 +1,5 @@
 const db = require('../models/db');
-const { QueryTypes } = require('sequelize'); // <<=== CORRECCIÓN AQUÍ
+const { QueryTypes } = require('sequelize');
 const PrestamoInteres = require('../models/PrestamoInteres');
 const Cliente = require('../models/Cliente');
 const Pago = require('../models/Pago');
@@ -40,7 +40,6 @@ exports.index = async (req, res) => {
 
 exports.createForm = async (req, res) => {
   try {
-    // Obtener listado de clientes y rutas desde la base de datos
     const [clientes, rutas] = await Promise.all([
       db.query('SELECT id, nombre, apellidos, cedula, profesion FROM clientes ORDER BY nombre', {
         type: QueryTypes.SELECT
@@ -74,6 +73,7 @@ exports.create = async (req, res) => {
   }
 };
 
+// ============ FUNCIÓN SHOW CORREGIDA ============
 exports.show = async (req, res) => {
   try {
     const prestamoId = req.params.id;
@@ -83,7 +83,10 @@ exports.show = async (req, res) => {
       return res.redirect('/prestamos_interes');
     }
 
+    // === LÍNEA CRÍTICA: OBTENIENDO EL HISTORIAL DE PAGOS ===
     const pagos = await PrestamoInteres.getHistorialPagos(prestamoId);
+    // Para depurar: console.log('Pagos obtenidos para la vista:', pagos);
+
     const interesGeneradoAhora = await PrestamoInteres.calculateAccruedInterest(prestamo);
     let saldoInteres = prestamo.interes_pendiente_acumulado + interesGeneradoAhora;
     saldoInteres = Math.max(0, saldoInteres);
@@ -121,7 +124,7 @@ exports.show = async (req, res) => {
 
     res.render('prestamos_interes/show', {
       prestamo,
-      pagos,
+      pagos, // <<=== ASEGÚRATE DE QUE ESTA LÍNEA EXISTA
       moment
     });
   } catch (error) {
@@ -130,6 +133,7 @@ exports.show = async (req, res) => {
     res.redirect('/prestamos_interes');
   }
 };
+
 
 exports.showPago = async (req, res) => {
   const { id } = req.params;
@@ -283,7 +287,7 @@ exports.recibo = async (req, res) => {
     pago.monto = safeParseFloat(pago.monto);
     pago.interes_pagado = safeParseFloat(pago.interes_pagado);
     pago.capital_pagado = safeParseFloat(pago.capital_pagado);
-    res.render('prestamos_interes/recibo', { prestamo: prestamoForReceipt, pago, layout: false });
+    res.render('prestamos_interes/recibo_termico', { prestamo: prestamoForReceipt, pago });
   } catch (error) {
     console.error('Error generando recibo:', error);
     req.flash('error', 'Error al generar recibo: ' + error.message);
