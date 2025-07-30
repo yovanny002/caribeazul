@@ -1,6 +1,7 @@
 const db = require('../models/db');
+const { QueryTypes } = require('sequelize'); // <<=== CORRECCIÓN AQUÍ
 const PrestamoInteres = require('../models/PrestamoInteres');
-const Cliente = require('../models/Cliente'); // <<=== ESTO FALTABA
+const Cliente = require('../models/Cliente');
 const Pago = require('../models/Pago');
 const SolicitudPrestamo = require('../models/SolicitudPrestamo');
 const Ruta = require('../models/Ruta');
@@ -28,7 +29,7 @@ exports.index = async (req, res) => {
     res.render('prestamos_interes/index', {
       prestamos,
       moment,
-      estadoFiltro: estado // <-- ESTA ES LA LÍNEA QUE FALTABA
+      estadoFiltro: estado
     });
   } catch (error) {
     console.error('Error al obtener préstamos:', error);
@@ -38,28 +39,29 @@ exports.index = async (req, res) => {
 };
 
 exports.createForm = async (req, res) => {
-  try {
-    // Obtener listado de clientes y rutas desde la base de datos
-    const [clientes, rutas] = await Promise.all([
-      db.query('SELECT id, nombre, apellidos, cedula, profesion FROM clientes ORDER BY nombre', {
-        type: QueryTypes.SELECT
-      }),
-      db.query('SELECT id, nombre, zona FROM rutas ORDER BY nombre', {
-        type: QueryTypes.SELECT
-      })
-    ]);
+  try {
+    // Obtener listado de clientes y rutas desde la base de datos
+    const [clientes, rutas] = await Promise.all([
+      db.query('SELECT id, nombre, apellidos, cedula, profesion FROM clientes ORDER BY nombre', {
+        type: QueryTypes.SELECT
+      }),
+      db.query('SELECT id, nombre, zona FROM rutas ORDER BY nombre', {
+        type: QueryTypes.SELECT
+      })
+    ]);
 
-    res.render('prestamos_interes/create', {
-      clientes,
-      rutas,
-      body: req.body || {} // <-- ESTO ES LO QUE SOLUCIONA EL ERROR
-    });
-  } catch (error) {
-    console.error('Error al cargar formulario de préstamo:', error);
-    req.flash('error', 'Error al cargar formulario de préstamo');
-    res.redirect('/prestamos_interes');
-  }
+    res.render('prestamos_interes/create', {
+      clientes,
+      rutas,
+      body: req.body || {}
+    });
+  } catch (error) {
+    console.error('Error al cargar formulario de préstamo:', error);
+    req.flash('error', 'Error al cargar formulario de préstamo');
+    res.redirect('/prestamos_interes');
+  }
 };
+
 exports.create = async (req, res) => {
   try {
     const prestamoId = await PrestamoInteres.create(req.body);
@@ -218,12 +220,11 @@ exports.imprimirContrato = async (req, res) => {
       layout: false, 
       prestamo: {
         ...prestamo,
-        // Agrega los datos del cliente al objeto prestamo
         cliente_nombre: cliente.nombre,
         cliente_apellidos: cliente.apellidos,
         cliente_cedula: cliente.cedula,
-        cliente_telefono1: cliente.telefono1, // Asegúrate de que este campo exista en tu tabla clientes
-        cliente_direccion: cliente.direccion // Asegúrate de que este campo exista en tu tabla clientes
+        cliente_telefono1: cliente.telefono1,
+        cliente_direccion: cliente.direccion
       }
     });
   } catch (error) {
