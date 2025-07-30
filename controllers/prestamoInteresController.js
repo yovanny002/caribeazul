@@ -174,7 +174,7 @@ exports.showPago = async (req, res) => {
 exports.pagoForm = exports.showPago;
 
 exports.registrarPago = async (req, res) => {
- console.log('BODY ANTES DE TODO:', req.body);
+  console.log('BODY ANTES DE TODO:', req.body);
 
   const {
     prestamo_id,
@@ -183,14 +183,14 @@ exports.registrarPago = async (req, res) => {
     notas,
     referencia
   } = req.body;
-  const registrado_por = req.session.usuario_id;
-      if (!prestamo_id || !monto || !registrado_por) {
-        console.warn('Datos faltantes:', { prestamo_id, monto, registrado_por });
-        req.flash('error', 'Datos incompletos para registrar el pago.');
-        return res.redirect(`/prestamos_interes/${prestamo_id || ''}`);
-      }
-
+  const registrado_por = req.session.usuario_id;  // <-- Aquí está el valor que da undefined
+  if (!prestamo_id || !monto || !registrado_por) {
+    req.flash('error', 'Datos incompletos para registrar el pago.');
+    return res.redirect(`/prestamos_interes/${prestamo_id}`);
+  }
   try {
+    console.log('REQ.BODY antes de destructurar:', req.body);
+    const { monto, prestamo_id } = req.body;
 
     const pagoId = await PrestamoInteres.registrarPago({
       prestamo_id,
@@ -208,6 +208,7 @@ exports.registrarPago = async (req, res) => {
     res.redirect(`/prestamos_interes/${prestamo_id}`);
   }
 };
+
 
 exports.imprimirContrato = async (req, res) => {
   try {
