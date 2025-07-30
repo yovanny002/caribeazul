@@ -22,8 +22,14 @@ const safeParseFloat = (value, defaultValue = 0) => {
 
 exports.index = async (req, res) => {
   try {
-    const prestamos = await PrestamoInteres.findAllWithClientes();
-    res.render('prestamos_interes/index', { prestamos, moment, messages: req.flash() });
+    const estado = req.query.estado || null;
+    const prestamos = await PrestamoInteres.findAllWithClientes(estado);
+    
+    res.render('prestamos_interes/index', {
+      prestamos,
+      moment,
+      estadoFiltro: estado // <-- ESTA ES LA LÍNEA QUE FALTABA
+    });
   } catch (error) {
     console.error('Error al obtener préstamos:', error);
     req.flash('error', 'Hubo un error al cargar los préstamos');
