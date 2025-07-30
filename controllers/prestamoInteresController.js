@@ -308,6 +308,7 @@ exports.recibo = async (req, res) => {
     pago.capital_pagado = safeParseFloat(pago.capital_pagado);
 
     res.render('prestamos_interes/recibo', {
+       layout: false,
         prestamo: prestamoForReceipt,
         pago
     });
