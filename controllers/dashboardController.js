@@ -2,56 +2,61 @@ const db = require('../models/db');
 const { Op, QueryTypes } = require('sequelize');
 
 const dashboardController = {
-getDashboardData: async () => {
-  try {
-    // Consultas SQL adaptadas para PostgreSQL
-    const [clientesRes] = await db.query(`
-      SELECT COUNT(*) AS total FROM clientes WHERE estado = 'activo'
-    `);
+  getDashboardData: async () => {
+    try {
+      // Consultas SQL adaptadas para PostgreSQL
+      const [clientesRes] = await db.query(`
+        SELECT COUNT(*) AS total FROM clientes WHERE estado = 'activo'
+      `);
 
-    const [prestamosRes] = await db.query(`
-      SELECT COUNT(*) AS total FROM solicitudes_prestamos WHERE estado = 'aprobado'
-    `);
+      const [prestamosRes] = await db.query(`
+        SELECT COUNT(*) AS total FROM solicitudes_prestamos WHERE estado = 'aprobado'
+      `);
 
-    const [cobradoresRes] = await db.query(`
-      SELECT COUNT(*) AS total FROM users WHERE rol = 'cobrador'
-    `);
+      const [cobradoresRes] = await db.query(`
+        SELECT COUNT(*) AS total FROM users WHERE rol = 'cobrador'
+      `);
 
-    const [pagosHoyRes] = await db.query(`
-      SELECT SUM(monto) AS total FROM pagos 
-      WHERE DATE(fecha) = CURRENT_DATE
-    `);
+      const [pagosHoyRes] = await db.query(`
+        SELECT SUM(monto) AS total FROM pagos 
+        WHERE DATE(fecha) = CURRENT_DATE
+      `);
 
-    const [capitalRes] = await db.query(`
-      SELECT SUM(monto_aprobado) AS total FROM solicitudes_prestamos 
-      WHERE estado = 'aprobado'
-    `);
+      const [capitalRes] = await db.query(`
+        SELECT SUM(monto_aprobado) AS total FROM solicitudes_prestamos 
+        WHERE estado = 'aprobado'
+      `);
 
-    const [interesRes] = await db.query(`
-      SELECT SUM(monto_aprobado * 0.43) AS total FROM solicitudes_prestamos 
-      WHERE estado = 'aprobado'
-    `);
+      const [interesRes] = await db.query(`
+        SELECT SUM(monto_aprobado * 0.43) AS total FROM solicitudes_prestamos 
+        WHERE estado = 'aprobado'
+      `);
 
-    // CONSULTA CORREGIDA PARA MOROSIDAD (incluye cálculo de mora del 5% después de 3 días)
-    const morosidadRes = await db.query(`
-      SELECT 
-        COALESCE(SUM(
-          CASE 
-            WHEN c.fecha_vencimiento < CURRENT_DATE - INTERVAL '3 days' THEN c.monto * 1.05
-            WHEN c.fecha_vencimiento < CURRENT_DATE THEN c.monto
-            ELSE 0
-          END
-        ), 0) AS total_moras_calculadas,
-        COALESCE(SUM(p.moras), 0) AS total_moras_registradas
-      FROM cuotas c
-      JOIN solicitudes_prestamos p ON c.prestamo_id = p.id
-      WHERE (c.pagado = 0 OR c.estado = 'pendiente')
-      AND c.fecha_vencimiento < CURRENT_DATE
-    `, { type: QueryTypes.SELECT });
+      // Nueva consulta para préstamos abiertos de la tabla prestamos_interes
+      const [prestamosAbiertosRes] = await db.query(`
+        SELECT COUNT(*) AS total FROM prestamos_interes WHERE estado = 'activo'
+      `);
 
-    const [recuperadoRes] = await db.query(`
-      SELECT SUM(monto) AS total FROM pagos
-    `);
+      // CONSULTA CORREGIDA PARA MOROSIDAD (incluye cálculo de mora del 5% después de 3 días)
+      const morosidadRes = await db.query(`
+        SELECT 
+          COALESCE(SUM(
+            CASE 
+              WHEN c.fecha_vencimiento < CURRENT_DATE - INTERVAL '3 days' THEN c.monto * 1.05
+              WHEN c.fecha_vencimiento < CURRENT_DATE THEN c.monto
+              ELSE 0
+            END
+          ), 0) AS total_moras_calculadas,
+          COALESCE(SUM(p.moras), 0) AS total_moras_registradas
+        FROM cuotas c
+        JOIN solicitudes_prestamos p ON c.prestamo_id = p.id
+        WHERE (c.pagado = 0 OR c.estado = 'pendiente')
+        AND c.fecha_vencimiento < CURRENT_DATE
+      `, { type: QueryTypes.SELECT });
+
+      const [recuperadoRes] = await db.query(`
+        SELECT SUM(monto) AS total FROM pagos
+      `);
 
       // CONSULTA MEJORADA PARA PRÉSTAMOS RECIENTES (incluye más datos relevantes)
       const prestamosRecientes = await db.query(`
@@ -99,27 +104,27 @@ getDashboardData: async () => {
       `, { type: QueryTypes.SELECT });
 
       // Cálculo de morosidad total (calculada + registrada)
-     // Cálculo de morosidad total (calculada + registrada)
-    const morosidadTotal = parseFloat(morosidadRes.total_moras_calculadas || 0) + 
-                         parseFloat(morosidadRes.total_moras_registradas || 0);
+      const morosidadTotal = parseFloat(morosidadRes[0].total_moras_calculadas || 0) + 
+                             parseFloat(morosidadRes[0].total_moras_registradas || 0);
 
-    return {
-      total_clientes: clientesRes[0].total,
-      total_prestamos: prestamosRes[0].total,
-      total_cobradores: cobradoresRes[0].total,
-      pagos_hoy: pagosHoyRes[0].total || 0,
-      capital_prestado: capitalRes[0].total || 0,
-      intereses_generados: interesRes[0].total || 0,
-      morosidad: morosidadTotal,
-      recuperado: recuperadoRes[0].total || 0,
-      prestamosRecientes,
-      pagosPendientes
-    };
-  } catch (error) {
-    console.error('❌ Error obteniendo datos del dashboard:', error);
-    throw error;
-  }
-},
+      return {
+        total_clientes: clientesRes[0].total,
+        total_prestamos: prestamosRes[0].total,
+        prestamos_abiertos: prestamosAbiertosRes[0].total, // <-- Nuevo campo
+        total_cobradores: cobradoresRes[0].total,
+        pagos_hoy: pagosHoyRes[0].total || 0,
+        capital_prestado: capitalRes[0].total || 0,
+        intereses_generados: interesRes[0].total || 0,
+        morosidad: morosidadTotal,
+        recuperado: recuperadoRes[0].total || 0,
+        prestamosRecientes,
+        pagosPendientes
+      };
+    } catch (error) {
+      console.error('❌ Error obteniendo datos del dashboard:', error);
+      throw error;
+    }
+  },
 
   index: async (req, res) => {
     try {
