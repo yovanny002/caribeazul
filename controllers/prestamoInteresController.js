@@ -57,7 +57,7 @@ exports.createForm = async (req, res) => {
   } catch (error) {
     console.error('Error al cargar formulario de préstamo:', error);
     req.flash('error', 'Error al cargar formulario de préstamo');
-    res.redirect('/prestamos_intereses');
+    res.redirect('/prestamos_interes');
   }
 };
 exports.create = async (req, res) => {
