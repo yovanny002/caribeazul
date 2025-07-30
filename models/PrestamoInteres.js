@@ -275,6 +275,11 @@ PrestamoInteres.create = async (data) => {
 /**
  * Registrar un pago para un préstamo
  */
+// ... (código anterior del modelo) ...
+
+/**
+ * Registrar un pago para un préstamo
+ */
 PrestamoInteres.registrarPago = async (pagoData) => {
   const requiredFields = ['prestamo_id', 'monto', 'registrado_por'];
   const missingFields = requiredFields.filter(field => !pagoData[field]);
@@ -283,22 +288,16 @@ PrestamoInteres.registrarPago = async (pagoData) => {
   }
   try {
     // 1. Obtener el préstamo actual
-    console.log('--- Depurando registrarPago ---');
-    console.log('1. Buscando préstamo con ID:', pagoData.prestamo_id);
     const prestamo = await PrestamoInteres.findById(pagoData.prestamo_id);
     if (!prestamo) {
-      console.error('Error: Préstamo no encontrado.');
       throw new Error('Préstamo no encontrado');
     }
-    console.log('   - Saldo Capital ANTES del pago:', prestamo.saldo_capital);
-    console.log('   - Interés Pendiente ANTES del pago:', prestamo.interes_pendiente_acumulado);
-
+    
     // 2. Calcular el interés generado y el total pendiente
     const interesGeneradoDesdeUltimaActualizacion = await PrestamoInteres.calculateAccruedInterest(prestamo);
     let totalInteresPendiente = prestamo.interes_pendiente_acumulado + interesGeneradoDesdeUltimaActualizacion;
     totalInteresPendiente = Math.max(0, totalInteresPendiente);
-    console.log('2. Interés acumulado hasta ahora:', totalInteresPendiente);
-
+    
     // 3. Distribuir el pago
     const montoPago = safeParseFloat(pagoData.monto);
     let interesPagado = 0;
@@ -314,13 +313,10 @@ PrestamoInteres.registrarPago = async (pagoData) => {
       montoRestanteParaPagar -= capitalPagado;
     }
     capitalPagado = Math.max(0, capitalPagado);
-    console.log('3. Distribución final del pago de', montoPago);
-    console.log('   - Interés Pagado:', interesPagado);
-    console.log('   - Capital Pagado:', capitalPagado);
-
-
+    
     // 4. Registrar el pago en la tabla pagos_interes
-    console.log('4. Insertando pago en la base de datos...');
+    console.log('4. Intentando insertar pago en la DB...');
+    
     const [result] = await db.query(`
       INSERT INTO pagos_interes (
         prestamo_id,
@@ -334,34 +330,28 @@ PrestamoInteres.registrarPago = async (pagoData) => {
         fecha,
         created_at
       ) VALUES (
-        :prestamo_id,
-        :monto,
-        :interes_pagado,
-        :capital_pagado,
-        :metodo,
-        :notas,
-        :referencia,
-        :registrado_por,
-        NOW(),
-        NOW()
+        $1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()
       ) RETURNING id
     `, {
-      replacements: {
-        prestamo_id: pagoData.prestamo_id,
-        monto: montoPago,
-        interes_pagado: interesPagado,
-        capital_pagado: capitalPagado,
-        metodo: pagoData.metodo || 'efectivo',
-        notas: pagoData.notas || null,
-        referencia: pagoData.referencia || null,
-        registrado_por: pagoData.registrado_por
-      },
+      bind: [
+        pagoData.prestamo_id,
+        montoPago,
+        interesPagado,
+        capitalPagado,
+        pagoData.metodo || 'efectivo',
+        pagoData.notas || null,
+        pagoData.referencia || null,
+        pagoData.registrado_por
+      ],
       type: QueryTypes.INSERT
     });
-    const pagoId = result.id;
+    
+    // Depuración: ver el resultado completo de la consulta INSERT
+    console.log('   - Resultado completo de la consulta INSERT:', result);
+    
+    const pagoId = result[0].id; // La sintaxis para obtener el ID en Postgre es result[0][0].id o similar
     console.log('   - Pago insertado con ID:', pagoId);
-
-
+    
     // 5. Actualizar saldo del préstamo
     let nuevoEstado = prestamo.estado;
     const nuevoSaldoCapital = prestamo.saldo_capital - capitalPagado;
@@ -370,34 +360,31 @@ PrestamoInteres.registrarPago = async (pagoData) => {
     } else {
       nuevoEstado = 'activo';
     }
-    console.log('5. Actualizando préstamo en la base de datos...');
-    console.log('   - Nuevo Saldo Capital:', nuevoSaldoCapital);
-    console.log('   - Nuevo Interés Pendiente Acumulado:', totalInteresPendiente);
-    console.log('   - Nuevo Estado:', nuevoEstado);
-
+    
+    console.log('5. Intentando actualizar el préstamo en la DB...');
     const [resultUpdate, affectedRows] = await db.query(`
       UPDATE prestamos_interes 
       SET 
-        saldo_capital = :nuevoSaldoCapital,
-        interes_pendiente_acumulado = :totalInteresPendiente, 
-        estado = :estado,
+        saldo_capital = $1,
+        interes_pendiente_acumulado = $2, 
+        estado = $3,
         updated_at = NOW()
-      WHERE id = :prestamo_id
+      WHERE id = $4
     `, {
-      replacements: {
-        nuevoSaldoCapital: nuevoSaldoCapital,
-        totalInteresPendiente: totalInteresPendiente,
-        estado: nuevoEstado,
-        prestamo_id: pagoData.prestamo_id
-      },
+      bind: [
+        nuevoSaldoCapital,
+        totalInteresPendiente,
+        nuevoEstado,
+        pagoData.prestamo_id
+      ],
       type: QueryTypes.UPDATE
     });
+    
     console.log('   - Préstamo actualizado. Filas afectadas:', affectedRows);
-    console.log('--- Fin de depuración ---');
-
+    
     return pagoId;
   } catch (error) {
-    console.error('Error al registrar pago:', error);
+    console.error('❌ Error al registrar pago:', error);
     throw error;
   }
 };
