@@ -55,30 +55,25 @@
     </style>
 </head>
 <body>
-    <div class="no-print text-center my-3">
-        <button class="btn btn-primary" onclick="window.print()">
-            <i class="fas fa-print me-2"></i>Imprimir Recibo
-        </button>
-    </div>
+  
 
     <div class="text-center header">
-        <h1>FINANCIERA CARIBE AZUL</h1>
-        <p>RNC: 123456789</p>
-        <p>Calle Principal #123, Ciudad, País</p>
-        <p>Tel: 809-XXX-XXXX</p>
+        <h3>FINANCIERA CARIBE AZUL</h3>
+        <p>Calle H #15 Andres Boca Chica</p>
+        <p>Tel: (829) 651-4261</p>
     </div>
 
     <div class="separator"></div>
 
     <div class="text-center">
-        <h2>RECIBO DE PAGO</h2>
-        <p><strong>Recibo #:</strong> <%= pago.id %></p>
+        <h4>RECIBO DE PAGO</h4>
+        <p><strong>Recibo #:</stong> <%= pago.id %></p>
         <p><strong>Fecha:</strong> <%= pago.fecha_display %></p>
     </div>
 
     <div class="separator"></div>
 
-    <h3>DATOS DEL PRÉSTAMO</h3>
+    <h4>DATOS DEL PRÉSTAMO</h4>
     <div class="info-group">
         <div class="info-item"><span>Préstamo ID:</span><span><%= prestamo.id %></span></div>
         <div class="info-item"><span>Cliente:</span><span><%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></span></div>
@@ -88,7 +83,7 @@
 
     <div class="separator"></div>
 
-    <h3>DETALLE DEL PAGO</h3>
+    <h4>DETALLE DEL PAGO</h4>
     <div class="info-group">
         <div class="info-item"><span>Monto Pagado:</span><span>RD$ <%= pago.monto.toFixed(2) %></span></div>
         <div class="info-item"><span>Interés Pagado:</span><span>RD$ <%= pago.interes_pagado.toFixed(2) %></span></div>
@@ -102,7 +97,7 @@
     <div class="separator"></div>
 
     <div class="info-group">
-        <div class="info-item total-line"><span>NUEVO SALDO CAPITAL:</span><span>RD$ <%= prestamo.saldo_capital.toFixed(2) %></span></div>
+        <div class="info-item total-line"><span>SALDO CAPITAL:</span><span>RD$ <%= prestamo.saldo_capital.toFixed(2) %></span></div>
         <% if (prestamo.intereses_acumulados > 0) { %>
             <div class="info-item"><span>Interés Pendiente:</span><span>RD$ <%= prestamo.intereses_acumulados.toFixed(2) %></span></div>
         <% } %>
@@ -115,8 +110,12 @@
 
     <div class="text-center footer">
         <p>Gracias por su preferencia.</p>
-        <p>Sistema de Préstamos v1.0</p>
+        <p>Financiera Caribe azul </p>
     </div>
-
+  <div class="no-print text-center my-3">
+        <button class="btn btn-primary" onclick="window.print()">
+            <i class="fas fa-print me-2"></i>Imprimir Recibo
+        </button>
+    </div>
 </body>
 </html>
