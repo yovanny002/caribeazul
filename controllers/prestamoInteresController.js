@@ -189,6 +189,9 @@ exports.registrarPago = async (req, res) => {
     return res.redirect(`/prestamos_interes/${prestamo_id}`);
   }
   try {
+    console.log('REQ.BODY antes de destructurar:', req.body);
+const { monto, prestamo_id } = req.body;
+
     const pagoId = await PrestamoInteres.registrarPago({
       prestamo_id,
       monto: safeParseFloat(monto),
