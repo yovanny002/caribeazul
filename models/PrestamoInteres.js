@@ -282,13 +282,24 @@ PrestamoInteres.registrarPago = async (pagoData) => {
     throw new Error(`Faltan campos requeridos: ${missingFields.join(', ')}`);
   }
   try {
+    // 1. Obtener el préstamo actual
+    console.log('--- Depurando registrarPago ---');
+    console.log('1. Buscando préstamo con ID:', pagoData.prestamo_id);
     const prestamo = await PrestamoInteres.findById(pagoData.prestamo_id);
     if (!prestamo) {
+      console.error('Error: Préstamo no encontrado.');
       throw new Error('Préstamo no encontrado');
     }
+    console.log('   - Saldo Capital ANTES del pago:', prestamo.saldo_capital);
+    console.log('   - Interés Pendiente ANTES del pago:', prestamo.interes_pendiente_acumulado);
+
+    // 2. Calcular el interés generado y el total pendiente
     const interesGeneradoDesdeUltimaActualizacion = await PrestamoInteres.calculateAccruedInterest(prestamo);
     let totalInteresPendiente = prestamo.interes_pendiente_acumulado + interesGeneradoDesdeUltimaActualizacion;
     totalInteresPendiente = Math.max(0, totalInteresPendiente);
+    console.log('2. Interés acumulado hasta ahora:', totalInteresPendiente);
+
+    // 3. Distribuir el pago
     const montoPago = safeParseFloat(pagoData.monto);
     let interesPagado = 0;
     let capitalPagado = 0;
@@ -302,10 +313,14 @@ PrestamoInteres.registrarPago = async (pagoData) => {
       capitalPagado = Math.min(montoRestanteParaPagar, prestamo.saldo_capital);
       montoRestanteParaPagar -= capitalPagado;
     }
-    if (capitalPagado > prestamo.saldo_capital) {
-      capitalPagado = prestamo.saldo_capital;
-    }
     capitalPagado = Math.max(0, capitalPagado);
+    console.log('3. Distribución final del pago de', montoPago);
+    console.log('   - Interés Pagado:', interesPagado);
+    console.log('   - Capital Pagado:', capitalPagado);
+
+
+    // 4. Registrar el pago en la tabla pagos_interes
+    console.log('4. Insertando pago en la base de datos...');
     const [result] = await db.query(`
       INSERT INTO pagos_interes (
         prestamo_id,
@@ -343,6 +358,11 @@ PrestamoInteres.registrarPago = async (pagoData) => {
       },
       type: QueryTypes.INSERT
     });
+    const pagoId = result.id;
+    console.log('   - Pago insertado con ID:', pagoId);
+
+
+    // 5. Actualizar saldo del préstamo
     let nuevoEstado = prestamo.estado;
     const nuevoSaldoCapital = prestamo.saldo_capital - capitalPagado;
     if (nuevoSaldoCapital <= 0 && totalInteresPendiente <= 0) {
@@ -350,7 +370,12 @@ PrestamoInteres.registrarPago = async (pagoData) => {
     } else {
       nuevoEstado = 'activo';
     }
-    await db.query(`
+    console.log('5. Actualizando préstamo en la base de datos...');
+    console.log('   - Nuevo Saldo Capital:', nuevoSaldoCapital);
+    console.log('   - Nuevo Interés Pendiente Acumulado:', totalInteresPendiente);
+    console.log('   - Nuevo Estado:', nuevoEstado);
+
+    const [resultUpdate, affectedRows] = await db.query(`
       UPDATE prestamos_interes 
       SET 
         saldo_capital = :nuevoSaldoCapital,
@@ -367,11 +392,13 @@ PrestamoInteres.registrarPago = async (pagoData) => {
       },
       type: QueryTypes.UPDATE
     });
-    return result.id;
+    console.log('   - Préstamo actualizado. Filas afectadas:', affectedRows);
+    console.log('--- Fin de depuración ---');
+
+    return pagoId;
   } catch (error) {
     console.error('Error al registrar pago:', error);
     throw error;
   }
 };
-
 module.exports = PrestamoInteres;
