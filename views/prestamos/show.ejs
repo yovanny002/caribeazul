@@ -1,869 +1,844 @@
 <%- include('../partials/header', { title: `Préstamo #${prestamo.id} - ${prestamo.cliente_nombre}` }) %>
-<style>
-  /* Estilos para que los SweetAlerts estén siempre visibles */
-  .fixed-top { z-index: 1050; }
-</style>
-<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
-
 <%
-  // Función helper para formatear montos
-  function formatMoney(value) {
-    const num = parseFloat(value) || 0;
-    return num.toFixed(2);
-  }
+  // Función helper para formatear montos
+  function formatMoney(value) {
+    const num = parseFloat(value) || 0;
+    return num.toFixed(2);
+  }
 %>
 <div class="container-fluid px-4 mt-4">
-    <div class="card border-0 shadow-sm">
-        <div class="card-header bg-primary text-white py-3">
-      <div class="d-flex justify-content-between align-items-center flex-wrap">
-        <h2 class="mb-0">
-          <i class="fas fa-hand-holding-usd me-2"></i>Préstamo #<%= prestamo.id %>
-          <span class="badge bg-light text-dark ms-2"><%= prestamo.estado.toUpperCase() %></span>
-        </h2>
+  <!-- Tarjeta Principal -->
+  <div class="card border-0 shadow-sm">
+    <!-- Encabezado con acciones -->
+    <div class="card-header bg-primary text-white py-3">
+      <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <h2 class="mb-0">
+          <i class="fas fa-hand-holding-usd me-2"></i>Préstamo #<%= prestamo.id %>
+          <span class="badge bg-light text-dark ms-2"><%= prestamo.estado.toUpperCase() %></span>
+        </h2>
 
-        <div class="d-flex mt-2 mt-md-0">
-                    <a href="/prestamos/<%= prestamo.id %>/imprimir" class="btn btn-success btn-sm me-2">
-            <i class="fas fa-file me-1"></i> Imprimir Contrato
-          </a>
+        <div class="d-flex mt-2 mt-md-0">
+          <!-- Botón de Pago Rápido -->
+          <!-- <button class="btn btn-success btn-sm me-2" data-bs-toggle="modal" data-bs-target="#modalPago">
+            <i class="fas fa-money-bill-wave me-1"></i> Nuevo Pago
+          </button> -->
 
-          <a href="/prestamos/<%= prestamo.id %>/edit" class="btn btn-light btn-sm me-2">
-            <i class="fas fa-edit me-1"></i> Editar
-          </a>
+          <!-- Dropdown de Impresión -->
+          <!-- <div class="dropdown me-2">
+            <button class="btn btn-info btn-sm dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fas fa-print me-1"></i> Imprimir
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+              <li><a class="dropdown-item" href="#" onclick="imprimirTicket('completo')"><i class="fas fa-receipt me-2"></i>Recibo Completo</a></li>
+              <li><a class="dropdown-item" href="#" onclick="imprimirRecibo('simple')"><i class="fas fa-file-invoice me-2"></i>Recibo Simple</a></li>
+              <li><a class="dropdown-item" href="#" onclick="imprimirRecibo('contrato')"><i class="fas fa-file-contract me-2"></i>Contrato</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="#" onclick="imprimirDirecto()"><i class="fas fa-print me-2"></i>Imprimir Directo</a></li>
+            </ul>
+          </div> -->
 
-          <a href="/prestamos" class="btn btn-light btn-sm">
-            <i class="fas fa-arrow-left me-1"></i> Volver
-          </a>
-        </div>
-      </div>
-    </div>
-        <div class="card-body">
-            <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap">
-        <div class="me-3 mb-2 mb-md-0">
-          <strong>Cliente:</strong> <%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %>
-          <span class="badge bg-dark ms-2"><%= prestamo.cliente_cedula %></span>
-        </div>
-        <div class="text-nowrap">
-          <td><strong>Total:</strong> RD$ <%= formatMoney(prestamo.monto_total) %></td>
-          <span class="mx-2">|</span>
-          <td><strong>Saldo:</strong> RD$ <%= formatMoney(prestamo.saldo_actual) %></td>
-        </div>
-      </div>
-            <ul class="nav nav-tabs mb-4" id="prestamoTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-          <button class="nav-link active" id="resumen-tab" data-bs-toggle="tab" data-bs-target="#resumen" type="button">
-            <i class="fas fa-info-circle me-1"></i> Resumen
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="cuotas-tab" data-bs-toggle="tab" data-bs-target="#cuotas" type="button">
-            <i class="fas fa-calendar-alt me-1"></i> Plan de Pagos
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="pagos-tab" data-bs-toggle="tab" data-bs-target="#pagos" type="button">
-            <i class="fas fa-history me-1"></i> Historial
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="documentos-tab" data-bs-toggle="tab" data-bs-target="#documentos" type="button">
-            <i class="fas fa-file-alt me-1"></i> Documentos
-          </button>
-        </li>
-      </ul>
-            <div class="tab-content" id="prestamoTabsContent">
-                <div class="tab-pane fade show active" id="resumen" role="tabpanel">
-          <div class="row">
-                        <div class="col-md-6 mb-4">
-              <div class="card h-100">
-                <div class="card-header bg-light">
-                  <h5 class="mb-0"><i class="fas fa-file-contract me-2"></i>Detalles del Préstamo</h5>
-                </div>
-                <div class="card-body">
-                  <div class="table-responsive">
-                    <table class="table table-sm table-borderless">
-                      <tbody>
-                    <tr>
-                    <th>Ruta Asignada:</th>
-                    <td>
-                      <%= prestamo.ruta_nombre ? `${prestamo.ruta_zona} - ${prestamo.ruta_nombre}` : 'No asignada' %>
-                    </td>
-                  </tr>
-                        <tr>
-                          <th width="40%">Fecha de Solicitud:</th>
-                          <td><%= prestamo.created_at ? new Date(prestamo.created_at).toLocaleDateString('es-DO') : 'N/A' %></td>
-                        </tr>
-                        <tr>
-                          <th>Monto Solicitado:</th>
-                          <td>RD$ <%= formatMoney(prestamo.monto_solicitado) %></td>
-                        </tr>
-                        <tr>
-                          <th>Monto Aprobado:</th>
-                          <td class="fw-bold">RD$ <%= formatMoney(prestamo.monto_aprobado) %></td>
-                        </tr>
-                       <tr>
-                          <th class="d-flex align-items-center">
-                            Mora Acumulada:
-                            <% if (prestamo.mora_total > 0) { %>
-                                                            <button id="btnEliminarMora" class="btn btn-sm btn-danger ms-2" title="Eliminar Mora">
-                                <i class="fas fa-times-circle"></i>
-                              </button>
-                            <% } %>
-                          </th>
-                          <td class="text-danger fw-bold">RD$ <%= formatMoney(prestamo.mora_total) %></td>
-                        </tr>
-                        <tr>
-                          <th>Forma de Pago:</th>
-                          <td>
-                            <span class="badge bg-primary">
-                              <%= prestamo.forma_pago === 'diario' ? 'Diario' :
-                                prestamo.forma_pago === 'semanal' ? 'Semanal' :
-                                prestamo.forma_pago === 'quincenal' ? 'Quincenal' :
-                                prestamo.forma_pago === 'mensual' ? 'Mensual' : 'Personalizado' %>
-                            </span>
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Total a Pagar:</th>
-                          <td class="fw-bold text-success">RD$ <%= formatMoney(prestamo.monto_total) %></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-                        <div class="col-md-6 mb-4">
-              <div class="card h-100">
-                <div class="card-header bg-light">
-                  <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Estado Actual</h5>
-                </div>
-                <div class="card-body">
-                  <div class="table-responsive">
-                    <table class="table table-sm table-borderless">
-                      <tbody>
-                        <tr>
-                          <th width="40%">Total Pagado:</th>
-                          <td class="text-success fw-bold">RD$ <%= formatMoney(prestamo.total_pagado) %></td>
-                        </tr>
-                        <tr>
-                          <th>Saldo Pendiente:</th>
-                          <td class="text-danger fw-bold">RD$ <%= formatMoney(prestamo.saldo_actual) %></td>
-                        </tr>
-                        <tr>
-                          <th>Próxima Cuota:</th>
-                          <td>
-                            <% const proximaCuota = cuotas.find(c => c.estado === 'pendiente'); %>
-                            <% if (proximaCuota) { %>
-                              <%- moment(proximaCuota.fecha_vencimiento).format('DD/MM/YYYY') %> -
-                              RD$ <%= formatMoney(proximaCuota.monto) %>
-                            <% } else { %>
-                              <span class="text-muted">No hay cuotas pendientes</span>
-                            <% } %>
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Cuotas Pagadas:</th>
-                          <td>
-                            <%
-                              const totalCuotas = cuotas.length;
-                              const cuotasPagadas = cuotas.filter(c => c.estado === 'pagada').length;
-                            %>
-                            <div class="progress" style="height: 20px;">
-                              <div class="progress-bar bg-success" role="progressbar"
-                                   style="width: <%= totalCuotas > 0 ? (cuotasPagadas / totalCuotas) * 100 : 0 %>%"
-                                   aria-valuenow="<%= cuotasPagadas %>"
-                                   aria-valuemin="0"
-                                   aria-valuemax="<%= totalCuotas %>">
-                                <%= cuotasPagadas %>/<%= totalCuotas %>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>Último Pago:</th>
-                          <td>
-                            <% if (historialPagos.length > 0) { %>
-                              <%- moment(historialPagos[0].fecha).format('DD/MM/YYYY') %> -
-                              RD$ <%= formatMoney(historialPagos[0].monto) %>
-                            <% } else { %>
-                              <span class="text-muted">Sin pagos registrados</span>
-                            <% } %>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-               <div class="tab-pane fade" id="cuotas" role="tabpanel">
-  <div class="card">
-    <div class="card-header bg-light d-flex justify-content-between align-items-center">
-      <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Plan de Pagos</h5>
-      <div>
-        <%
-          const cp = cuotas.filter(c => c.estado === 'pagada').length;
-          const cup = cuotas.length - cp;
-        %>
-        <span class="badge bg-success me-2">Pagadas: <%= cp %></span>
-        <span class="badge bg-warning text-dark">Pendientes: <%= cup %></span>
-      </div>
-    </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-hover mb-0">
-          <thead class="table-light">
-            <tr>
-              <th>#</th>
-              <th>Monto</th>
-              <th>Vencimiento</th>
-              <th>Mora</th>
-              <th>Estado</th>
-              <th>Pago</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% if (cuotas.length > 0) { %>
-              <% cuotas.forEach(cuota => { %>
-                <% const esVencida = new Date(cuota.fecha_vencimiento) < new Date() && cuota.estado !== 'pagada'; %>
-                <tr class="<%= esVencida ? 'table-danger' : '' %>">
-                  <td><%= cuota.numero_cuota %></td>
-                  <td>RD$ <%= formatMoney(cuota.monto) %></td>
-                  <td>
-                    <%- moment(cuota.fecha_vencimiento).format('DD/MM/YYYY') %>
-                    <% if (esVencida) { %>
-                      <span class="badge bg-danger ms-2">Vencida</span>
-                    <% } %>
-                  </td>
-                  <td>
-                    RD$ <%= formatMoney(cuota.monto) %>
-                    <% if (cuota.mora && cuota.mora > 0) { %>
-                      <br><small class="text-danger">+ RD$ <%= formatMoney(cuota.mora) %> mora</small>
-                    <% } %>
-                  </td>
-                  <td>
-                    <span class="badge <%= cuota.estado === 'pagada' ? 'bg-success' :
-                                              cuota.estado === 'parcial' ? 'bg-info' : 'bg-secondary' %>">
-                      <%= cuota.estado %>
-                    </span>
-                  </td>
-                  <td>
-                    <%- cuota.fecha_pago ? moment(cuota.fecha_pago).format('DD/MM/YYYY') : '—' %>
-                  </td>
-                  <td>
-                    <% if (cuota.estado !== 'pagada') { %>
-                      <button class="btn btn-sm btn-outline-primary btn-pagar-cuota"
-                        data-cuota-id="<%= cuota.id %>"
-                        data-cuota-numero="<%= cuota.numero_cuota %>"
-                        data-monto="<%= cuota.total_a_pagar || cuota.monto %>">
-                        <i class="fas fa-money-bill-wave me-1"></i> Pagar
-                      </button>
-                    <% } else { %>
-                      <button class="btn btn-sm btn-outline-secondary btn-ver-recibo"
-                        data-pago-id="<%= historialPagos.find(p => p.cuota_id === cuota.id)?.id || '' %>">
-                        <i class="fas fa-receipt me-1"></i> Completado
-                      </button>
-                    <% } %>
-                  </td>
-                </tr>
-              <% }); %>
-            <% } else { %>
-              <tr>
-                <td colspan="7" class="text-center py-4 text-muted">
-                  No hay cuotas registradas para este préstamo
-                </td>
-              </tr>
-            <% } %>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+          <!-- Datos  -->
+
+          <!-- Botón de Edición -->
+       <a href="/prestamos/<%= prestamo.id %>/imprimir" class="btn btn-success btn-sm me-2">
+            <i class="fas fa-file me-1"></i> Imprimir Contrato
+          </a>
+
+          <a href="/prestamos/<%= prestamo.id %>/edit" class="btn btn-light btn-sm me-2">
+            <i class="fas fa-edit me-1"></i> Editar
+          </a>
+
+          <!-- Botón de Regreso -->
+          <a href="/prestamos" class="btn btn-light btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Volver
+          </a>
+        </div>
+      </div>
+    </div>
+    <!-- Cuerpo de la Tarjeta -->
+    <div class="card-body">
+      <!-- Resumen Rápido -->
+      <div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap">
+        <div class="me-3 mb-2 mb-md-0">
+          <strong>Cliente:</strong> <%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %>
+          <span class="badge bg-dark ms-2"><%= prestamo.cliente_cedula %></span>
+        </div>
+        <div class="text-nowrap">
+          <td><strong>Total:</strong> RD$ <%= formatMoney(prestamo.monto_total) %></td>
+          <span class="mx-2">|</span>
+          <td><strong>Saldo:</strong> RD$ <%= formatMoney(prestamo.saldo_actual) %></td>
+        </div>
+      </div>
+      <!-- Sección de Información en Tabs -->
+      <ul class="nav nav-tabs mb-4" id="prestamoTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="resumen-tab" data-bs-toggle="tab" data-bs-target="#resumen" type="button">
+            <i class="fas fa-info-circle me-1"></i> Resumen
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="cuotas-tab" data-bs-toggle="tab" data-bs-target="#cuotas" type="button">
+            <i class="fas fa-calendar-alt me-1"></i> Plan de Pagos
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="pagos-tab" data-bs-toggle="tab" data-bs-target="#pagos" type="button">
+            <i class="fas fa-history me-1"></i> Historial
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="documentos-tab" data-bs-toggle="tab" data-bs-target="#documentos" type="button">
+            <i class="fas fa-file-alt me-1"></i> Documentos
+          </button>
+        </li>
+      </ul>
+      <!-- Contenido de los Tabs -->
+      <div class="tab-content" id="prestamoTabsContent">
+        <!-- Tab de Resumen -->
+        <div class="tab-pane fade show active" id="resumen" role="tabpanel">
+          <div class="row">
+            <!-- Detalles del Préstamo -->
+            <div class="col-md-6 mb-4">
+              <div class="card h-100">
+                <div class="card-header bg-light">
+                  <h5 class="mb-0"><i class="fas fa-file-contract me-2"></i>Detalles del Préstamo</h5>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-sm table-borderless">
+                      <tbody>
+                    <tr>
+                    <th>Ruta Asignada:</th>
+                    <td>
+                      <%= prestamo.ruta_nombre ? `${prestamo.ruta_zona} - ${prestamo.ruta_nombre}` : 'No asignada' %>
+                    </td>
+                  </tr>
+
+
+                        <tr>
+                          <th width="40%">Fecha de Solicitud:</th>
+                          <td><%= prestamo.created_at ? new Date(prestamo.created_at).toLocaleDateString('es-DO') : 'N/A' %></td>
+                        </tr>
+                        <tr>
+                          <th>Monto Solicitado:</th>
+                          <td>RD$ <%= formatMoney(prestamo.monto_solicitado) %></td>
+                        </tr>
+                        <tr>
+                          <th>Monto Aprobado:</th>
+                          <td class="fw-bold">RD$ <%= formatMoney(prestamo.monto_aprobado) %></td>
+                        </tr>
+                       <tr>
+                        <th>Mora Acumulada:</th>
+                        <td class="text-danger fw-bold">RD$ <%= formatMoney(prestamo.mora_total) %></td>
+                      </tr>
+                      <tr>
+                          <th>Forma de Pago:</th>
+                          <td>
+                            <span class="badge bg-primary">
+                              <%= prestamo.forma_pago === 'diario' ? 'Diario' :
+                                prestamo.forma_pago === 'semanal' ? 'Semanal' :
+                                prestamo.forma_pago === 'quincenal' ? 'Quincenal' :
+                                prestamo.forma_pago === 'mensual' ? 'Mensual' : 'Personalizado' %>
+                            </span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Total a Pagar:</th>
+                          <td class="fw-bold text-success">RD$ <%= formatMoney(prestamo.monto_total) %></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Estado Actual -->
+            <div class="col-md-6 mb-4">
+              <div class="card h-100">
+                <div class="card-header bg-light">
+                  <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Estado Actual</h5>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-sm table-borderless">
+                      <tbody>
+                        <tr>
+                          <th width="40%">Total Pagado:</th>
+                          <td class="text-success fw-bold">RD$ <%= formatMoney(prestamo.total_pagado) %></td>
+                        </tr>
+                        <tr>
+                          <th>Saldo Pendiente:</th>
+                          <td class="text-danger fw-bold">RD$ <%= formatMoney(prestamo.saldo_actual) %></td>
+                        </tr>
+                        <tr>
+                          <th>Próxima Cuota:</th>
+                          <td>
+                            <% const proximaCuota = cuotas.find(c => c.estado === 'pendiente'); %>
+                            <% if (proximaCuota) { %>
+                              <%- moment(proximaCuota.fecha_vencimiento).format('DD/MM/YYYY') %> -
+                              RD$ <%= formatMoney(proximaCuota.monto) %>
+                            <% } else { %>
+                              <span class="text-muted">No hay cuotas pendientes</span>
+                            <% } %>
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Cuotas Pagadas:</th>
+                          <td>
+                            <%
+                              const totalCuotas = cuotas.length;
+                              const cuotasPagadas = cuotas.filter(c => c.estado === 'pagada').length;
+                            %>
+                            <div class="progress" style="height: 20px;">
+                              <div class="progress-bar bg-success" role="progressbar"
+                                   style="width: <%= totalCuotas > 0 ? (cuotasPagadas / totalCuotas) * 100 : 0 %>%"
+                                   aria-valuenow="<%= cuotasPagadas %>"
+                                   aria-valuemin="0"
+                                   aria-valuemax="<%= totalCuotas %>">
+                                <%= cuotasPagadas %>/<%= totalCuotas %>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>Último Pago:</th>
+                          <td>
+                            <% if (historialPagos.length > 0) { %>
+                              <%- moment(historialPagos[0].fecha).format('DD/MM/YYYY') %> -
+                              RD$ <%= formatMoney(historialPagos[0].monto) %>
+                            <% } else { %>
+                              <span class="text-muted">Sin pagos registrados</span>
+                            <% } %>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Tab de Cuotas -->
+       <div class="tab-pane fade" id="cuotas" role="tabpanel">
+  <div class="card">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+      <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Plan de Pagos</h5>
+      <div>
+        <%
+          const cp = cuotas.filter(c => c.estado === 'pagada').length;
+          const cup = cuotas.length - cp;
+        %>
+        <span class="badge bg-success me-2">Pagadas: <%= cp %></span>
+        <span class="badge bg-warning text-dark">Pendientes: <%= cup %></span>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Monto</th>
+              <th>Vencimiento</th>
+              <th>Mora</th>
+              <th>Estado</th>
+              <th>Pago</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (cuotas.length > 0) { %>
+              <% cuotas.forEach(cuota => { %>
+                <% const esVencida = new Date(cuota.fecha_vencimiento) < new Date() && cuota.estado !== 'pagada'; %>
+                <tr class="<%= esVencida ? 'table-danger' : '' %>">
+                  <td><%= cuota.numero_cuota %></td>
+                  <td>RD$ <%= formatMoney(cuota.monto) %></td>
+                  <td>
+                    <%- moment(cuota.fecha_vencimiento).format('DD/MM/YYYY') %>
+                    <% if (esVencida) { %>
+                      <span class="badge bg-danger ms-2">Vencida</span>
+                    <% } %>
+                  </td>
+                  <td>
+                    RD$ <%= formatMoney(cuota.monto) %>
+                    <% if (cuota.mora && cuota.mora > 0) { %>
+                      <br><small class="text-danger">+ RD$ <%= formatMoney(cuota.mora) %> mora</small>
+                    <% } %>
+                  </td>
+                  <td>
+                    <span class="badge <%= cuota.estado === 'pagada' ? 'bg-success' :
+                                              cuota.estado === 'parcial' ? 'bg-info' : 'bg-secondary' %>">
+                      <%= cuota.estado %>
+                    </span>
+                  </td>
+                  <td>
+                    <%- cuota.fecha_pago ? moment(cuota.fecha_pago).format('DD/MM/YYYY') : '—' %>
+                  </td>
+                  <td>
+                    <% if (cuota.estado !== 'pagada') { %>
+                      <button class="btn btn-sm btn-outline-primary btn-pagar-cuota"
+                        data-cuota-id="<%= cuota.id %>"
+                        data-cuota-numero="<%= cuota.numero_cuota %>"
+                        data-monto="<%= cuota.total_a_pagar || cuota.monto %>">
+                        <i class="fas fa-money-bill-wave me-1"></i> Pagar
+                      </button>
+                    <% } else { %>
+                      <button class="btn btn-sm btn-outline-secondary btn-ver-recibo"
+                        data-pago-id="<%= historialPagos.find(p => p.cuota_id === cuota.id)?.id || '' %>">
+                        <i class="fas fa-receipt me-1"></i> Completado
+                      </button>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="7" class="text-center py-4 text-muted">
+                  No hay cuotas registradas para este préstamo
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
-                <div class="tab-pane fade" id="pagos" role="tabpanel">
-          <div class="card">
-            <div class="card-header bg-light d-flex justify-content-between align-items-center">
-              <h5 class="mb-0"><i class="fas fa-history me-2"></i>Historial de Pagos</h5>
-              <div>
-                <span class="badge bg-primary">
-                  Total: RD$ <%= formatMoney(prestamo.total_pagado) %>
-                </span>
-              </div>
-            </div>
-            <div class="card-body p-0">
-              <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                  <thead class="table-light">
-                    <tr>
-                      <th>Fecha</th>
-                      <th>Método</th>
-                      <th>Monto</th>
-                      <th>Cuota</th>
-                      <th>Registrado por</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <% if (historialPagos.length > 0) { %>
-                      <% historialPagos.forEach(pago => { %>
-                        <tr>
-                          <td><%- moment(pago.fecha).format('DD/MM/YYYY') %></td>
-                          <td>
-                            <span class="badge
-                              <%= pago.metodo === 'efectivo' ? 'bg-success' :
-                                  pago.metodo === 'transferencia' ? 'bg-info' : 'bg-secondary' %>">
-                              <%= pago.metodo.toUpperCase() %>
-                            </span>
-                          </td>
-                          <td class="fw-bold">RD$ <%= formatMoney(pago.monto) %></td>
-                          <td>
-                            <% if (pago.cuota_id) { %>
-                              <span class="badge bg-primary">#<%= pago.numero_cuota %></span>
-                            <% } else { %>
-                              <span class="text-muted">Adicional</span>
-                            <% } %>
-                          </td>
-                          <td><%= pago.registrado_por %></td>
-                          <td>
-                            <div class="btn-group btn-group-sm" role="group">
-                              <a href="/prestamos/<%= prestamo.id %>/recibo?pago=<%= pago.id %>"
-                                 class="btn btn-outline-primary" target="_blank">
-                                <i class="fas fa-eye"></i> Recibo
-                              </a>
-                            </div>
-                          </td>
-                        </tr>
-                      <% }); %>
-                    <% } else { %>
-                      <tr>
-                        <td colspan="6" class="text-center py-4 text-muted">
-                          No hay pagos registrados para este préstamo
-                        </td>
-                      </tr>
-                    <% } %>
-                  </tbody>
-                </table>
-              </div>
-              </div>
-            </div>
-          </div>
-                  <div class="tab-pane fade" id="documentos" role="tabpanel">
-          <div class="card">
-            <div class="card-header bg-light">
-              <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Documentos Relacionados</h5>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                                <div class="col-md-4 mb-3">
-                  <div class="card h-100">
-                    <div class="card-body text-center">
-                      <i class="fas fa-file-contract fa-3x text-primary mb-3"></i>
-                      <h5>Contrato Firmado</h5>
-                      <% if (prestamo.contrato_url) { %>
-                        <a href="<%= prestamo.contrato_url %>" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
-                          <i class="fas fa-download me-1"></i> Descargar
-                        </a>
-                        <button class="btn btn-sm btn-outline-danger mt-2 ms-2 btn-eliminar-doc" data-tipo="contrato">
-                          <i class="fas fa-trash me-1"></i> Eliminar
-                        </button>
-                      <% } else { %>
-                        <p class="text-muted mb-2">No disponible</p>
-                        <button class="btn btn-sm btn-outline-secondary mt-2 btn-subir-doc" data-tipo="contrato">
-                          <i class="fas fa-upload me-1"></i> Subir
-                        </button>
-                        <input type="file" class="d-none" id="uploadContrato" data-tipo="contrato">
-                      <% } %>
-                    </div>
-                  </div>
-                </div>
+        <!-- Tab de Historial de Pagos -->
+        <div class="tab-pane fade" id="pagos" role="tabpanel">
+          <div class="card">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+              <h5 class="mb-0"><i class="fas fa-history me-2"></i>Historial de Pagos</h5>
+              <div>
+                <span class="badge bg-primary">
+                  Total: RD$ <%= formatMoney(prestamo.total_pagado) %>
+                </span>
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Método</th>
+                      <th>Monto</th>
+                      <th>Cuota</th>
+                      <th>Registrado por</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% if (historialPagos.length > 0) { %>
+                      <% historialPagos.forEach(pago => { %>
+                        <tr>
+                          <td><%- moment(pago.fecha).format('DD/MM/YYYY') %></td>
+                          <td>
+                            <span class="badge
+                              <%= pago.metodo === 'efectivo' ? 'bg-success' :
+                                  pago.metodo === 'transferencia' ? 'bg-info' : 'bg-secondary' %>">
+                              <%= pago.metodo.toUpperCase() %>
+                            </span>
+                          </td>
+                          <td class="fw-bold">RD$ <%= formatMoney(pago.monto) %></td>
+                          <td>
+                            <% if (pago.cuota_id) { %>
+                              <span class="badge bg-primary">#<%= pago.numero_cuota %></span>
+                            <% } else { %>
+                              <span class="text-muted">Adicional</span>
+                            <% } %>
+                          </td>
+                          <td><%= pago.registrado_por %></td>
+                          <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                              <a href="/prestamos/<%= prestamo.id %>/recibo?pago=<%= pago.id %>"
+                                 class="btn btn-outline-primary" target="_blank">
+                                <i class="fas fa-eye"></i> Recibo
+                              </a>
+                            </div>
+                          </td>
+                        </tr>
+                      <% }); %>
+                    <% } else { %>
+                      <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">
+                          No hay pagos registrados para este préstamo
+                        </td>
+                      </tr>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Tab de Documentos -->
+        <div class="tab-pane fade" id="documentos" role="tabpanel">
+          <div class="card">
+            <div class="card-header bg-light">
+              <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Documentos Relacionados</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <!-- Contrato -->
+                <div class="col-md-4 mb-3">
+                  <div class="card h-100">
+                    <div class="card-body text-center">
+                      <i class="fas fa-file-contract fa-3x text-primary mb-3"></i>
+                      <h5>Contrato Firmado</h5>
+                      <% if (prestamo.contrato_url) { %>
+                        <a href="<%= prestamo.contrato_url %>" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                          <i class="fas fa-download me-1"></i> Descargar
+                        </a>
+                        <button class="btn btn-sm btn-outline-danger mt-2 ms-2 btn-eliminar-doc" data-tipo="contrato">
+                          <i class="fas fa-trash me-1"></i> Eliminar
+                        </button>
+                      <% } else { %>
+                        <p class="text-muted mb-2">No disponible</p>
+                        <button class="btn btn-sm btn-outline-secondary mt-2 btn-subir-doc" data-tipo="contrato">
+                          <i class="fas fa-upload me-1"></i> Subir
+                        </button>
+                        <input type="file" class="d-none" id="uploadContrato" data-tipo="contrato">
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
 
-                                <div class="col-md-4 mb-3">
-                  <div class="card h-100">
-                    <div class="card-body text-center">
-                      <i class="fas fa-id-card fa-3x text-info mb-3"></i>
-                      <h5>Identificación</h5>
-                      <% if (prestamo.identificacion_url) { %>
-                        <a href="<%= prestamo.identificacion_url %>" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
-                          <i class="fas fa-download me-1"></i> Descargar
-                        </a>
-                        <button class="btn btn-sm btn-outline-danger mt-2 ms-2 btn-eliminar-doc" data-tipo="identificacion">
-                          <i class="fas fa-trash me-1"></i> Eliminar
-                        </button>
-                      <% } else { %>
-                        <p class="text-muted mb-2">No disponible</p>
-                        <button class="btn btn-sm btn-outline-secondary mt-2 btn-subir-doc" data-tipo="identificacion">
-                          <i class="fas fa-upload me-1"></i> Subir
-                        </button>
-                        <input type="file" class="d-none" id="uploadIdentificacion" data-tipo="identificacion">
-                      <% } %>
-                    </div>
-                  </div>
-                </div>
+                <!-- Identificación -->
+                <div class="col-md-4 mb-3">
+                  <div class="card h-100">
+                    <div class="card-body text-center">
+                      <i class="fas fa-id-card fa-3x text-info mb-3"></i>
+                      <h5>Identificación</h5>
+                      <% if (prestamo.identificacion_url) { %>
+                        <a href="<%= prestamo.identificacion_url %>" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                          <i class="fas fa-download me-1"></i> Descargar
+                        </a>
+                        <button class="btn btn-sm btn-outline-danger mt-2 ms-2 btn-eliminar-doc" data-tipo="identificacion">
+                          <i class="fas fa-trash me-1"></i> Eliminar
+                        </button>
+                      <% } else { %>
+                        <p class="text-muted mb-2">No disponible</p>
+                        <button class="btn btn-sm btn-outline-secondary mt-2 btn-subir-doc" data-tipo="identificacion">
+                          <i class="fas fa-upload me-1"></i> Subir
+                        </button>
+                        <input type="file" class="d-none" id="uploadIdentificacion" data-tipo="identificacion">
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
 
-                                <div class="col-md-4 mb-3">
-                  <div class="card h-100">
-                    <div class="card-body text-center">
-                      <i class="fas fa-home fa-3x text-warning mb-3"></i>
-                      <h5>Documentos de Garantía</h5>
-                      <% if (prestamo.garantias_url) { %>
-                        <a href="<%= prestamo.garantias_url %>" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
-                          <i class="fas fa-download me-1"></i> Descargar
-                        </a>
-                        <button class="btn btn-sm btn-outline-danger mt-2 ms-2 btn-eliminar-doc" data-tipo="garantias">
-                          <i class="fas fa-trash me-1"></i> Eliminar
-                        </button>
-                      <% } else { %>
-                        <p class="text-muted mb-2">No disponible</p>
-                        <button class="btn btn-sm btn-outline-secondary mt-2 btn-subir-doc" data-tipo="garantias">
-                          <i class="fas fa-upload me-1"></i> Subir
-                        </button>
-                        <input type="file" class="d-none" id="uploadGarantias" data-tipo="garantias">
-                      <% } %>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+                <!-- Garantías -->
+                <div class="col-md-4 mb-3">
+                  <div class="card h-100">
+                    <div class="card-body text-center">
+                      <i class="fas fa-home fa-3x text-warning mb-3"></i>
+                      <h5>Documentos de Garantía</h5>
+                      <% if (prestamo.garantias_url) { %>
+                        <a href="<%= prestamo.garantias_url %>" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+                          <i class="fas fa-download me-1"></i> Descargar
+                        </a>
+                        <button class="btn btn-sm btn-outline-danger mt-2 ms-2 btn-eliminar-doc" data-tipo="garantias">
+                          <i class="fas fa-trash me-1"></i> Eliminar
+                        </button>
+                      <% } else { %>
+                        <p class="text-muted mb-2">No disponible</p>
+                        <button class="btn btn-sm btn-outline-secondary mt-2 btn-subir-doc" data-tipo="garantias">
+                          <i class="fas fa-upload me-1"></i> Subir
+                        </button>
+                        <input type="file" class="d-none" id="uploadGarantias" data-tipo="garantias">
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<!-- Modal para Pago General -->
 <div class="modal fade" id="modalPago" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title"><i class="fas fa-money-bill-wave me-2"></i>Registrar Pago</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form id="formPagoGeneral">
-        <div class="modal-body">
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Monto a Pagar *</label>
-              <div class="input-group">
-                <span class="input-group-text">RD$</span>
-                <input type="number" class="form-control" name="monto" step="0.01" min="0.01" required
-                       value="<%= cuotas.find(c => c.estado === 'pendiente')?.monto.toFixed(2) || '' %>">
-            </div>
-          </div>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title"><i class="fas fa-money-bill-wave me-2"></i>Registrar Pago</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="formPagoGeneral">
+        <div class="modal-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Monto a Pagar *</label>
+              <div class="input-group">
+                <span class="input-group-text">RD$</span>
+                <input type="number" class="form-control" name="monto" step="0.01" min="0.01" required
+                       value="<%= cuotas.find(c => c.estado === 'pendiente')?.monto.toFixed(2) || '' %>">
+              </div>
+            </div>
 
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Método de Pago *</label>
-              <select class="form-select" name="metodo" required>
-                <option value="">Seleccionar...</option>
-                <option value="efectivo">Efectivo</option>
-                <option value="transferencia">Transferencia</option>
-                <option value="tarjeta">Tarjeta</option>
-                <option value="cheque">Cheque</option>
-                <option value="otro">Otro</option>
-              </select>
-            </div>
-          </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Método de Pago *</label>
+              <select class="form-select" name="metodo" required>
+                <option value="">Seleccionar...</option>
+                <option value="efectivo">Efectivo</option>
+                <option value="transferencia">Transferencia</option>
+                <option value="tarjeta">Tarjeta</option>
+                <option value="cheque">Cheque</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+          </div>
 
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Aplicar a Cuota</label>
-              <select class="form-select" name="cuota_id">
-                <option value="">Pago adicional (no aplica a cuota)</option>
-                <% cuotas.forEach(cuota => { %>
-                  <% if (cuota.estado !== 'pagada') { %>
-                    <option value="<%= cuota.id %>">
-                      Cuota #<%= cuota.numero_cuota %> -
-                      <%- moment(cuota.fecha_vencimiento).format('DD/MM/YYYY') %> -
-                      RD$ <%= cuota.monto.toFixed(2) %>
-                    </option>
-                  <% } %>
-                <% }); %>
-              </select>
-            </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Aplicar a Cuota</label>
+              <select class="form-select" name="cuota_id">
+                <option value="">Pago adicional (no aplica a cuota)</option>
+                <% cuotas.forEach(cuota => { %>
+                  <% if (cuota.estado !== 'pagada') { %>
+                    <option value="<%= cuota.id %>">
+                      Cuota #<%= cuota.numero_cuota %> -
+                      <%- moment(cuota.fecha_vencimiento).format('DD/MM/YYYY') %> -
+                      RD$ <%= cuota.monto.toFixed(2) %>
+                    </option>
+                  <% } %>
+                <% }); %>
+              </select>
+            </div>
 
-            <div class="col-md-6 mb-3">
-              <label class="form-label">Referencia (opcional)</label>
-              <input type="text" class="form-control" name="referencia" placeholder="Número de transacción, cheque, etc.">
-            </div>
-          </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Referencia (opcional)</label>
+              <input type="text" class="form-control" name="referencia" placeholder="Número de transacción, cheque, etc.">
+            </div>
+          </div>
 
-          <div class="mb-3">
-            <label class="form-label">Notas (opcional)</label>
-            <textarea class="form-control" name="notas" rows="2" placeholder="Detalles adicionales del pago..."></textarea>
-          </div>
+          <div class="mb-3">
+            <label class="form-label">Notas (opcional)</label>
+            <textarea class="form-control" name="notas" rows="2" placeholder="Detalles adicionales del pago..."></textarea>
+          </div>
 
-          <div class="form-check form-switch mb-3">
-            <input class="form-check-input" type="checkbox" name="imprimir_recibo" id="imprimirRecibo" checked>
-            <label class="form-check-label" for="imprimirRecibo">
-              Imprimir recibo automáticamente
-            </label>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-            <i class="fas fa-times me-1"></i> Cancelar
-          </button>
-          <button type="submit" class="btn btn-success">
-            <i class="fas fa-check me-1"></i> Registrar Pago
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
+          <div class="form-check form-switch mb-3">
+            <input class="form-check-input" type="checkbox" name="imprimir_recibo" id="imprimirRecibo" checked>
+            <label class="form-check-label" for="imprimirRecibo">
+              Imprimir recibo automáticamente
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-1"></i> Cancelar
+          </button>
+          <button type="submit" class="btn btn-success">
+            <i class="fas fa-check me-1"></i> Registrar Pago
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 
+<!-- Modal para Pago de Cuota Específica -->
 <div class="modal fade" id="modalPagoCuota" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title">Pagar Cuota</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <form id="formPagoCuota">
-        <div class="modal-body">
-          <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>
-            <span id="infoCuota">Pagando cuota #<span id="numeroCuota"></span> - Monto: RD$ <span id="montoCuota"></span></span>
-          </div>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">Pagar Cuota</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="formPagoCuota">
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>
+            <span id="infoCuota">Pagando cuota #<span id="numeroCuota"></span> - Monto: RD$ <span id="montoCuota"></span></span>
+          </div>
 
-          <input type="hidden" name="cuota_id" id="cuotaId">
+          <input type="hidden" name="cuota_id" id="cuotaId">
 
-          <div class="mb-3">
-            <label class="form-label">Monto *</label>
-            <input type="number" class="form-control" name="monto" id="montoCuotaInput" required step="0.01" min="0.01">
-          </div>
+          <div class="mb-3">
+            <label class="form-label">Monto *</label>
+            <input type="number" class="form-control" name="monto" id="montoCuotaInput" required step="0.01" min="0.01">
+          </div>
 
-          <div class="mb-3">
-            <label class="form-label">Método de Pago *</label>
-            <select class="form-select" name="metodo" required>
-              <option value="">Seleccionar...</option>
-              <option value="efectivo">Efectivo</option>
-              <option value="transferencia">Transferencia</option>
-              <option value="tarjeta">Tarjeta</option>
-            </select>
-          </div>
+          <div class="mb-3">
+            <label class="form-label">Método de Pago *</label>
+            <select class="form-select" name="metodo" required>
+              <option value="">Seleccionar...</option>
+              <option value="efectivo">Efectivo</option>
+              <option value="transferencia">Transferencia</option>
+              <option value="tarjeta">Tarjeta</option>
+            </select>
+          </div>
 
-          <div class="mb-3">
-            <label class="form-label">Referencia (opcional)</label>
-            <input type="text" class="form-control" name="referencia" placeholder="Número de transacción, cheque, etc.">
-          </div>
+          <div class="mb-3">
+            <label class="form-label">Referencia (opcional)</label>
+            <input type="text" class="form-control" name="referencia" placeholder="Número de transacción, cheque, etc.">
+          </div>
 
-          <div class="mb-3">
-            <label class="form-label">Notas (opcional)</label>
-            <textarea class="form-control" name="notas" rows="2"></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-primary">Confirmar Pago</button>
-        </div>
-      </form>
-    </div>
-  </div>
+          <div class="mb-3">
+            <label class="form-label">Notas (opcional)</label>
+            <textarea class="form-control" name="notas" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Confirmar Pago</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 <script>
-  // Variables globales necesarias para el JS externo
-  window.prestamoData = {
-    id: '<%= prestamo.id %>',
-    ultimoPagoId: <%= historialPagos.length > 0 ? historialPagos[0].id : 'null' %>,
-    cuotas: <%= JSON.stringify(cuotas) %>,
-    historialPagos: <%= JSON.stringify(historialPagos) %>
-  };
+  // Variables globales necesarias para el JS externo
+  window.prestamoData = {
+    id: '<%= prestamo.id %>',
+    ultimoPagoId: <%= historialPagos.length > 0 ? historialPagos[0].id : 'null' %>,
+    cuotas: <%= JSON.stringify(cuotas) %>,
+    historialPagos: <%= JSON.stringify(historialPagos) %>
+  };
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Scripts -->
 <script>
-  // Función para obtener el token de autenticación
-  function getAuthToken() {
-    // Buscar token en localStorage (para SPA)
-    const localStorageToken = localStorage.getItem('authToken');
-    if (localStorageToken) return localStorageToken;
+  // Función para obtener el token de autenticación
+  function getAuthToken() {
+    // Buscar token en localStorage (para SPA)
+    const localStorageToken = localStorage.getItem('authToken');
+    if (localStorageToken) return localStorageToken;
 
-    // Buscar token en cookies (para renderizado tradicional)
-    const cookieMatch = document.cookie.match(/token=([^;]+)/);
-    if (cookieMatch) return cookieMatch[1];
+    // Buscar token en cookies (para renderizado tradicional)
+    const cookieMatch = document.cookie.match(/token=([^;]+)/);
+    if (cookieMatch) return cookieMatch[1];
 
-    return null;
-  }
+    return null;
+  }
 
-  // Función para mostrar notificaciones
-  function showAlert(type, message) {
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} alert-dismissible fade show fixed-top mt-3 mx-3`;
-    alertDiv.role = 'alert';
-    alertDiv.innerHTML = `
-      ${message}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    `;
+  // Función para mostrar notificaciones
+  function showAlert(type, message) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show fixed-top mt-3 mx-3`;
+    alertDiv.role = 'alert';
+    alertDiv.innerHTML = `
+      ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    `;
 
-    document.body.appendChild(alertDiv);
+    document.body.appendChild(alertDiv);
 
-    setTimeout(() => {
-      alertDiv.classList.remove('show');
-      setTimeout(() => alertDiv.remove(), 150);
-    }, 5000);
-  }
+    setTimeout(() => {
+      alertDiv.classList.remove('show');
+      setTimeout(() => alertDiv.remove(), 150);
+    }, 5000);
+  }
 
-  // Función para imprimir recibos
-  function imprimirRecibo(tipo, pagoId = null) {
-    let url = `/prestamos/<%= prestamo.id %>/recibo?tipo=${tipo}&print=1`;
-    if (pagoId) url += `&pago=${pagoId}`;
+  // Función para imprimir recibos
+  function imprimirRecibo(tipo, pagoId = null) {
+    let url = `/prestamos/<%= prestamo.id %>/recibo?tipo=${tipo}&print=1`;
+    if (pagoId) url += `&pago=${pagoId}`;
 
-    const ventana = window.open(url, '_blank', 'width=800,height=600');
+    const ventana = window.open(url, '_blank', 'width=800,height=600');
 
-    ventana.onload = function() {
-      setTimeout(() => {
-        ventana.print();
-        setTimeout(() => ventana.close(), 3000);
-      }, 500);
-    };
-  }
+    ventana.onload = function() {
+      setTimeout(() => {
+        ventana.print();
+        setTimeout(() => ventana.close(), 3000);
+      }, 500);
+    };
+  }
 
-  // Función para impresión directa
-  function imprimirDirecto() {
-    fetch(`/prestamos/<%= prestamo.id %>/recibo?tipo=simple&raw=1`, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${getAuthToken()}`
-      }
-    })
-    .then(handleResponse)
-    .then(data => {
-      if(data.success) {
-        showAlert('success', 'Recibo enviado a la impresora térmica');
-      } else {
-        throw new Error(data.message || 'Error al imprimir');
-      }
-    })
-    .catch(handleError);
-  }
+  // Función para impresión directa
+  function imprimirDirecto() {
+    fetch(`/prestamos/<%= prestamo.id %>/recibo?tipo=simple&raw=1`, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getAuthToken()}`
+      }
+    })
+    .then(handleResponse)
+    .then(data => {
+      if(data.success) {
+        showAlert('success', 'Recibo enviado a la impresora térmica');
+      } else {
+        throw new Error(data.message || 'Error al imprimir');
+      }
+    })
+    .catch(handleError);
+  }
 
-  // Función para manejar pagos de cuotas
-  function pagarCuota(cuotaId, cuotaNumero, monto) {
-    document.getElementById('cuotaId').value = cuotaId;
-    document.getElementById('numeroCuota').textContent = cuotaNumero;
-    document.getElementById('montoCuota').textContent = parseFloat(monto).toFixed(2);
-    document.getElementById('montoCuotaInput').value = parseFloat(monto).toFixed(2);
-    new bootstrap.Modal(document.getElementById('modalPagoCuota')).show();
-  }
+  // Función para manejar pagos de cuotas
+  function pagarCuota(cuotaId, cuotaNumero, monto) {
+    document.getElementById('cuotaId').value = cuotaId;
+    document.getElementById('numeroCuota').textContent = cuotaNumero;
+    document.getElementById('montoCuota').textContent = parseFloat(monto).toFixed(2);
+    document.getElementById('montoCuotaInput').value = parseFloat(monto).toFixed(2);
+    new bootstrap.Modal(document.getElementById('modalPagoCuota')).show();
+  }
 
-  // Función para manejar respuestas fetch
-  function handleResponse(response) {
-    if (!response.ok) {
-      return response.json().then(err => { throw err; });
-    }
-    return response.json();
-  }
+  // Función para manejar respuestas fetch
+  function handleResponse(response) {
+    if (!response.ok) {
+      return response.json().then(err => { throw err; });
+    }
+    return response.json();
+  }
 
-  // Función para manejar errores
-  function handleError(error) {
-    console.error('Error:', error);
-    showAlert('danger', 'Error: ' + error.message);
+  // Función para manejar errores
+  function handleError(error) {
+    console.error('Error:', error);
+    showAlert('danger', 'Error: ' + error.message);
 
-    if (error.message.includes('token') || error.message.includes('autenticación')) {
-      setTimeout(() => window.location.href = '/auth/login', 2000);
-    }
-  }
+    if (error.message.includes('token') || error.message.includes('autenticación')) {
+      setTimeout(() => window.location.href = '/auth/login', 2000);
+    }
+  }
 
-  // Función para procesar pagos (unificada y corregida)
-  async function processPayment(form, isSpecificPayment = false) {
-    // Validar montos antes de enviar
-    let montoPago;
-    try {
-      montoPago = parseFloat(isSpecificPayment ?
-        document.getElementById('montoCuotaInput').value :
-        form.monto.value);
+  // Función para procesar pagos (unificada y corregida)
+  async function processPayment(form, isSpecificPayment = false) {
+    // Validar montos antes de enviar
+    let montoPago;
+    try {
+      montoPago = parseFloat(isSpecificPayment ?
+        document.getElementById('montoCuotaInput').value :
+        form.monto.value);
 
-      if (isNaN(montoPago)) throw new Error('Monto inválido');
-      if (montoPago <= 0) throw new Error('El monto debe ser mayor que cero');
-    } catch (error) {
-      showAlert('danger', error.message);
-      return;
-    }
+      if (isNaN(montoPago)) throw new Error('Monto inválido');
+      if (montoPago <= 0) throw new Error('El monto debe ser mayor que cero');
+    } catch (error) {
+      showAlert('danger', error.message);
+      return;
+    }
 
-    const formData = {
-      monto: montoPago,
-      metodo: form.metodo.value,
-      referencia: form.referencia.value || '',
-      notas: form.notas.value || '',
-      cuota_id: isSpecificPayment ? form.cuota_id.value : form.cuota_id.value || null
-    };
+    const formData = {
+      monto: montoPago,
+      metodo: form.metodo.value,
+      referencia: form.referencia.value || '',
+      notas: form.notas.value || '',
+      cuota_id: isSpecificPayment ? form.cuota_id.value : form.cuota_id.value || null
+    };
 
-    try {
-      const response = await fetch(`/prestamos/<%= prestamo.id %>/pagar`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData)
-      });
+    try {
+      const response = await fetch(`/prestamos/<%= prestamo.id %>/pagar`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
 
-      const data = await handleResponse(response);
-      showAlert('success', 'Pago registrado correctamente');
+      const data = await handleResponse(response);
+      showAlert('success', 'Pago registrado correctamente');
 
-      // Cerrar modales después de éxito
-      const modal = bootstrap.Modal.getInstance(isSpecificPayment ?
-        document.getElementById('modalPagoCuota') :
-        document.getElementById('modalPago'));
-      modal.hide();
+      // Cerrar modales después de éxito
+      const modal = bootstrap.Modal.getInstance(isSpecificPayment ?
+        document.getElementById('modalPagoCuota') :
+        document.getElementById('modalPago'));
+      modal.hide();
 
-      if (form.imprimir_recibo?.checked) {
-        imprimirRecibo('simple', data.pagoId);
-      }
+      if (form.imprimir_recibo?.checked) {
+        imprimirRecibo('simple', data.pagoId);
+      }
 
-      setTimeout(() => window.location.reload(), 1000);
-    } catch (error) {
-      handleError(error);
-    }
-  }
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (error) {
+      handleError(error);
+    }
+  }
 
-  // Configuración de eventos cuando el DOM está listo
-  document.addEventListener('DOMContentLoaded', function() {
-    // Configurar botones de pago de cuotas
-    const btnsPagarCuota = document.querySelectorAll('.btn-pagar-cuota');
-    btnsPagarCuota.forEach(btn => {
-      btn.addEventListener('click', function() {
-        const cuotaId = this.getAttribute('data-cuota-id');
-        const cuotaNumero = this.getAttribute('data-cuota-numero');
-        const monto = this.getAttribute('data-monto');
-        pagarCuota(cuotaId, cuotaNumero, monto);
-      });
-    });
+  // Configuración de eventos cuando el DOM está listo
+  document.addEventListener('DOMContentLoaded', function() {
+    // Configurar botones de pago de cuotas
+    const btnsPagarCuota = document.querySelectorAll('.btn-pagar-cuota');
+    btnsPagarCuota.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const cuotaId = this.getAttribute('data-cuota-id');
+        const cuotaNumero = this.getAttribute('data-cuota-numero');
+        const monto = this.getAttribute('data-monto');
+        pagarCuota(cuotaId, cuotaNumero, monto);
+      });
+    });
 
-    // Configurar formulario de pago general
-    const formPagoGeneral = document.getElementById('formPagoGeneral');
-    if (formPagoGeneral) {
-      formPagoGeneral.addEventListener('submit', function(e) {
-        e.preventDefault();
-        processPayment(this);
-      });
-    }
+    // Configurar formulario de pago general
+    const formPagoGeneral = document.getElementById('formPagoGeneral');
+    if (formPagoGeneral) {
+      formPagoGeneral.addEventListener('submit', function(e) {
+        e.preventDefault();
+        processPayment(this);
+      });
+    }
 
-    // Configurar formulario de pago de cuota
-    const formPagoCuota = document.getElementById('formPagoCuota');
-    if (formPagoCuota) {
-      formPagoCuota.addEventListener('submit', function(e) {
-        e.preventDefault();
-        processPayment(this, true);
-      });
-    }
+    // Configurar formulario de pago de cuota
+    const formPagoCuota = document.getElementById('formPagoCuota');
+    if (formPagoCuota) {
+      formPagoCuota.addEventListener('submit', function(e) {
+        e.preventDefault();
+        processPayment(this, true);
+      });
+    }
+  });
+  document.querySelectorAll('.btn-subir-doc').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tipo = btn.dataset.tipo;
+    const input = document.querySelector(`#upload${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
+    input.click();
 
-    // Configuración del botón de eliminar mora
-    const btnEliminarMora = document.getElementById('btnEliminarMora');
-    if (btnEliminarMora) {
-      btnEliminarMora.addEventListener('click', function() {
-        Swal.fire({
-          title: '¿Estás seguro?',
-          text: 'Esta acción eliminará la mora acumulada del préstamo y no se puede deshacer.',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#d33',
-          cancelButtonColor: '#3085d6',
-          confirmButtonText: 'Sí, eliminar mora',
-          cancelButtonText: 'Cancelar'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            eliminarMoraDelPrestamo();
-          }
-        });
-      });
-    }
-  });
+    input.onchange = async () => {
+      const formData = new FormData();
+      formData.append('archivo', input.files[0]);
+      formData.append('tipo', tipo);
 
-  // Función AJAX para eliminar mora
-  async function eliminarMoraDelPrestamo() {
-    try {
-      const response = await fetch(`/prestamos/<%= prestamo.id %>/eliminar-mora`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ prestamo_id: '<%= prestamo.id %>' })
-      });
+      try {
+        const res = await fetch(`/documentos/<%= prestamo.id %>/subir`, {
+          method: 'POST',
+          body: formData
+        });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        Swal.fire({
-          icon: 'success',
-          title: 'Mora Eliminada',
-          text: 'La mora del préstamo ha sido eliminada exitosamente.',
-          timer: 2000,
-          showConfirmButton: false
-        }).then(() => {
-          window.location.reload();
-        });
-      } else {
-        throw new Error(data.message || 'Error al eliminar la mora.');
-      }
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: `No se pudo eliminar la mora: ${error.message}`
-      });
-    }
-  }
-
-  document.querySelectorAll('.btn-subir-doc').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const tipo = btn.dataset.tipo;
-    const input = document.querySelector(`#upload${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`);
-    input.click();
-
-    input.onchange = async () => {
-      const formData = new FormData();
-      formData.append('archivo', input.files[0]);
-      formData.append('tipo', tipo);
-
-      try {
-        const res = await fetch(`/documentos/<%= prestamo.id %>/subir`, {
-          method: 'POST',
-          body: formData
-        });
-
-        const data = await res.json();
-        if (data.success) {
-          showAlert('success', 'Documento subido');
-          setTimeout(() => window.location.reload(), 800);
-        } else {
-          throw new Error(data.message);
-        }
-      } catch (err) {
-        handleError(err);
-      }
-    };
-  });
+        const data = await res.json();
+        if (data.success) {
+          showAlert('success', 'Documento subido');
+          setTimeout(() => window.location.reload(), 800);
+        } else {
+          throw new Error(data.message);
+        }
+      } catch (err) {
+        handleError(err);
+      }
+    };
+  });
 });
 
 document.querySelectorAll('.btn-eliminar-doc').forEach(btn => {
-  btn.addEventListener('click', async () => {
-    const tipo = btn.dataset.tipo;
+  btn.addEventListener('click', async () => {
+    const tipo = btn.dataset.tipo;
 
-    if (!confirm(`¿Eliminar el documento "${tipo}"?`)) return;
+    if (!confirm(`¿Eliminar el documento "${tipo}"?`)) return;
 
-    try {
-      const res = await fetch(`/documentos/<%= prestamo.id %>/eliminar`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tipo })
-      });
+    try {
+      const res = await fetch(`/documentos/<%= prestamo.id %>/eliminar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo })
+      });
 
-      const data = await res.json();
-      if (data.success) {
-        showAlert('success', 'Documento eliminado');
-        setTimeout(() => window.location.reload(), 800);
-      } else {
-        throw new Error(data.message);
-      }
-    } catch (err) {
-      handleError(err);
-    }
-  });
+      const data = await res.json();
+      if (data.success) {
+        showAlert('success', 'Documento eliminado');
+        setTimeout(() => window.location.reload(), 800);
+      } else {
+        throw new Error(data.message);
+      }
+    } catch (err) {
+      handleError(err);
+    }
+  });
 });
+
 </script>
 
 
 <%- include('../partials/footer') %>
+
