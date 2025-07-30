@@ -38,17 +38,28 @@ exports.index = async (req, res) => {
 };
 
 exports.createForm = async (req, res) => {
-  try {
-    const clientes = await Cliente.findAll();
-    const rutas = await Ruta.findAll();
-    res.render('prestamos_interes/create', { clientes, rutas });
-  } catch (error) {
-    console.error('❌ Error cargando formulario de préstamo:', error.message);
-    req.flash('error', 'No se pudo cargar el formulario de préstamo');
-    res.redirect('/prestamos_interes');
-  }
-};
+  try {
+    // Obtener listado de clientes y rutas desde la base de datos
+    const [clientes, rutas] = await Promise.all([
+      db.query('SELECT id, nombre, apellidos, cedula, profesion FROM clientes ORDER BY nombre', {
+        type: QueryTypes.SELECT
+      }),
+      db.query('SELECT id, nombre, zona FROM rutas ORDER BY nombre', {
+        type: QueryTypes.SELECT
+      })
+    ]);
 
+    res.render('prestamos_interes/create', {
+      clientes,
+      rutas,
+      body: req.body || {} // <-- ESTO ES LO QUE SOLUCIONA EL ERROR
+    });
+  } catch (error) {
+    console.error('Error al cargar formulario de préstamo:', error);
+    req.flash('error', 'Error al cargar formulario de préstamo');
+    res.redirect('/prestamos_intereses');
+  }
+};
 exports.create = async (req, res) => {
   try {
     const prestamoId = await PrestamoInteres.create(req.body);
