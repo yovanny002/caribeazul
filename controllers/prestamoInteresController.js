@@ -205,90 +205,90 @@ exports.registrarPago = async (req, res) => {
 };
 
 exports.imprimirContrato = async (req, res) => {
-  try {
-    const prestamoId = req.params.id;
-    const prestamo = await PrestamoInteres.findById(prestamoId);
-    
-    if (!prestamo) {
-      return res.status(404).send('Préstamo no encontrado');
-    }
+  try {
+    const prestamoId = req.params.id;
+    const prestamo = await PrestamoInteres.findById(prestamoId);
+    
+    if (!prestamo) {
+      return res.status(404).send('Préstamo no encontrado');
+    }
 
-    const cliente = await Cliente.findById(prestamo.cliente_id);
-    if (!cliente) {
-      return res.status(404).send('Cliente no encontrado para el préstamo');
-    }
+    const cliente = await Cliente.findById(prestamo.cliente_id);
+    if (!cliente) {
+      return res.status(404).send('Cliente no encontrado para el préstamo');
+    }
 
-    res.render('prestamos_interes/imprimir_contrato', {
-      layout: false, 
-      prestamo: {
-        ...prestamo,
-        cliente_nombre: cliente.nombre,
-        cliente_apellidos: cliente.apellidos,
-        cliente_cedula: cliente.cedula,
-        cliente_telefono1: cliente.telefono1,
-        cliente_direccion: cliente.direccion
-      }
-    });
-  } catch (error) {
-    console.error('Error al cargar vista de impresión del contrato:', error);
-    res.status(500).send('Error interno del servidor');
-  }
+    res.render('prestamos_interes/imprimir_contrato', {
+      layout: false, 
+      prestamo: {
+        ...prestamo,
+        cliente_nombre: cliente.nombre,
+        cliente_apellidos: cliente.apellidos,
+        cliente_cedula: cliente.cedula,
+        cliente_telefono1: cliente.telefono1,
+        cliente_direccion: cliente.direccion
+      }
+    });
+  } catch (error) {
+    console.error('Error al cargar vista de impresión del contrato:', error);
+    res.status(500).send('Error interno del servidor');
+  }
 };
 
 exports.recibo = async (req, res) => {
-  try {
-    const pagoId = req.params.pagoId;
-    const [pago] = await db.query(`
-      SELECT p.*, 
-             pi.id AS prestamo_id, pi.monto_aprobado, pi.interes_porcentaje, 
-             pi.interes_manual, pi.frecuencia_interes, pi.created_at, pi.updated_at as prestamo_updated_at,
-             c.nombre AS cliente_nombre, c.apellidos AS cliente_apellidos,
-             c.cedula AS cliente_cedula,
-             c.profesion AS cliente_profesion,
-             r.nombre AS ruta_nombre
-      FROM pagos_interes p
-      JOIN prestamos_interes pi ON p.prestamo_id = pi.id
-      JOIN clientes c ON pi.cliente_id = c.id
-      LEFT JOIN rutas r ON pi.ruta_id = r.id
-      WHERE p.id = :pagoId
-    `, { replacements: { pagoId }, type: db.QueryTypes.SELECT });
+  try {
+    const pagoId = req.params.pagoId;
+    const [pago] = await db.query(`
+      SELECT p.*, 
+             pi.id AS prestamo_id, pi.monto_aprobado, pi.interes_porcentaje, 
+             pi.interes_manual, pi.frecuencia_interes, pi.created_at, pi.updated_at as prestamo_updated_at,
+             c.nombre AS cliente_nombre, c.apellidos AS cliente_apellidos,
+             c.cedula AS cliente_cedula,
+             c.profesion AS cliente_profesion,
+             r.nombre AS ruta_nombre
+      FROM pagos_interes p
+      JOIN prestamos_interes pi ON p.prestamo_id = pi.id
+      JOIN clientes c ON pi.cliente_id = c.id
+      LEFT JOIN rutas r ON pi.ruta_id = r.id
+      WHERE p.id = :pagoId
+    `, { replacements: { pagoId }, type: db.QueryTypes.SELECT });
 
-    if (!pago) {
-      req.flash('error', 'Recibo no encontrado');
-      return res.redirect('/prestamos_interes');
-    }
-    const prestamoActualizado = await PrestamoInteres.findById(pago.prestamo_id);
-    if (!prestamoActualizado) {
-      req.flash('error', 'Préstamo asociado al recibo no encontrado.');
-      return res.redirect('/prestamos_interes');
-    }
-    const interesGeneradoAhora = await PrestamoInteres.calculateAccruedInterest(prestamoActualizado);
-    const interesesPendientesParaRecibo = prestamoActualizado.interes_pendiente_acumulado + interesGeneradoAhora;
-    let moraParaRecibo = 0;
-    const diasPorPeriodo = prestamoActualizado.frecuencia_interes === 'quincenal' ? 15 : 30;
-    const fechaUltimaActualizacion = moment(prestamoActualizado.updated_at);
-    const diasAtraso = moment().diff(fechaUltimaActualizacion, 'days');
-    if (diasAtraso > diasPorPeriodo + 2 && (interesesPendientesParaRecibo > 0 || prestamoActualizado.saldo_capital > 0)) {
-      moraParaRecibo = prestamoActualizado.saldo_capital * 0.02;
-    }
-    const prestamoForReceipt = {
-      id: prestamoActualizado.id,
-      cliente_nombre: pago.cliente_nombre,
-      cliente_apellidos: pago.cliente_apellidos,
-      cliente_cedula: pago.cliente_cedula,
-      monto_aprobado: prestamoActualizado.monto_aprobado,
-      saldo_capital: prestamoActualizado.saldo_capital,
-      intereses_acumulados: interesesPendientesParaRecibo,
-      mora: moraParaRecibo
-    };
-    pago.fecha_display = moment(pago.fecha).format('DD/MM/YYYY HH:mm');
-    pago.monto = safeParseFloat(pago.monto);
-    pago.interes_pagado = safeParseFloat(pago.interes_pagado);
-    pago.capital_pagado = safeParseFloat(pago.capital_pagado);
-    res.render('prestamos_interes/recibo_termico', { prestamo: prestamoForReceipt, pago, layout: false });
-  } catch (error) {
-    console.error('Error generando recibo:', error);
-    req.flash('error', 'Error al generar recibo: ' + error.message);
-    res.redirect(`/prestamos_interes/${req.params.id}`);
-  }
+    if (!pago) {
+      req.flash('error', 'Recibo no encontrado');
+      return res.redirect('/prestamos_interes');
+    }
+    const prestamoActualizado = await PrestamoInteres.findById(pago.prestamo_id);
+    if (!prestamoActualizado) {
+      req.flash('error', 'Préstamo asociado al recibo no encontrado.');
+      return res.redirect('/prestamos_interes');
+    }
+    const interesGeneradoAhora = await PrestamoInteres.calculateAccruedInterest(prestamoActualizado);
+    const interesesPendientesParaRecibo = prestamoActualizado.interes_pendiente_acumulado + interesGeneradoAhora;
+    let moraParaRecibo = 0;
+    const diasPorPeriodo = prestamoActualizado.frecuencia_interes === 'quincenal' ? 15 : 30;
+    const fechaUltimaActualizacion = moment(prestamoActualizado.updated_at);
+    const diasAtraso = moment().diff(fechaUltimaActualizacion, 'days');
+    if (diasAtraso > diasPorPeriodo + 2 && (interesesPendientesParaRecibo > 0 || prestamoActualizado.saldo_capital > 0)) {
+      moraParaRecibo = prestamoActualizado.saldo_capital * 0.02;
+    }
+    const prestamoForReceipt = {
+      id: prestamoActualizado.id,
+      cliente_nombre: pago.cliente_nombre,
+      cliente_apellidos: pago.cliente_apellidos,
+      cliente_cedula: pago.cliente_cedula,
+      monto_aprobado: prestamoActualizado.monto_aprobado,
+      saldo_capital: prestamoActualizado.saldo_capital,
+      intereses_acumulados: interesesPendientesParaRecibo,
+      mora: moraParaRecibo
+    };
+    pago.fecha_display = moment(pago.fecha).format('DD/MM/YYYY HH:mm');
+    pago.monto = safeParseFloat(pago.monto);
+    pago.interes_pagado = safeParseFloat(pago.interes_pagado);
+    pago.capital_pagado = safeParseFloat(pago.capital_pagado);
+    res.render('prestamos_interes/recibo_termico', { prestamo: prestamoForReceipt, pago, layout: false });
+  } catch (error) {
+    console.error('Error generando recibo:', error);
+    req.flash('error', 'Error al generar recibo: ' + error.message);
+    res.redirect(`/prestamos_interes/${req.params.id}`);
+  }
 };
