@@ -26,7 +26,10 @@ router.post('/',
 //   checkRole(['administrador', 'supervisor', 'servicio']), 
 //   prestamoInteresController.create
 // );
-
+router.get('/:id/imprimir-contrato',
+  checkRole(['administrador', 'supervisor', 'servicio']),
+  prestamoInteresController.imprimirContrato
+);
 // Detalle de préstamo (GET)
 router.get('/:id', 
   checkRole(['administrador', 'supervisor', 'servicio']), 

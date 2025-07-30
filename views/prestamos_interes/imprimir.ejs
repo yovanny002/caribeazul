@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contrato de Préstamo - Financiera Caribe Azul</title>
+  <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+ 
+  <style>
+    /* Base Styles */
+    body {
+      font-family: 'Open Sans', sans-serif;
+      margin: 0;
+      padding: 0;
+      color: #333;
+      line-height: 1.6;
+      background-color: #fff;
+      font-size: 12px;
+    }
+
+    /* Container for the contract content */
+    .contract-container {
+      width: 100%;
+      max-width: 7.5in; /* Adjusted to fit within letter size */
+      margin: 0 auto;
+      padding: 0.5in;
+      background-color: #fff;
+    }
+
+    /* Title Styling */
+    .title {
+      font-family: 'Merriweather', serif;
+      text-align: center;
+      text-transform: uppercase;
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f4c75;
+      margin-bottom: 20px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid #0f4c75;
+      letter-spacing: 1px;
+    }
+
+    /* Section Styling */
+    .section {
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed #e0e0e0;
+    }
+
+    .section:last-of-type {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .section-heading {
+      font-family: 'Open Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: #0f4c75;
+      margin-bottom: 10px;
+      border-left: 3px solid #3282b8;
+      padding-left: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Table Styling for Data Sections */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+      background-color: #fff;
+      border: 1px solid #cce0ec;
+      font-size: 11px;
+    }
+
+    .data-table thead th {
+        background-color: #eaf4fa;
+        color: #0f4c75;
+        font-weight: 700;
+        text-align: left;
+        padding: 8px 10px;
+        border: 1px solid #cce0ec;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .data-table tbody td {
+      padding: 6px 10px;
+      border: 1px solid #e0eaf1;
+      vertical-align: top;
+    }
+
+    .data-table tbody tr:nth-child(even) {
+        background-color: #f9fcff;
+    }
+
+    /* Disclaimer/Commitment Text */
+    .commitment-text {
+      background-color: #f2f7fc;
+      border-left: 3px solid #3282b8;
+      padding: 12px;
+      margin-top: 15px;
+      font-size: 11px;
+      color: #444;
+      border-radius: 3px;
+      line-height: 1.5;
+    }
+
+    .commitment-text strong {
+      color: #0f4c75;
+    }
+
+    /* Signature Section */
+    .signature-section {
+      margin-top: 30px;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .signature-block {
+      text-align: center;
+      margin: 10px 0;
+      width: 45%;
+    }
+
+    .signature-line {
+      border-top: 1px solid #000;
+      width: 80%;
+      margin: 8px auto 4px auto;
+      padding-top: 3px;
+    }
+
+    .signature-label {
+      font-size: 10px;
+      color: #555;
+    }
+
+    /* Print Specific Styles */
+    @media print {
+      @page {
+        size: letter;
+        margin: 0.5in;
+      }
+
+      body {
+        background-color: #fff;
+        -webkit-print-color-adjust: exact;
+        color-adjust: exact;
+        margin: 0;
+        padding: 0;
+        font-size: 11px;
+      }
+
+      .contract-container {
+        box-shadow: none;
+        border: none;
+        margin: 0;
+        padding: 0.5in;
+        max-width: 7.5in;
+        width: 100%;
+      }
+
+      /* Adjust font sizes for print */
+      .title {
+        font-size: 18px;
+        border-bottom: 1px solid #000;
+        color: #000;
+        margin-bottom: 15px;
+        padding-bottom: 5px;
+      }
+      
+      .section-heading {
+        font-size: 14px;
+        color: #000;
+        border-left-color: #000;
+        margin-bottom: 8px;
+        padding-left: 6px;
+      }
+      
+      .data-table thead th {
+        background-color: #e0e0e0 !important;
+        color: #000 !important;
+        border-color: #000 !important;
+        font-size: 11px;
+        padding: 6px 8px;
+      }
+      
+      .data-table tbody td {
+        border-color: #666 !important;
+        color: #000 !important;
+        font-size: 10px;
+        padding: 5px 8px;
+      }
+      
+      .data-table tbody tr:nth-child(even) {
+        background-color: #f0f0f0 !important;
+      }
+      
+      .commitment-text {
+        background-color: #f0f0f0 !important;
+        border-left-color: #666 !important;
+        color: #000 !important;
+        font-size: 10px;
+        padding: 10px;
+        margin-top: 15px;
+      }
+      
+      .commitment-text strong {
+        color: #000 !important;
+      }
+      
+      .signature-section {
+        margin-top: 25px;
+      }
+      
+      .signature-block {
+        margin: 8px 0;
+      }
+      
+      .signature-line {
+        border-color: #000;
+        margin-top: 6px;
+      }
+      
+      .signature-label {
+        color: #000;
+        font-size: 9px;
+      }
+      
+      /* Prevent page breaks inside important sections */
+      .section, .signature-section {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+
+
+</head>
+<body>
+
+  <div class="contract-container">
+    <div class="title">Contrato de Solicitud de Préstamo - Interés</div>
+
+    <div class="section">
+      <h3 class="section-heading">Información del Cliente</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Campo</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Nombre completo</td>
+            <td><%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></td>
+          </tr>
+          <tr>
+            <td>Cédula</td>
+            <td><%= prestamo.cliente_cedula %></td>
+          </tr>
+          <tr>
+            <td>Teléfono</td>
+            <td><%= prestamo.cliente_telefono1 %></td>
+          </tr>
+          <tr>
+            <td>Dirección</td>
+            <td><%= prestamo.cliente_direccion %></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h3 class="section-heading">Detalles del Préstamo</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Campo</th>
+            <th>Valor</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Fecha de Solicitud</td>
+            <td><%= prestamo.created_at ? new Date(prestamo.created_at).toLocaleDateString('es-DO') : 'Sin fecha' %></td>
+          </tr>
+          <tr>
+            <td>Monto Aprobado</td>
+            <td>RD$ <%= Number(prestamo.monto_aprobado || 0).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></td>
+          </tr>
+          <tr>
+            <td>Tasa de Interés</td>
+            <td>
+                <% if (prestamo.interes_manual && prestamo.interes_manual > 0) { %>
+                    RD$ <%= Number(prestamo.interes_manual).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+                <% } else { %>
+                    <%= Number(prestamo.interes_porcentaje).toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>% Mensual
+                <% } %>
+            </td>
+          </tr>
+          <tr>
+            <td>Frecuencia de Interés</td>
+            <td><%= prestamo.frecuencia_interes === 'quincenal' ? 'Quincenal' : 'Mensual' %></td>
+          </tr>
+          <tr>
+            <td>Plazo</td>
+            <td><%= prestamo.plazo_meses %> meses</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h3 class="section-heading">Términos y Condiciones</h3>
+      <p class="commitment-text">
+        Yo, <strong><%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></strong>, con cédula de identidad y electoral número <%= prestamo.cliente_cedula %>,
+        por medio del presente, me comprometo formalmente a pagar el préstamo aprobado bajo las condiciones establecidas.
+        La tasa de interés se aplicará sobre el capital pendiente de pago de forma <%= prestamo.frecuencia_interes === 'quincenal' ? 'quincenal' : 'mensual' %>.
+        En caso de no realizar el pago del interés acumulado en la fecha de corte, reconozco y acepto un recargo por mora del 
+        <strong>5% sobre el capital pendiente</strong> a partir del segundo día posterior al vencimiento. Este contrato representa mi consentimiento expreso y mi compromiso inquebrantable
+        con las obligaciones financieras adquiridas.
+
+        <br><br>
+        Asimismo, reconozco que de persistir la falta de pago, me comprometo a responder con cualquier bien de mi propiedad (muebles, inmuebles, vehículos u otros) como garantía para saldar la deuda, autorizando expresamente a Financiera Caribe Azul a iniciar las acciones 
+        legales y/o judiciales correspondientes para recuperar el monto adeudado.
+      </p>
+    </div>
+
+    <div class="signature-section">
+      <div class="signature-block">
+        <div class="signature-line"></div>
+        <p class="signature-label">Firma del Cliente</p>
+        <p class="signature-label">Fecha: <%= new Date().toLocaleDateString('es-DO') %></p>
+      </div>
+      <div class="signature-block">
+        <div class="signature-line"></div>
+        <p class="signature-label">Firma de Ciwita Financiera</p>
+        <p class="signature-label">Fecha: <%= new Date().toLocaleDateString('es-DO') %></p>
+      </div>
+    </div>
+  </div>
+<script>
+  window.onload = function () {
+    window.print();
+  };
+  window.onafterprint = function () {
+    window.close();
+  };
+</script>
+</body>
+</html>

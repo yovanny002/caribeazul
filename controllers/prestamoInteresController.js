@@ -319,3 +319,34 @@ exports.recibo = async (req, res) => {
     res.redirect(`/prestamos_interes`);
   }
 };
+exports.imprimirContrato = async (req, res) => {
+  try {
+    const prestamoId = req.params.id;
+    // Usa el método findById de tu modelo de préstamo por interés
+    const prestamo = await PrestamoInteres.findById(prestamoId);
+    
+    if (!prestamo) {
+      return res.status(404).send('Préstamo no encontrado');
+    }
+
+    // Asegúrate de que los campos del cliente estén disponibles si los necesitas
+    // Asumo que findById ya los carga. Si no, necesitarías una consulta adicional.
+    const cliente = await Cliente.findById(prestamo.cliente_id);
+
+    res.render('prestamos_interes/imprimir_contrato', {
+      // El layout: false es para que no se renderice el header y footer de la app
+      layout: false, 
+      prestamo: {
+        ...prestamo,
+        // Si findById no carga los datos del cliente, hazlo aquí:
+        // cliente_nombre: cliente.nombre,
+        // cliente_apellidos: cliente.apellidos,
+        // cliente_cedula: cliente.cedula,
+        // etc.
+      }
+    });
+  } catch (error) {
+    console.error('Error al cargar vista de impresión del contrato:', error);
+    res.status(500).send('Error interno del servidor');
+  }
+};
