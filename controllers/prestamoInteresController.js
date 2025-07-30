@@ -174,6 +174,8 @@ exports.showPago = async (req, res) => {
 exports.pagoForm = exports.showPago;
 
 exports.registrarPago = async (req, res) => {
+  console.log('BODY:', req.body);
+
   const {
     prestamo_id,
     monto,
