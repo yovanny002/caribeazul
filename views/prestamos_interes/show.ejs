@@ -55,7 +55,7 @@
                       RD$ <%= prestamo.interes_manual.toFixed(2) %>
                     </p>
                   <% } else { %>
-                    <p><strong>Tasa de Interés Anual:</strong> <%= prestamo.interes_porcentaje %>%</p>
+                    <p><strong>Tasa de Interés:</strong> <%= prestamo.interes_porcentaje %>%</p>
                   <% } %>
                   <p><strong>Forma de Pago:</strong> <%= prestamo.forma_pago %></p>
                   <p><strong>Estado:</strong> 
@@ -115,7 +115,7 @@
         </div>
       </div>
 
-  <h5 class="mt-4 mb-3">Historial de Pagos</h5>
+      <h5 class="mt-4 mb-3">Historial de Pagos</h5>
       <div class="table-responsive">
         <table class="table table-striped table-hover">
           <thead class="table-dark">
@@ -155,6 +155,10 @@
           </tbody>
         </table>
       </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
@@ -191,8 +195,8 @@
           legend: {
             position: 'right',
             labels: {
-                boxWidth: 20, // Ancho de la caja de color
-                padding: 10   // Espacio entre ítems de leyenda
+                boxWidth: 20,
+                padding: 10
             }
           },
           tooltip: {
@@ -203,7 +207,7 @@
             }
           }
         },
-        cutout: '70%', // Tamaño del "agujero" en el centro del donut
+        cutout: '70%',
       },
     });
   });

@@ -215,14 +215,19 @@ exports.registrarPago = async (req, res) => {
     referencia
   } = req.body;
 
-  const registrado_por = req.session.usuario_id; 
+  const registrado_por = req.session.usuario_id || 1; // Usamos 1 si no hay sesión para la prueba
+
+  console.log('--- INICIO DE REGISTRO DE PAGO EN EL CONTROLADOR ---');
+  console.log('Datos recibidos del formulario:', { prestamo_id, monto, metodo, notas, referencia });
+  
   if (!prestamo_id || !monto || !registrado_por) {
+    console.log('Error: Datos incompletos');
     req.flash('error', 'Datos incompletos para registrar el pago.');
     return res.redirect(`/prestamos_interes/${prestamo_id}`);
   }
 
   try {
-    await PrestamoInteres.registrarPago({
+    const pagoId = await PrestamoInteres.registrarPago({
       prestamo_id,
       monto: safeParseFloat(monto),
       metodo,
@@ -230,11 +235,12 @@ exports.registrarPago = async (req, res) => {
       referencia,
       registrado_por
     });
-
+    
+    console.log(`Pago registrado con ID: ${pagoId}`);
     req.flash('success', 'Pago registrado correctamente.');
     res.redirect(`/prestamos_interes/${prestamo_id}`);
   } catch (error) {
-    console.error('Error al registrar pago:', error);
+    console.error('Error al registrar pago en el controlador:', error);
     req.flash('error', `Hubo un problema al registrar el pago: ${error.message}`);
     res.redirect(`/prestamos_interes/${prestamo_id}`);
   }
