@@ -285,7 +285,7 @@ exports.recibo = async (req, res) => {
     pago.monto = safeParseFloat(pago.monto);
     pago.interes_pagado = safeParseFloat(pago.interes_pagado);
     pago.capital_pagado = safeParseFloat(pago.capital_pagado);
-    res.render('prestamos_interes/recibo_termico', { prestamo: prestamoForReceipt, pago, layout: false });
+    res.render('prestamos_interes/recibo', { prestamo: prestamoForReceipt, pago, layout: false });
   } catch (error) {
     console.error('Error generando recibo:', error);
     req.flash('error', 'Error al generar recibo: ' + error.message);
