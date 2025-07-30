@@ -307,7 +307,7 @@ exports.recibo = async (req, res) => {
     pago.interes_pagado = safeParseFloat(pago.interes_pagado);
     pago.capital_pagado = safeParseFloat(pago.capital_pagado);
 
-    res.render('prestamos_interes/recibo_termico', {
+    res.render('prestamos_interes/recibo', {
         prestamo: prestamoForReceipt,
         pago
     });
