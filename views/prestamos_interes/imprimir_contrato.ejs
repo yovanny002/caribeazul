@@ -178,16 +178,27 @@
 
     <div class="section">
       <h3 class="section-heading">Datos del Préstamo</h3>
-      <table class="data-table">
-        <tbody>
-          <tr><th>Monto Solicitado</th><td>RD$ <%= Number(prestamo.monto_solicitado).toLocaleString('es-DO', {minimumFractionDigits:2}) %></td></tr>
-          <tr><th>Monto Aprobado</th><td>RD$ <%= Number(prestamo.monto_aprobado).toLocaleString('es-DO', {minimumFractionDigits:2}) %></td></tr>
-          <tr><th>Cuota</th><td>RD$ <%= Number(prestamo.monto_por_cuota).toLocaleString('es-DO', {minimumFractionDigits:2}) %></td></tr>
-          <tr><th>Forma de Pago</th><td><%= prestamo.forma_pago %></td></tr>
-          <tr><th>Número de Cuotas</th><td><%= prestamo.cuotas %></td></tr>
-          <tr><th>Fecha</th><td><%= new Date().toLocaleDateString('es-DO') %></td></tr>
-        </tbody>
-      </table>
+       <table class="data-table">
+    <tbody>
+      <tr>
+        <th>Monto Solicitado</th>
+        <td>RD$ <%= Number(prestamo.monto_solicitado).toLocaleString('es-DO', {minimumFractionDigits:2}) %></td>
+      </tr>
+      <tr>
+        <th>Monto Aprobado</th>
+        <td>RD$ <%= Number(prestamo.monto_aprobado).toLocaleString('es-DO', {minimumFractionDigits:2}) %></td>
+      </tr>
+      <tr>
+        <th>Interés</th>
+        <td><%= prestamo.interes %> %</td>
+      </tr>
+        <tr><th>Forma de Pago</th><td><%= prestamo.forma_pago %></td></tr>
+      <tr>
+        <th>Fecha del Primer Pago</th>
+        <td><%= prestamo.fecha_primer_pago %></td>
+      </tr>
+    </tbody>
+  </table>
     </div>
 
     <div class="section">
