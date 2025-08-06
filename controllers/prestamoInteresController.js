@@ -226,6 +226,7 @@ exports.imprimirContrato = async (req, res) => {
 
     res.render('prestamos_interes/imprimir_contrato', {
       layout: false, 
+      moment: moment,
       prestamo: {
         ...prestamo,
         cliente_nombre: cliente.nombre,

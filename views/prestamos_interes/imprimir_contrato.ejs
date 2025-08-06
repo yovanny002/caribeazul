@@ -184,7 +184,7 @@
       <table class="data-table">
         <tbody>
           <tr><th>Número de Préstamo</th><td><%= prestamo.id %></td></tr>
-          <tr><th>Fecha de Creación</th><td><%= moment(prestamo.created_at).format('DD/MM/YYYY') %></td></tr>
+          <tr><th>Fecha de Creación</th><td><%= new Date(prestamo.created_at).toLocaleDateString('es-DO') %></td></tr>
           <tr><th>Monto Aprobado</th><td>RD$ <%= Number(prestamo.monto_aprobado).toLocaleString('es-DO', {minimumFractionDigits:2}) %></td></tr>
           <% if (prestamo.interes_manual && prestamo.interes_manual > 0) { %>
             <tr>
