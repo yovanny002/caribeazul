@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contrato de Préstamo - Ciwita</title>
+  <title>Contrato de Préstamo - Financiera Caribe Azul</title>
   <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -162,53 +162,59 @@
 </head>
 <body>
   <div class="contract-container">
-    <div class="title">Contrato de Solicitud de Préstamo</div>
+    <div class="title">Contrato de Préstamo - Financiera Caribe Azul</div>
 
     <div class="section">
       <h3 class="section-heading">Información del Cliente</h3>
       <table class="data-table">
         <tbody>
-          <tr><th>Nombre</th><td><%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></td></tr>
+          <tr><th>Nombre Completo</th><td><%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></td></tr>
           <tr><th>Cédula</th><td><%= prestamo.cliente_cedula %></td></tr>
+          <tr><th>Profesión</th><td><%= prestamo.cliente_profesion || 'No especificada' %></td></tr>
           <tr><th>Teléfono</th><td><%= prestamo.cliente_telefono1 %></td></tr>
           <tr><th>Dirección</th><td><%= prestamo.cliente_direccion %></td></tr>
+          <tr><th>Ruta</th><td><%= prestamo.ruta_nombre || 'No asignada' %></td></tr>
+          <tr><th>Zona</th><td><%= prestamo.ruta_zona || 'No especificada' %></td></tr>
         </tbody>
       </table>
     </div>
 
     <div class="section">
       <h3 class="section-heading">Datos del Préstamo</h3>
-       <table class="data-table">
-    <tbody>
-      <tr>
-        <th>Monto Solicitado</th>
-        <td>RD$ <%= Number(prestamo.monto_solicitado).toLocaleString('es-DO', {minimumFractionDigits:2}) %></td>
-      </tr>
-      <tr>
-        <th>Monto Aprobado</th>
-        <td>RD$ <%= Number(prestamo.monto_aprobado).toLocaleString('es-DO', {minimumFractionDigits:2}) %></td>
-      </tr>
-      <tr>
-        <th>Interés</th>
-        <td><%= prestamo.interes %> %</td>
-      </tr>
-        <tr><th>Forma de Pago</th><td><%= prestamo.forma_pago %></td></tr>
-      <tr>
-        <th>Fecha del Primer Pago</th>
-        <td><%= prestamo.fecha_primer_pago %></td>
-      </tr>
-    </tbody>
-  </table>
+      <table class="data-table">
+        <tbody>
+          <tr><th>Número de Préstamo</th><td><%= prestamo.id %></td></tr>
+          <tr><th>Fecha de Creación</th><td><%= moment(prestamo.created_at).format('DD/MM/YYYY') %></td></tr>
+          <tr><th>Monto Aprobado</th><td>RD$ <%= Number(prestamo.monto_aprobado).toLocaleString('es-DO', {minimumFractionDigits:2}) %></td></tr>
+          <% if (prestamo.interes_manual && prestamo.interes_manual > 0) { %>
+            <tr>
+              <th>Interés Fijo (<%= prestamo.frecuencia_interes === 'quincenal' ? 'Quincenal' : 'Mensual' %>)</th>
+              <td>RD$ <%= Number(prestamo.interes_manual).toLocaleString('es-DO', {minimumFractionDigits:2}) %></td>
+            </tr>
+          <% } else { %>
+            <tr><th>Tasa de Interés</th><td><%= prestamo.interes_porcentaje %>%</td></tr>
+          <% } %>
+          <tr><th>Frecuencia de Interés</th><td><%= prestamo.frecuencia_interes === 'quincenal' ? 'Quincenal' : 'Mensual' %></td></tr>
+          <tr><th>Plazo</th><td><%= prestamo.plazo_meses %> meses</td></tr>
+          <tr><th>Forma de Pago</th><td><%= prestamo.forma_pago %></td></tr>
+          <tr><th>Estado</th><td><%= prestamo.estado %></td></tr>
+        </tbody>
+      </table>
     </div>
 
     <div class="section">
-      <h3 class="section-heading">Compromiso</h3>
+      <h3 class="section-heading">Términos y Condiciones</h3>
       <p class="commitment-text">
-        Yo, <strong><%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></strong>, con cédula número <%= prestamo.cliente_cedula %>, me comprometo formalmente a pagar el préstamo aprobado bajo las condiciones acordadas. En caso de incumplimiento, reconozco un recargo por mora del <strong>5% diario</strong> a partir del segundo día de atraso. Asimismo, autorizo a  Financiera Caribe Azul a tomar las acciones legales correspondientes para recuperar el monto adeudado, respondiendo con mis bienes como garantía.
-      
-      <br><br>
-        Asimismo, reconozco que de persistir la falta de pago, me comprometo a responder con cualquier bien de mi propiedad (muebles, inmuebles, vehículos u otros) como garantía para saldar la deuda, autorizando expresamente a Financiera Caribe Azul a iniciar las acciones 
-        legales y/o judiciales correspondientes para recuperar el monto adeudado.
+        <strong>1. Obligación de Pago:</strong> Yo, <strong><%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %></strong>, con cédula número <%= prestamo.cliente_cedula %>, me comprometo formalmente a pagar el préstamo aprobado bajo las condiciones acordadas.
+        
+        <br><br>
+        <strong>2. Intereses y Mora:</strong> En caso de incumplimiento, reconozco un recargo por mora del <strong>2% diario</strong> sobre el saldo capital pendiente, a partir del segundo día de atraso después del período de pago establecido (<%= prestamo.frecuencia_interes === 'quincenal' ? '15 días' : '30 días' %>).
+        
+        <br><br>
+        <strong>3. Garantías:</strong> Asimismo, reconozco que de persistir la falta de pago, me comprometo a responder con cualquier bien de mi propiedad (muebles, inmuebles, vehículos u otros) como garantía para saldar la deuda, autorizando expresamente a Financiera Caribe Azul a iniciar las acciones legales y/o judiciales correspondientes para recuperar el monto adeudado.
+        
+        <br><br>
+        <strong>4. Aceptación de Términos:</strong> Este contrato representa el acuerdo completo entre las partes y sustituye cualquier acuerdo o entendimiento previo. Cualquier modificación a este contrato debe realizarse por escrito y ser firmada por ambas partes.
       </p>
     </div>
 
@@ -216,12 +222,13 @@
       <div class="signature-block">
         <div class="signature-line"></div>
         <p class="signature-label">Firma del Cliente</p>
-        <p class="signature-label">Fecha: <%= new Date().toLocaleDateString('es-DO') %></p>
+        <p class="signature-label">Fecha: <%= moment().format('DD/MM/YYYY') %></p>
       </div>
       <div class="signature-block">
         <div class="signature-line"></div>
-        <p class="signature-label">Firma de Ciwita Financiera</p>
-        <p class="signature-label">Fecha: <%= new Date().toLocaleDateString('es-DO') %></p>
+        <p class="signature-label">Firma del Representante</p>
+        <p class="signature-label">Financiera Caribe Azul</p>
+        <p class="signature-label">Fecha: <%= moment().format('DD/MM/YYYY') %></p>
       </div>
     </div>
   </div>
