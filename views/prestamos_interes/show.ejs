@@ -7,6 +7,11 @@
       <h3>Detalle del Préstamo por Interés</h3>
       <div>
         <% if (prestamo.estado === 'activo' || prestamo.estado === 'pendiente') { %>
+          <a href="/prestamos_interes/<%= prestamo.id %>/imprimir-contrato" 
+              target="_blank"
+              class="btn btn-primary me-2">
+              <i class="fas fa-file-contract"></i> Imprimir Contrato
+            </a>
           <a href="/prestamos_interes/<%= prestamo.id %>/pago" class="btn btn-success me-2">
             <i class="fas fa-money-bill-wave"></i> Registrar Pago
           </a>
