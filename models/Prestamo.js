@@ -192,26 +192,46 @@ const Prestamo = {
     return prestamoId;
   },
 
-  update: async (id, data) => {
-    await db.query(`
-      UPDATE solicitudes_prestamos
-      SET monto_solicitado = ?,
-          monto_aprobado = ?,
-          interes_porcentaje = ?,
-          forma_pago = ?,
-          estado = ?,
-          moras = ?
-      WHERE id = ?
-    `, [
-      safeParseFloat(data.monto_solicitado),
-      safeParseFloat(data.monto_aprobado),
-      safeParseFloat(data.interes_porcentaje, 25),
-      data.forma_pago,
-      data.estado,
-      safeParseFloat(data.moras, 0),
-      id
-    ]);
-  },
+ update: async (id, data) => {
+  const montoAprobado = safeParseFloat(data.monto_aprobado || data.monto_solicitado);
+  const interes = safeParseFloat(data.interes_porcentaje, 43);
+
+  let cuotas = parseInt(data.cuotas) || 3;
+  switch (data.forma_pago) {
+    case 'diario': cuotas = 26; break;
+    case 'semanal': cuotas = 13; break;
+    case 'quincenal': cuotas = 7; break;
+  }
+
+  const montoTotal = montoAprobado * (1 + interes / 100);
+  const montoPorCuota = parseFloat((montoTotal / cuotas).toFixed(2));
+
+  await db.query(`
+    UPDATE solicitudes_prestamos
+    SET monto_solicitado = ?,
+        monto_aprobado = ?,
+        interes_porcentaje = ?,
+        forma_pago = ?,
+        estado = ?,
+        moras = ?,
+        cuotas = ?,
+        monto_por_cuota = ?
+    WHERE id = ?
+  `, [
+    safeParseFloat(data.monto_solicitado),
+    montoAprobado,
+    interes,
+    data.forma_pago,
+    data.estado,
+    safeParseFloat(data.moras, 0),
+    cuotas,
+    montoPorCuota,
+    id
+  ]);
+
+  await db.query(`DELETE FROM cuotas WHERE prestamo_id = ?`, [id]);
+  await Prestamo.generateCuotas(id, montoTotal, cuotas, data.forma_pago);
+},
   
   updateEstado: async (id, estado) => {
     await db.query(`
