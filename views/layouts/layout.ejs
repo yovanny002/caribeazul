@@ -308,18 +308,20 @@
         <!-- <% } %>  -->
    
       <% if (rol === 'administrador' || rol === 'supervisor' || rol === 'servicio') { %>
-        <li class="nav-item">
+       <li class="nav-item">
           <a class="nav-link" href="##">
-            <i class="fas fa-map-marker-alt"></i>
-            <span>Financiamiento Vehicular</span>
+            <i class="fas fa-car-side"></i>
+            <span>Financiamiento</span>
           </a>
         </li>
-           <li class="nav-item">
+
+        <li class="nav-item">
           <a class="nav-link" href="##">
-            <i class="fas fa-map-marker-alt"></i>
+            <i class="fas fa-hand-holding-dollar"></i>
             <span>Hipotecas</span>
           </a>
         </li>
+
       <% } %>
       <% if (rol === 'caja' || rol === 'administrador') { %>
         <li class="nav-item">
