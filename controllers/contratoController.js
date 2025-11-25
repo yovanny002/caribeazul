@@ -3,18 +3,25 @@ const Cliente = require('../models/Cliente');
 const Prestamo = require('../models/Prestamo');
 const moment = require('moment');
 
-// Template completo del contrato (copia TODO el template largo aquí)
+// Template completo del contrato (coloca aquí el contrato real)
 const CONTRATO_TEMPLATE = `CONTRATO DE FINANCIAMIENTO DE VEHÍCULO DE MOTOR AL AMPARO DE LA Ley No. 483 SOBRE VENTA CONDICIONAL DE MUEBLES
-De una parte, CARIBE AZUL, S.R.L... [PEGA AQUÍ TODO EL TEXTO COMPLETO DEL CONTRATO]`;
+De una parte, CARIBE AZUL, S.R.L...
+[PEGAR AQUÍ EL TEXTO COMPLETO]`;
 
+
+// ================================================
+// LISTADO
+// ================================================
 exports.index = async (req, res) => {
   try {
     const contratos = await Contrato.findAll();
-    res.render('contratos/index', { 
-      contratos, 
+
+    res.render('contratos/index', {
+      contratos,
       moment,
-      messages: req.flash() 
+      messages: req.flash()
     });
+
   } catch (error) {
     console.error('Error al obtener contratos:', error);
     req.flash('error', 'Error al cargar los contratos');
@@ -22,16 +29,21 @@ exports.index = async (req, res) => {
   }
 };
 
+
+// ================================================
+// FORMULARIO DE CREACIÓN
+// ================================================
 exports.createForm = async (req, res) => {
   try {
     const clientes = await Cliente.findAll();
     const prestamos = await Prestamo.findAllWithClientes('aprobado');
-    
-    res.render('contratos/financiamiento', { 
-      clientes, 
+
+    res.render('contratos/financiamiento', {
+      clientes,
       prestamos,
-      messages: req.flash() 
+      messages: req.flash()
     });
+
   } catch (error) {
     console.error('Error cargando formulario de contrato:', error);
     req.flash('error', 'Error al cargar formulario');
@@ -39,6 +51,10 @@ exports.createForm = async (req, res) => {
   }
 };
 
+
+// ================================================
+// CREAR CONTRATO
+// ================================================
 exports.create = async (req, res) => {
   try {
     const {
@@ -69,7 +85,8 @@ exports.create = async (req, res) => {
       monto_seguro
     } = req.body;
 
-    // Organizar datos en JSON
+
+    // ORGANIZAR DATOS
     const datosCliente = {
       nombre_cliente,
       nacionalidad,
@@ -105,22 +122,28 @@ exports.create = async (req, res) => {
       monto_seguro
     };
 
-    // Generar texto del contrato
+
+    // GENERAR CONTRATO
     let contratoTexto = CONTRATO_TEMPLATE;
-    const allData = { ...datosCliente, ...datosVehiculo, ...datosFinanciamiento, ...datosSeguro };
-    
-    // Formatear fechas para el contrato
+
+    const allData = {
+      ...datosCliente,
+      ...datosVehiculo,
+      ...datosFinanciamiento,
+      ...datosSeguro
+    };
+
     allData.fecha_primera_cuota = formatearFecha(fecha_primera_cuota);
     allData.fecha_ultima_cuota = formatearFecha(fecha_ultima_cuota);
 
-    // Reemplazar placeholders
     for (const key in allData) {
       const value = allData[key] || 'N/A';
       contratoTexto = contratoTexto.replace(new RegExp(`{{${key}}}`, 'g'), value);
     }
 
-    // Guardar en base de datos
-    const contratoId = await Contrato.create({
+
+    // GUARDAR EN BD
+    const contrato = await Contrato.create({
       cliente_id: cliente_id || null,
       prestamo_id: prestamo_id || null,
       datos_cliente: datosCliente,
@@ -130,8 +153,9 @@ exports.create = async (req, res) => {
       contrato_texto: contratoTexto
     });
 
+
     req.flash('success', 'Contrato generado exitosamente');
-    res.redirect(`/contratos/${contratoId}`);
+    res.redirect(`/contratos/${contrato.id}`);
 
   } catch (error) {
     console.error('Error al crear contrato:', error);
@@ -140,9 +164,14 @@ exports.create = async (req, res) => {
   }
 };
 
+
+// ================================================
+// VER CONTRATO
+// ================================================
 exports.show = async (req, res) => {
   try {
     const contrato = await Contrato.findById(req.params.id);
+
     if (!contrato) {
       req.flash('error', 'Contrato no encontrado');
       return res.redirect('/contratos');
@@ -152,6 +181,7 @@ exports.show = async (req, res) => {
       contrato,
       moment
     });
+
   } catch (error) {
     console.error('Error al mostrar contrato:', error);
     req.flash('error', 'Error al cargar contrato');
@@ -159,9 +189,14 @@ exports.show = async (req, res) => {
   }
 };
 
+
+// ================================================
+// DESCARGAR
+// ================================================
 exports.download = async (req, res) => {
   try {
     const contrato = await Contrato.findById(req.params.id);
+
     if (!contrato) {
       return res.status(404).send('Contrato no encontrado');
     }
@@ -169,15 +204,21 @@ exports.download = async (req, res) => {
     res.setHeader('Content-Type', 'text/plain');
     res.setHeader('Content-Disposition', `attachment; filename="contrato-${contrato.id}.txt"`);
     res.send(contrato.contrato_texto);
+
   } catch (error) {
     console.error('Error al descargar contrato:', error);
     res.status(500).send('Error al descargar contrato');
   }
 };
 
+
+// ================================================
+// IMPRIMIR
+// ================================================
 exports.print = async (req, res) => {
   try {
     const contrato = await Contrato.findById(req.params.id);
+
     if (!contrato) {
       req.flash('error', 'Contrato no encontrado');
       return res.redirect('/contratos');
@@ -187,6 +228,7 @@ exports.print = async (req, res) => {
       contrato,
       layout: false
     });
+
   } catch (error) {
     console.error('Error al imprimir contrato:', error);
     req.flash('error', 'Error al generar vista de impresión');
@@ -194,25 +236,36 @@ exports.print = async (req, res) => {
   }
 };
 
+
+// ================================================
+// ELIMINAR
+// ================================================
 exports.delete = async (req, res) => {
   try {
     await Contrato.delete(req.params.id);
+
     req.flash('success', 'Contrato eliminado exitosamente');
     res.json({ success: true });
+
   } catch (error) {
     console.error('Error al eliminar contrato:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// Helper function para formatear fechas
+
+// ================================================
+// HELPER: FORMATEAR FECHA
+// ================================================
 function formatearFecha(fechaStr) {
   if (!fechaStr) return '';
   const fecha = new Date(fechaStr);
+
   const dia = fecha.getDate();
-  const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-  const mes = meses[fecha.getMonth()];
-  const anio = fecha.getFullYear();
-  return `${dia} de ${mes} del año ${anio}`;
+  const meses = [
+    'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
+  ];
+
+  return `${dia} de ${meses[fecha.getMonth()]} del año ${fecha.getFullYear()}`;
 }
