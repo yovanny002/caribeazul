@@ -1,164 +1,157 @@
+// controllers/contratosController.js
 const Contrato = require('../models/Contrato');
 const Cliente = require('../models/Cliente');
 const Prestamo = require('../models/Prestamo');
-const moment = require('moment');
+const moment = require('moment'); // Asegúrate de tener instalado 'moment'
 
-// Template completo del contrato (copia TODO el template largo aquí)
+// Template completo del contrato
 const CONTRATO_TEMPLATE = `CONTRATO DE FINANCIAMIENTO DE VEHÍCULO DE MOTOR AL AMPARO DE LA Ley No. 483 SOBRE VENTA CONDICIONAL DE MUEBLES
-De una parte, CARIBE AZUL, S.R.L... [PEGA AQUÍ TODO EL TEXTO COMPLETO DEL CONTRATO]`;
+De una parte, CARIBE AZUL, S.R.L... [PEGA AQUÍ TODO EL TEXTO COMPLETO DEL CONTRATO Y LOS PLACEHOLDERS COMO {{nombre_cliente}}, {{monto_financiado}}, etc.]`;
+
+// Helper function para formatear fechas (la que proporcionaste)
+function formatearFecha(fechaStr) {
+  if (!fechaStr) return '';
+  const fecha = new Date(fechaStr);
+  const dia = fecha.getDate();
+  const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  const mes = meses[fecha.getMonth()];
+  const anio = fecha.getFullYear();
+  return `${dia} de ${mes} del año ${anio}`;
+}
 
 exports.index = async (req, res) => {
-  try {
-    const contratos = await Contrato.findAll();
-    res.render('contratos/index', { 
-      contratos, 
-      moment,
-      messages: req.flash() 
-    });
-  } catch (error) {
-    console.error('Error al obtener contratos:', error);
-    req.flash('error', 'Error al cargar los contratos');
-    res.redirect('/');
-  }
+  try {
+    const contratos = await Contrato.findAll();
+    res.render('contratos/index', { 
+      contratos, 
+      moment,
+      messages: req.flash() 
+    });
+  } catch (error) {
+    console.error('Error al obtener contratos:', error);
+    req.flash('error', 'Error al cargar los contratos');
+    res.redirect('/');
+  }
 };
 
+/**
+ * Función corregida: Renderiza la vista 'financiamiento.ejs'.
+ * @route GET /contratos/create
+ */
 exports.createForm = async (req, res) => {
-  try {
-    const clientes = await Cliente.findAll();
-    const prestamos = await Prestamo.findAllWithClientes('aprobado');
-    
-    res.render('contratos/financiamiento', { 
-      clientes, 
-      prestamos,
-      messages: req.flash() 
-    });
-  } catch (error) {
-    console.error('Error cargando formulario de contrato:', error);
-    req.flash('error', 'Error al cargar formulario');
-    res.redirect('/contratos');
-  }
+  try {
+    const clientes = await Cliente.findAll();
+    // Asegúrate de que Prestamo.findAllWithClientes exista y funcione.
+    const prestamos = await Prestamo.findAllWithClientes('aprobado'); 
+    
+    // CORRECCIÓN: Renderizar 'contratos/financiamiento'
+    res.render('contratos/financiamiento', { 
+      clientes, 
+      prestamos,
+      messages: req.flash() 
+    });
+  } catch (error) {
+    console.error('Error cargando formulario de contrato:', error);
+    req.flash('error', 'Error al cargar formulario');
+    res.redirect('/contratos');
+  }
 };
 
+/**
+ * Procesa la creación del contrato.
+ * @route POST /contratos
+ */
 exports.create = async (req, res) => {
-  try {
-    const {
-      cliente_id,
-      prestamo_id,
-      nombre_cliente,
-      nacionalidad,
-      ocupacion,
-      tipo_documento,
-      numero_documento,
-      direccion,
-      telefono,
-      email,
-      tipo_vehiculo,
-      marca,
-      modelo,
-      anio,
-      placa,
-      chasis,
-      color,
-      precio_total,
-      monto_financiado,
-      cantidad_cuotas,
-      monto_cuota,
-      fecha_primera_cuota,
-      fecha_ultima_cuota,
-      tipo_seguro,
-      monto_seguro
-    } = req.body;
+  try {
+    const {
+      cliente_id, prestamo_id, nombre_cliente, nacionalidad, ocupacion,
+      tipo_documento, numero_documento, direccion, telefono, email,
+      tipo_vehiculo, marca, modelo, anio, placa, chasis, color,
+      precio_total, monto_financiado, cantidad_cuotas, monto_cuota,
+      fecha_primera_cuota, fecha_ultima_cuota, tipo_seguro, monto_seguro
+    } = req.body;
 
-    // Organizar datos en JSON
-    const datosCliente = {
-      nombre_cliente,
-      nacionalidad,
-      ocupacion,
-      tipo_documento,
-      numero_documento,
-      direccion,
-      telefono,
-      email
-    };
+    // Organización de datos... (Se mantiene como lo tenías)
+    const datosCliente = { nombre_cliente, nacionalidad, ocupacion, tipo_documento, numero_documento, direccion, telefono, email };
+    const datosVehiculo = { tipo_vehiculo, marca, modelo, anio, placa, chasis, color };
+    const datosFinanciamiento = { precio_total, monto_financiado, cantidad_cuotas, monto_cuota, fecha_primera_cuota, fecha_ultima_cuota };
+    const datosSeguro = { tipo_seguro, monto_seguro };
 
-    const datosVehiculo = {
-      tipo_vehiculo,
-      marca,
-      modelo,
-      anio,
-      placa,
-      chasis,
-      color
-    };
+    // Generar texto del contrato... (Se mantiene como lo tenías)
+    let contratoTexto = CONTRATO_TEMPLATE;
+    const allData = { ...datosCliente, ...datosVehiculo, ...datosFinanciamiento, ...datosSeguro };
+    
+    // Formatear fechas para el contrato
+    allData.fecha_primera_cuota = formatearFecha(fecha_primera_cuota);
+    allData.fecha_ultima_cuota = formatearFecha(fecha_ultima_cuota);
 
-    const datosFinanciamiento = {
-      precio_total,
-      monto_financiado,
-      cantidad_cuotas,
-      monto_cuota,
-      fecha_primera_cuota,
-      fecha_ultima_cuota
-    };
+    // Reemplazar placeholders
+    for (const key in allData) {
+      const value = allData[key] || 'N/A';
+      contratoTexto = contratoTexto.replace(new RegExp(`{{${key}}}`, 'g'), value);
+    }
 
-    const datosSeguro = {
-      tipo_seguro,
-      monto_seguro
-    };
+    // Guardar en base de datos... (Se mantiene como lo tenías)
+    const contratoId = await Contrato.create({
+      cliente_id: cliente_id || null,
+      prestamo_id: prestamo_id || null,
+      datos_cliente: datosCliente,
+      datos_vehiculo: datosVehiculo,
+      datos_financiamiento: datosFinanciamiento,
+      datos_seguro: datosSeguro,
+      contrato_texto: contratoTexto
+    });
 
-    // Generar texto del contrato
-    let contratoTexto = CONTRATO_TEMPLATE;
-    const allData = { ...datosCliente, ...datosVehiculo, ...datosFinanciamiento, ...datosSeguro };
-    
-    // Formatear fechas para el contrato
-    allData.fecha_primera_cuota = formatearFecha(fecha_primera_cuota);
-    allData.fecha_ultima_cuota = formatearFecha(fecha_ultima_cuota);
+    req.flash('success', 'Contrato generado exitosamente');
+    res.redirect(`/contratos/${contratoId}`);
 
-    // Reemplazar placeholders
-    for (const key in allData) {
-      const value = allData[key] || 'N/A';
-      contratoTexto = contratoTexto.replace(new RegExp(`{{${key}}}`, 'g'), value);
-    }
-
-    // Guardar en base de datos
-    const contratoId = await Contrato.create({
-      cliente_id: cliente_id || null,
-      prestamo_id: prestamo_id || null,
-      datos_cliente: datosCliente,
-      datos_vehiculo: datosVehiculo,
-      datos_financiamiento: datosFinanciamiento,
-      datos_seguro: datosSeguro,
-      contrato_texto: contratoTexto
-    });
-
-    req.flash('success', 'Contrato generado exitosamente');
-    res.redirect(`/contratos/${contratoId}`);
-
-  } catch (error) {
-    console.error('Error al crear contrato:', error);
-    req.flash('error', 'Error al generar contrato: ' + error.message);
-    res.redirect('/contratos/create');
-  }
+  } catch (error) {
+    console.error('Error al crear contrato:', error);
+    req.flash('error', 'Error al generar contrato: ' + error.message);
+    res.redirect('/contratos/create');
+  }
 };
 
+/**
+ * Muestra un contrato.
+ * @route GET /contratos/:id
+ */
 exports.show = async (req, res) => {
-  try {
-    const contrato = await Contrato.findById(req.params.id);
-    if (!contrato) {
-      req.flash('error', 'Contrato no encontrado');
-      return res.redirect('/contratos');
-    }
+  try {
+    const contrato = await Contrato.findById(req.params.id);
+    if (!contrato) {
+      req.flash('error', 'Contrato no encontrado');
+      return res.redirect('/contratos');
+    }
 
-    res.render('contratos/show', {
-      contrato,
-      moment
-    });
-  } catch (error) {
-    console.error('Error al mostrar contrato:', error);
-    req.flash('error', 'Error al cargar contrato');
-    res.redirect('/contratos');
-  }
+    res.render('contratos/show', {
+      contrato,
+      moment
+    });
+  } catch (error) {
+    console.error('Error al mostrar contrato:', error);
+    req.flash('error', 'Error al cargar contrato');
+    res.redirect('/contratos');
+  }
 };
 
+/**
+ * Elimina un contrato (soft delete).
+ * @route DELETE /contratos/:id
+ */
+exports.delete = async (req, res) => {
+  try {
+    await Contrato.delete(req.params.id);
+    req.flash('success', 'Contrato eliminado exitosamente');
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error al eliminar contrato:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ... Otras funciones (download, print) se mantienen igual
 exports.download = async (req, res) => {
   try {
     const contrato = await Contrato.findById(req.params.id);
