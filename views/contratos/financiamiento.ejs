@@ -236,7 +236,7 @@
             }
         }
         
-        /* Estilos para impresión */
+        /* ESTILOS DE IMPRESIÓN CORREGIDOS */
         @media print {
             body * {
                 visibility: hidden;
@@ -252,6 +252,7 @@
                 height: auto;
                 background: white;
                 overflow: visible;
+                display: block !important;
             }
             .modal-content {
                 margin: 0;
@@ -260,9 +261,31 @@
                 width: 100%;
                 max-width: 100%;
                 height: auto;
+                border: none;
+                overflow: visible;
+                position: relative;
             }
             .close, .modal-buttons {
                 display: none;
+            }
+            #contratoFinal {
+                white-space: pre-wrap;
+                line-height: 1.5;
+                font-size: 12px;
+                text-align: justify;
+                margin-top: 0;
+                max-height: none;
+                overflow: visible;
+                page-break-inside: avoid;
+            }
+            /* Asegurar que el contenido no se corte entre páginas */
+            .modal-content {
+                page-break-inside: avoid;
+            }
+            /* Mejorar la legibilidad en impresión */
+            body {
+                font-size: 12px;
+                line-height: 1.4;
             }
         }
 
@@ -907,9 +930,87 @@ Abogado Notario`;
             }
         };
 
-        // Imprimir contrato
+        // IMPRIMIR CONTRATO - FUNCIÓN CORREGIDA
         btnImprimir.onclick = function() {
-            window.print();
+            // Crear una ventana nueva específicamente para imprimir
+            const ventanaImpresion = window.open('', '_blank');
+            const contratoCompleto = contratoFinal.textContent;
+            
+            ventanaImpresion.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Contrato de Financiamiento - Financiera Caribe Azul</title>
+                    <style>
+                        body {
+                            font-family: 'Times New Roman', serif;
+                            font-size: 12px;
+                            line-height: 1.4;
+                            margin: 20px;
+                            color: #000;
+                        }
+                        .contrato {
+                            white-space: pre-wrap;
+                            text-align: justify;
+                        }
+                        .firma {
+                            margin-top: 50px;
+                            border-top: 1px solid #000;
+                            padding-top: 10px;
+                            width: 300px;
+                        }
+                        .firma-izquierda {
+                            float: left;
+                        }
+                        .firma-derecha {
+                            float: right;
+                        }
+                        .clear {
+                            clear: both;
+                        }
+                        @media print {
+                            body { margin: 0; }
+                            .page-break { page-break-before: always; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="contrato">${contratoCompleto}</div>
+                    <div class="clear"></div>
+                    <div class="firma firma-izquierda">
+                        <strong>LA PRIMERA PARTE, VENDEDOR o LA COMPAÑÍA</strong><br>
+                        _________________________<br>
+                        Firma y sello
+                    </div>
+                    <div class="firma firma-derecha">
+                        <strong>EL COMPRADOR o SEGUNDA PARTE</strong><br>
+                        _________________________<br>
+                        Firma
+                    </div>
+                    <div class="clear"></div>
+                    <div style="margin-top: 100px; text-align: center;">
+                        <div style="border-top: 1px solid #000; padding-top: 10px; width: 60%; margin: 0 auto;">
+                            <strong>LIC. YVELISSE VIZCAINO CASTRO</strong><br>
+                            Abogado Notario Público<br>
+                            Matrícula No. 7247<br>
+                            _________________________<br>
+                            Firma y sello notarial
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `);
+            
+            ventanaImpresion.document.close();
+            
+            // Esperar a que se cargue el contenido y luego imprimir
+            setTimeout(() => {
+                ventanaImpresion.print();
+                // Opcional: cerrar la ventana después de imprimir
+                setTimeout(() => {
+                    ventanaImpresion.close();
+                }, 100);
+            }, 500);
         };
 
         // Establecer fechas por defecto
