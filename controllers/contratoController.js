@@ -3,8 +3,9 @@ const Cliente = require('../models/Cliente');
 const Prestamo = require('../models/Prestamo');
 const moment = require('moment');
 
-// Template del contrato (el mismo que tienes en el frontend)
-const CONTRATO_TEMPLATE = `CONTRATO DE FINANCIAMIENTO DE VEHÍCULO DE MOTOR...`; // Copia todo el template aquí
+// Template completo del contrato (copia TODO el template largo aquí)
+const CONTRATO_TEMPLATE = `CONTRATO DE FINANCIAMIENTO DE VEHÍCULO DE MOTOR AL AMPARO DE LA Ley No. 483 SOBRE VENTA CONDICIONAL DE MUEBLES
+De una parte, CARIBE AZUL, S.R.L... [PEGA AQUÍ TODO EL TEXTO COMPLETO DEL CONTRATO]`;
 
 exports.index = async (req, res) => {
   try {
@@ -114,7 +115,8 @@ exports.create = async (req, res) => {
 
     // Reemplazar placeholders
     for (const key in allData) {
-      contratoTexto = contratoTexto.replaceAll(`{{${key}}}`, allData[key] || 'N/A');
+      const value = allData[key] || 'N/A';
+      contratoTexto = contratoTexto.replace(new RegExp(`{{${key}}}`, 'g'), value);
     }
 
     // Guardar en base de datos
