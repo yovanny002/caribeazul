@@ -14,75 +14,231 @@
     </div>
 
     <div class="card-body">
-      <% if (messages.success) { %>
+      <!-- Mensajes Flash -->
+      <% if (messages.success && messages.success.length > 0) { %>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
-          <%= messages.success %>
+          <%= messages.success[0] %>
           <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
       <% } %>
       
-      <% if (messages.error) { %>
+      <% if (messages.error && messages.error.length > 0) { %>
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-          <%= messages.error %>
+          <%= messages.error[0] %>
           <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
       <% } %>
 
+      <!-- Estadísticas rápidas -->
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <div class="card bg-primary text-white">
+            <div class="card-body py-3">
+              <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                  <h4 class="mb-0"><%= contratos.length %></h4>
+                  <small>Total Contratos</small>
+                </div>
+                <div class="flex-shrink-0">
+                  <i class="fas fa-file-contract fa-2x"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card bg-success text-white">
+            <div class="card-body py-3">
+              <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                  <h4 class="mb-0">
+                    RD$ <%= contratos.reduce((total, c) => total + (parseFloat(c.datos_financiamiento?.monto_financiado) || 0), 0).toLocaleString() %>
+                  </h4>
+                  <small>Monto Total</small>
+                </div>
+                <div class="flex-shrink-0">
+                  <i class="fas fa-money-bill-wave fa-2x"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabla de Contratos -->
       <div class="table-responsive">
-        <table class="table table-hover">
-          <thead>
+        <table class="table table-hover table-striped">
+          <thead class="table-dark">
             <tr>
               <th>ID</th>
               <th>Cliente</th>
               <th>Vehículo</th>
-              <th>Monto Financiado</th>
-              <th>Fecha Creación</th>
+              <th>Financiamiento</th>
+              <th>Estado</th>
+              <th>Fecha</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             <% if (contratos.length === 0) { %>
               <tr>
-                <td colspan="6" class="text-center">No hay contratos registrados</td>
-              </tr>
-            <% } %>
-            
-            <% contratos.forEach(contrato => { %>
-              <tr>
-                <td>#<%= contrato.id %></td>
-                <td>
-                  <strong><%= contrato.datos_cliente.nombre_cliente %></strong><br>
-                  <small class="text-muted"><%= contrato.datos_cliente.numero_documento %></small>
-                </td>
-                <td>
-                  <%= contrato.datos_vehiculo.marca %> <%= contrato.datos_vehiculo.modelo %><br>
-                  <small class="text-muted"><%= contrato.datos_vehiculo.placa %></small>
-                </td>
-                <td>
-                  <strong>RD$ <%= Number(contrato.datos_financiamiento.monto_financiado).toLocaleString() %></strong><br>
-                  <small><%= contrato.datos_financiamiento.cantidad_cuotas %> cuotas</small>
-                </td>
-                <td><%= moment(contrato.created_at).format('DD/MM/YYYY') %></td>
-                <td>
-                  <div class="btn-group btn-group-sm">
-                    <a href="/contratos/<%= contrato.id %>" class="btn btn-outline-primary">
-                      <i class="fas fa-eye"></i>
+                <td colspan="7" class="text-center py-4">
+                  <div class="text-muted">
+                    <i class="fas fa-file-contract fa-3x mb-3"></i>
+                    <h5>No hay contratos registrados</h5>
+                    <p class="mb-0">Comienza creando tu primer contrato de financiamiento</p>
+                    <a href="/contratos/create" class="btn btn-primary mt-3">
+                      <i class="fas fa-plus me-1"></i> Crear Primer Contrato
                     </a>
-                    <a href="/contratos/<%= contrato.id %>/download" class="btn btn-outline-success">
-                      <i class="fas fa-download"></i>
-                    </a>
-                    <a href="/contratos/<%= contrato.id %>/print" class="btn btn-outline-info" target="_blank">
-                      <i class="fas fa-print"></i>
-                    </a>
-                    <button class="btn btn-outline-danger delete-contrato" data-id="<%= contrato.id %>">
-                      <i class="fas fa-trash"></i>
-                    </button>
                   </div>
                 </td>
               </tr>
-            <% }) %>
+            <% } else { %>
+              <% contratos.forEach(contrato => { %>
+                <tr>
+                  <td>
+                    <span class="badge bg-secondary">#<%= contrato.id %></span>
+                  </td>
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar-sm bg-light rounded-circle me-3 d-flex align-items-center justify-content-center">
+                        <i class="fas fa-user text-primary"></i>
+                      </div>
+                      <div>
+                        <strong class="d-block">
+                          <%= contrato.datos_cliente?.nombre_cliente || 'Cliente no especificado' %>
+                        </strong>
+                        <small class="text-muted">
+                          <%= contrato.datos_cliente?.numero_documento || 'Sin documento' %>
+                        </small>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div>
+                      <strong class="d-block">
+                        <%= contrato.datos_vehiculo?.marca || 'N/A' %> <%= contrato.datos_vehiculo?.modelo || '' %>
+                      </strong>
+                      <small class="text-muted">
+                        <%= contrato.datos_vehiculo?.placa ? `Placa: ${contrato.datos_vehiculo.placa}` : 'Sin placa' %>
+                        <%= contrato.datos_vehiculo?.anio ? ` • ${contrato.datos_vehiculo.anio}` : '' %>
+                      </small>
+                    </div>
+                  </td>
+                  <td>
+                    <div>
+                      <strong class="text-success d-block">
+                        RD$ <%= (contrato.datos_financiamiento?.monto_financiado || 0).toLocaleString() %>
+                      </strong>
+                      <small class="text-muted">
+                        <%= contrato.datos_financiamiento?.cantidad_cuotas || 'N/A' %> cuotas
+                        <br>
+                        RD$ <%= (contrato.datos_financiamiento?.monto_cuota || 0).toLocaleString() %>/mes
+                      </small>
+                    </div>
+                  </td>
+                  <td>
+                    <% const estado = contrato.estado || 'activo'; %>
+                    <% const estadoClass = {
+                         'activo': 'bg-success',
+                         'inactivo': 'bg-warning',
+                         'eliminado': 'bg-danger',
+                         'pendiente': 'bg-info'
+                       }[estado] || 'bg-secondary'; %>
+                    <span class="badge <%= estadoClass %>">
+                      <i class="fas fa-circle me-1 small"></i>
+                      <%= estado.charAt(0).toUpperCase() + estado.slice(1) %>
+                    </span>
+                  </td>
+                  <td>
+                    <small class="text-muted d-block">
+                      <%= moment(contrato.created_at).format('DD/MM/YYYY') %>
+                    </small>
+                    <small class="text-muted">
+                      <%= moment(contrato.created_at).format('HH:mm') %>
+                    </small>
+                  </td>
+                  <td>
+                    <div class="btn-group btn-group-sm">
+                      <!-- Ver -->
+                      <a href="/contratos/<%= contrato.id %>" 
+                         class="btn btn-outline-primary" 
+                         title="Ver detalles"
+                         data-bs-toggle="tooltip">
+                        <i class="fas fa-eye"></i>
+                      </a>
+                      
+                      <!-- Descargar -->
+                      <a href="/contratos/<%= contrato.id %>/download" 
+                         class="btn btn-outline-success" 
+                         title="Descargar PDF"
+                         data-bs-toggle="tooltip">
+                        <i class="fas fa-download"></i>
+                      </a>
+                      
+                      <!-- Imprimir -->
+                      <a href="/contratos/<%= contrato.id %>/print" 
+                         class="btn btn-outline-info" 
+                         target="_blank"
+                         title="Imprimir"
+                         data-bs-toggle="tooltip">
+                        <i class="fas fa-print"></i>
+                      </a>
+                      
+                      <!-- Eliminar -->
+                      <% if (contrato.estado !== 'eliminado') { %>
+                        <button class="btn btn-outline-danger delete-contrato" 
+                                data-id="<%= contrato.id %>" 
+                                data-name="<%= contrato.datos_cliente?.nombre_cliente || 'este contrato' %>"
+                                title="Eliminar"
+                                data-bs-toggle="tooltip">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      <% } else { %>
+                        <button class="btn btn-outline-secondary" disabled title="Ya eliminado">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      <% } %>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } %>
           </tbody>
         </table>
+      </div>
+
+      <!-- Paginación (si es necesaria en el futuro) -->
+      <% if (contratos.length > 0) { %>
+        <div class="d-flex justify-content-between align-items-center mt-4">
+          <div class="text-muted">
+            Mostrando <strong><%= contratos.length %></strong> contrato<%= contratos.length !== 1 ? 's' : '' %>
+          </div>
+          <!-- Aquí puedes agregar paginación si es necesario -->
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Confirmación para Eliminar -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirmar Eliminación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>¿Está seguro de que desea eliminar el contrato de <strong id="contratoName"></strong>?</p>
+        <p class="text-danger small">
+          <i class="fas fa-exclamation-triangle me-1"></i>
+          Esta acción no se puede deshacer.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="confirmDelete">Eliminar</button>
       </div>
     </div>
   </div>
@@ -90,34 +246,112 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Eliminar contrato
+  // Inicializar tooltips de Bootstrap
+  const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+  tooltips.forEach(tooltip => new bootstrap.Tooltip(tooltip));
+
+  // Modal de eliminación
+  const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+  let contratoToDelete = null;
+  let contratoNameToDelete = '';
+
+  // Configurar botones de eliminar
   document.querySelectorAll('.delete-contrato').forEach(button => {
     button.addEventListener('click', function() {
-      const contratoId = this.getAttribute('data-id');
+      contratoToDelete = this.getAttribute('data-id');
+      contratoNameToDelete = this.getAttribute('data-name');
       
-      if (confirm('¿Está seguro de que desea eliminar este contrato?')) {
-        fetch(`/contratos/${contratoId}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            location.reload();
-          } else {
-            alert('Error al eliminar contrato');
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          alert('Error al eliminar contrato');
-        });
+      document.getElementById('contratoName').textContent = contratoNameToDelete;
+      deleteModal.show();
+    });
+  });
+
+  // Confirmar eliminación
+  document.getElementById('confirmDelete').addEventListener('click', function() {
+    if (!contratoToDelete) return;
+
+    fetch(`/contratos/${contratoToDelete}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': '<%= typeof csrfToken !== "undefined" ? csrfToken : "" %>'
       }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Error en la respuesta del servidor');
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (data.success) {
+        // Mostrar mensaje de éxito
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-success alert-dismissible fade show';
+        alert.innerHTML = `
+          <i class="fas fa-check-circle me-2"></i>
+          Contrato eliminado correctamente
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.querySelector('.card-body').insertBefore(alert, document.querySelector('.table-responsive'));
+        
+        // Recargar después de 1 segundo
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
+      } else {
+        throw new Error(data.message || 'Error desconocido');
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      
+      // Mostrar mensaje de error
+      const alert = document.createElement('div');
+      alert.className = 'alert alert-danger alert-dismissible fade show';
+      alert.innerHTML = `
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        Error al eliminar el contrato: ${error.message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      document.querySelector('.card-body').insertBefore(alert, document.querySelector('.table-responsive'));
+    })
+    .finally(() => {
+      deleteModal.hide();
+      contratoToDelete = null;
+      contratoNameToDelete = '';
     });
   });
 });
 </script>
+
+<style>
+.avatar-sm {
+  width: 40px;
+  height: 40px;
+  font-size: 14px;
+}
+
+.table th {
+  border-top: none;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.btn-group-sm > .btn {
+  padding: 0.25rem 0.5rem;
+}
+
+.card {
+  border: none;
+  box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
+
+.badge {
+  font-size: 0.75em;
+}
+</style>
 
 <%- include('../partials/footer') %>
