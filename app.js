@@ -93,7 +93,7 @@ app.use('/cobradores', authMiddleware.ensureAuthenticated, cobradoresRoutes);
 app.use('/rutas', authMiddleware.ensureAuthenticated, rutasRoutes);
 // Ruta para subir documentos
 app.use('/documentos', authMiddleware.ensureAuthenticated, documentosRoutes);
-app.use('/financiamiento', contratoRoutes);
+app.use('/contratos', contratoRoutes);
 
 
 
