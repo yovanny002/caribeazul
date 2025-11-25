@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contrato #<%= contrato.id %></title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; }
+    .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+    .contrato-content { white-space: pre-wrap; text-align: justify; }
+    .firmas { margin-top: 100px; display: flex; justify-content: space-between; }
+    .firma { text-align: center; width: 45%; }
+    .linea-firma { border-top: 1px solid #000; margin: 60px 0 10px; }
+    @media print {
+      body { margin: 0; }
+      .no-print { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Agencia Caribe Azul</h1>
+    <h2>Contrato de Financiamiento #<%= contrato.id %></h2>
+  </div>
+
+  <div class="contrato-content">
+    <%= contrato.contrato_texto %>
+  </div>
+
+  <div class="firmas">
+    <div class="firma">
+      <div class="linea-firma"></div>
+      <strong>CARIBE AZUL, S.R.L</strong><br>
+      EL VENDEDOR
+    </div>
+    <div class="firma">
+      <div class="linea-firma"></div>
+      <strong><%= contrato.datos_cliente.nombre_cliente %></strong><br>
+      EL COMPRADOR
+    </div>
+  </div>
+
+  <div class="no-print" style="text-align: center; margin-top: 50px;">
+    <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px;">Imprimir</button>
+    <button onclick="window.close()" style="padding: 10px 20px; font-size: 16px; margin-left: 10px;">Cerrar</button>
+  </div>
+</body>
+</html>

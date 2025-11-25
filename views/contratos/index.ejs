@@ -1,0 +1,123 @@
+<%- include('../partials/header', { title: 'Contratos de Financiamiento' }) %>
+
+<div class="container-fluid px-4 mt-4">
+  <div class="card border-0 shadow">
+    <div class="card-header bg-primary text-white py-3">
+      <div class="d-flex justify-content-between align-items-center">
+        <h2 class="mb-0">
+          <i class="fas fa-file-contract me-2"></i>Contratos de Financiamiento
+        </h2>
+        <a href="/contratos/create" class="btn btn-light btn-sm">
+          <i class="fas fa-plus me-1"></i> Nuevo Contrato
+        </a>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <% if (messages.success) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <%= messages.success %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      <% } %>
+      
+      <% if (messages.error) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <%= messages.error %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      <% } %>
+
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Cliente</th>
+              <th>Vehículo</th>
+              <th>Monto Financiado</th>
+              <th>Fecha Creación</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (contratos.length === 0) { %>
+              <tr>
+                <td colspan="6" class="text-center">No hay contratos registrados</td>
+              </tr>
+            <% } %>
+            
+            <% contratos.forEach(contrato => { %>
+              <tr>
+                <td>#<%= contrato.id %></td>
+                <td>
+                  <strong><%= contrato.datos_cliente.nombre_cliente %></strong><br>
+                  <small class="text-muted"><%= contrato.datos_cliente.numero_documento %></small>
+                </td>
+                <td>
+                  <%= contrato.datos_vehiculo.marca %> <%= contrato.datos_vehiculo.modelo %><br>
+                  <small class="text-muted"><%= contrato.datos_vehiculo.placa %></small>
+                </td>
+                <td>
+                  <strong>RD$ <%= Number(contrato.datos_financiamiento.monto_financiado).toLocaleString() %></strong><br>
+                  <small><%= contrato.datos_financiamiento.cantidad_cuotas %> cuotas</small>
+                </td>
+                <td><%= moment(contrato.created_at).format('DD/MM/YYYY') %></td>
+                <td>
+                  <div class="btn-group btn-group-sm">
+                    <a href="/contratos/<%= contrato.id %>" class="btn btn-outline-primary">
+                      <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="/contratos/<%= contrato.id %>/download" class="btn btn-outline-success">
+                      <i class="fas fa-download"></i>
+                    </a>
+                    <a href="/contratos/<%= contrato.id %>/print" class="btn btn-outline-info" target="_blank">
+                      <i class="fas fa-print"></i>
+                    </a>
+                    <button class="btn btn-outline-danger delete-contrato" data-id="<%= contrato.id %>">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Eliminar contrato
+  document.querySelectorAll('.delete-contrato').forEach(button => {
+    button.addEventListener('click', function() {
+      const contratoId = this.getAttribute('data-id');
+      
+      if (confirm('¿Está seguro de que desea eliminar este contrato?')) {
+        fetch(`/contratos/${contratoId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            location.reload();
+          } else {
+            alert('Error al eliminar contrato');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error al eliminar contrato');
+        });
+      }
+    });
+  });
+});
+</script>
+
+<%- include('../partials/footer') %>

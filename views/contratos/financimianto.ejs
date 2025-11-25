@@ -1,4 +1,4 @@
-<%- include('../partials/header', { title: typeof title !== 'undefined' ? title : 'Generador de Contrato' }) %>
+<%- include('../partials/header', { title: 'Generador de Contrato de Financiamiento' }) %>
 
 <!-- SweetAlert2 CSS -->
 <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
@@ -62,7 +62,8 @@
   }
 
   .form-group input,
-  .form-group select {
+  .form-group select,
+  .form-group textarea {
     width: 100%;
     padding: 10px;
     border: 1px solid #cfd8e2;
@@ -81,6 +82,7 @@
     font-weight: 500;
     transition: background 0.3s;
   }
+
   .button-color{
     background-color: red;
   }
@@ -253,6 +255,30 @@
       display: none;
     }
   }
+
+  .form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+  }
+
+  .form-row .form-group {
+    flex: 1;
+    margin-bottom: 0;
+  }
+
+  .info-box {
+    background: #f8f9fa;
+    border-left: 4px solid var(--primary-color);
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+  }
+
+  .info-box h4 {
+    margin-bottom: 10px;
+    color: var(--primary-color);
+  }
 </style>
 
 <div class="container-fluid px-4 mt-4">
@@ -262,8 +288,8 @@
         <h2 class="mb-0">
           <i class="fas fa-file-contract me-2"></i>Generador de Contrato de Financiamiento
         </h2>
-        <a href="/prestamos" class="btn btn-light btn-sm">
-          <i class="fas fa-arrow-left me-1"></i> Volver
+        <a href="/contratos" class="btn btn-light btn-sm">
+          <i class="fas fa-arrow-left me-1"></i> Volver a Contratos
         </a>
       </div>
     </div>
@@ -273,90 +299,178 @@
         <h1>Agencia Caribe Azul <br>Contrato de Financiamiento</h1>
       </div>
 
+      <% if (messages.success) { %>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          <%= messages.success %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      <% } %>
+      
+      <% if (messages.error) { %>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <%= messages.error %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      <% } %>
+
+      <div class="info-box">
+        <h4><i class="fas fa-info-circle me-2"></i>Información Importante</h4>
+        <p class="mb-0">Complete todos los campos obligatorios (*) para generar el contrato. Puede asociar el contrato a un cliente y préstamo existente si lo desea.</p>
+      </div>
+
       <div class="card">
-        <form id="formContrato">
+        <form id="formContrato" action="/contratos/create" method="POST">
           <!-- Indicador de progreso -->
           <div class="progress-indicator">
             <div class="progress-step active" data-step="1">1</div>
             <div class="progress-step" data-step="2">2</div>
             <div class="progress-step" data-step="3">3</div>
             <div class="progress-step" data-step="4">4</div>
+            <div class="progress-step" data-step="5">5</div>
+          </div>
+          
+          <!-- Bloque 0: Asociaciones -->
+          <div class="form-block active" id="block-0">
+            <h2><i class="fas fa-link me-2"></i>Asociaciones (Opcional)</h2>
+            
+            <div class="form-group">
+              <label>Cliente existente</label>
+              <select name="cliente_id" class="form-control">
+                <option value="">Seleccionar cliente existente...</option>
+                <% if (typeof clientes !== 'undefined' && clientes.length > 0) { %>
+                  <% clientes.forEach(cliente => { %>
+                    <option value="<%= cliente.id %>">
+                      <%= cliente.nombre %> <%= cliente.apellidos %> - <%= cliente.cedula %>
+                    </option>
+                  <% }) %>
+                <% } %>
+              </select>
+              <small class="text-muted">Si selecciona un cliente, algunos campos se completarán automáticamente</small>
+            </div>
+
+            <div class="form-group">
+              <label>Préstamo asociado</label>
+              <select name="prestamo_id" class="form-control">
+                <option value="">Seleccionar préstamo existente...</option>
+                <% if (typeof prestamos !== 'undefined' && prestamos.length > 0) { %>
+                  <% prestamos.forEach(prestamo => { %>
+                    <option value="<%= prestamo.id %>" data-monto="<%= prestamo.monto_aprobado %>" data-cliente="<%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %>">
+                      <%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %> - RD$ <%= Number(prestamo.monto_aprobado).toLocaleString() %>
+                    </option>
+                  <% }) %>
+                <% } %>
+              </select>
+              <small class="text-muted">Si selecciona un préstamo, los datos de financiamiento se completarán automáticamente</small>
+            </div>
+            
+            <div class="btn-group">
+              <button type="button" id="btn-next-0">Siguiente</button>
+            </div>
           </div>
           
           <!-- Bloque 1: Datos del Cliente -->
-          <div class="form-block active" id="block-1">
-            <h2>Datos del Cliente</h2>
-            <div class="form-group">
-              <label>Nombre completo*</label>
-              <input type="text" placeholder="Ej: Juan Pérez" name="nombre_cliente" required>
+          <div class="form-block" id="block-1">
+            <h2><i class="fas fa-user me-2"></i>Datos del Cliente</h2>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Nombre completo*</label>
+                <input type="text" placeholder="Ej: Juan Pérez" name="nombre_cliente" required>
+              </div>
+              <div class="form-group">
+                <label>Nacionalidad</label>
+                <input type="text" placeholder="Ej: Dominicana" name="nacionalidad" value="Dominicana">
+              </div>
             </div>
-            <div class="form-group">
-              <label>Nacionalidad</label>
-              <input type="text" placeholder="Ej: Dominicana" name="nacionalidad">
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Ocupación*</label>
+                <input type="text" placeholder="Ej: Ingeniero" name="ocupacion" required>
+              </div>
+              <div class="form-group">
+                <label>Tipo de documento*</label>
+                <select name="tipo_documento" required>
+                  <option value="cédula">Cédula</option>
+                  <option value="pasaporte">Pasaporte</option>
+                </select>
+              </div>
             </div>
-            <div class="form-group">
-              <label>Ocupación</label>
-              <input type="text" placeholder="Ej: Ingeniero" name="ocupacion">
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Número de documento*</label>
+                <input type="text" placeholder="Ej: 001-1234567-8" name="numero_documento" required>
+              </div>
+              <div class="form-group">
+                <label>Teléfono*</label>
+                <input type="tel" placeholder="Ej: 809-123-4567" name="telefono" required>
+              </div>
             </div>
+
             <div class="form-group">
-              <label>Tipo de documento*</label>
-              <select name="tipo_documento" required>
-                <option value="cédula">Cédula</option>
-                <option value="pasaporte">Pasaporte</option>
-              </select>
+              <label>Dirección completa*</label>
+              <textarea name="direccion" placeholder="Ej: Calle Principal #123, Sector Los Jardines, Santo Domingo Este" rows="2" required></textarea>
             </div>
-            <div class="form-group">
-              <label>Número de documento*</label>
-              <input type="text" placeholder="Ej: 001-1234567-8" name="numero_documento" required>
-            </div>
-            <div class="form-group">
-              <label>Dirección</label>
-              <input type="text" placeholder="Ej: Calle Principal #123" name="direccion">
-            </div>
-            <div class="form-group">
-              <label>Teléfono</label>
-              <input type="tel" placeholder="Ej: 809-123-4567" name="telefono">
-            </div>
+
             <div class="form-group">
               <label>Email</label>
               <input type="email" placeholder="Ej: juan.perez@email.com" name="email">
             </div>
             
             <div class="btn-group">
+              <button type="button" id="btn-prev-1">Anterior</button>
               <button type="button" id="btn-next-1">Siguiente</button>
             </div>
           </div>
           
           <!-- Bloque 2: Vehículo -->
           <div class="form-block" id="block-2">
-            <h2>Vehículo</h2>
-            <div class="form-group">
-              <label>Tipo</label>
-              <input type="text" placeholder="Ej: Automóvil" name="tipo_vehiculo">
+            <h2><i class="fas fa-car me-2"></i>Vehículo</h2>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Tipo de vehículo*</label>
+                <select name="tipo_vehiculo" required>
+                  <option value="">Seleccionar tipo...</option>
+                  <option value="Automóvil">Automóvil</option>
+                  <option value="Camioneta">Camioneta</option>
+                  <option value="Motocicleta">Motocicleta</option>
+                  <option value="Camión">Camión</option>
+                  <option value="Jeep">Jeep</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Marca*</label>
+                <input type="text" placeholder="Ej: Toyota" name="marca" required>
+              </div>
             </div>
-            <div class="form-group">
-              <label>Marca</label>
-              <input type="text" placeholder="Ej: Toyota" name="marca">
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Modelo*</label>
+                <input type="text" placeholder="Ej: Corolla" name="modelo" required>
+              </div>
+              <div class="form-group">
+                <label>Año*</label>
+                <input type="text" placeholder="Ej: 2023" name="anio" required>
+              </div>
             </div>
-            <div class="form-group">
-              <label>Modelo</label>
-              <input type="text" placeholder="Ej: Corolla" name="modelo">
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Placa*</label>
+                <input type="text" placeholder="Ej: ABC123" name="placa" required>
+              </div>
+              <div class="form-group">
+                <label>Color*</label>
+                <input type="text" placeholder="Ej: Rojo" name="color" required>
+              </div>
             </div>
+
             <div class="form-group">
-              <label>Año</label>
-              <input type="text" placeholder="Ej: 2023" name="anio">
-            </div>
-            <div class="form-group">
-              <label>Placa</label>
-              <input type="text" placeholder="Ej: ABC123" name="placa">
-            </div>
-            <div class="form-group">
-              <label>Chasis</label>
-              <input type="text" placeholder="Ej: 1HGCM82633A123456" name="chasis">
-            </div>
-            <div class="form-group">
-              <label>Color</label>
-              <input type="text" placeholder="Ej: Rojo" name="color">
+              <label>Número de chasis*</label>
+              <input type="text" placeholder="Ej: 1HGCM82633A123456" name="chasis" required>
             </div>
             
             <div class="btn-group">
@@ -367,30 +481,45 @@
           
           <!-- Bloque 3: Financiamiento -->
           <div class="form-block" id="block-3">
-            <h2>Financiamiento</h2>
-            <div class="form-group">
-              <label>Precio total*</label>
-              <input type="number" placeholder="Ej: 500000" name="precio_total" required>
+            <h2><i class="fas fa-money-bill-wave me-2"></i>Financiamiento</h2>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Precio total del vehículo*</label>
+                <input type="number" placeholder="Ej: 500000" name="precio_total" step="0.01" required>
+              </div>
+              <div class="form-group">
+                <label>Monto financiado*</label>
+                <input type="number" placeholder="Ej: 400000" name="monto_financiado" step="0.01" required>
+              </div>
             </div>
-            <div class="form-group">
-              <label>Monto financiado*</label>
-              <input type="number" placeholder="Ej: 400000" name="monto_financiado" required>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Cantidad de cuotas*</label>
+                <select name="cantidad_cuotas" required>
+                  <option value="12">12 cuotas</option>
+                  <option value="24" selected>24 cuotas</option>
+                  <option value="36">36 cuotas</option>
+                  <option value="48">48 cuotas</option>
+                  <option value="60">60 cuotas</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Monto por cuota*</label>
+                <input type="number" placeholder="Ej: 18000" name="monto_cuota" step="0.01" required>
+              </div>
             </div>
-            <div class="form-group">
-              <label>Cantidad de cuotas*</label>
-              <input type="number" placeholder="Ej: 24" name="cantidad_cuotas" required>
-            </div>
-            <div class="form-group">
-              <label>Monto por cuota*</label>
-              <input type="number" placeholder="Ej: 18000" name="monto_cuota" required>
-            </div>
-            <div class="form-group">
-              <label>Fecha primera cuota*</label>
-              <input type="date" name="fecha_primera_cuota" required>
-            </div>
-            <div class="form-group">
-              <label>Fecha última cuota*</label>
-              <input type="date" name="fecha_ultima_cuota" required>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Fecha primera cuota*</label>
+                <input type="date" name="fecha_primera_cuota" required>
+              </div>
+              <div class="form-group">
+                <label>Fecha última cuota*</label>
+                <input type="date" name="fecha_ultima_cuota" required>
+              </div>
             </div>
             
             <div class="btn-group">
@@ -401,18 +530,26 @@
           
           <!-- Bloque 4: Seguro -->
           <div class="form-block" id="block-4">
-            <h2>Seguro</h2>
-            <div class="form-group">
-              <label>Tipo de seguro</label>
-              <select name="tipo_seguro">
-                <option value="full">Full</option>
-                <option value="deuda">Deuda</option>
-                <option value="terceros">Terceros</option>
-              </select>
+            <h2><i class="fas fa-shield-alt me-2"></i>Seguro</h2>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label>Tipo de seguro*</label>
+                <select name="tipo_seguro" required>
+                  <option value="full">Full</option>
+                  <option value="deuda">Deuda</option>
+                  <option value="terceros">Terceros</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Monto seguro*</label>
+                <input type="number" placeholder="Ej: 5000" name="monto_seguro" step="0.01" required>
+              </div>
             </div>
-            <div class="form-group">
-              <label>Monto seguro</label>
-              <input type="number" placeholder="Ej: 5000" name="monto_seguro">
+
+            <div class="info-box">
+              <h4><i class="fas fa-exclamation-triangle me-2"></i>Nota Importante</h4>
+              <p class="mb-0">Al generar el contrato, este será guardado en el sistema y podrá ser consultado, descargado e impreso en cualquier momento desde la lista de contratos.</p>
             </div>
             
             <div class="btn-group">
@@ -435,7 +572,7 @@
     <div class="modal-buttons">
       <button id="btnCopiar">Copiar Contrato</button>
       <button id="btnImprimir">Imprimir Contrato</button>
-      <button id="btnCerrar" class="button-color" >Cerrar</button>
+      <button id="btnCerrar" class="button-color">Cerrar</button>
     </div>
   </div>
 </div>
@@ -444,7 +581,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-  // Template del contrato
+  // Template del contrato (mismo que tenías)
   const template = `CONTRATO DE FINANCIAMIENTO DE VEHÍCULO DE MOTOR AL AMPARO DE LA Ley No. 483 SOBRE VENTA CONDICIONAL DE MUEBLES
 De una parte, CARIBE AZUL, S.R.L, entidad bancaria organizada y existente conforme a las leyes de la República Dominicana, r.n.c. num. 133-37493-5 con su asiento social y oficina principal ubicada en la calle H, Numero 15, Andres, Boca Chica, Provincia de Santo Domingo Restauración No.127, esquina calle Jácuba, de la ciudad de Santiago de los Caballeros, República Dominicana, representada por el (la) señor (a) CRISTIAN VARGAS, de nacionalidad Dominicana, Profesión u ocupación Comerciante, portador (a) de la Cédula de Identidad y Electoral No. 001-1497135-1, domiciliado (a) y residente en en esta ciudad de Andres, Boca Chica, Provincia de Santo Domingo, en su calidad de Encargado de Sucursal, y quien en lo adelante se denominará EL ACREEDOR;
 De otra parte: (1) {{nombre_cliente}}, de nacionalidad {{nacionalidad}}, de profesión u ocupación {{ocupacion}}, portador del {{tipo_documento}} Num. {{numero_documento}}, domiciliado (a) y residente en {{direccion}} quien (es) en lo adelante y para lo fines y consecuencias del presente acuerdo, ya sea de manera conjunta o individual, se denominará (n) como EL DEUDOR (A)/ LOS DEUDORES; Se hace constar que, en lo adelante del presente acuerdo, cuando se nombre de manera conjunta a la empresa PINALES HERMANOS SRL, el señor (a) JULIO CESAR DE LA ROSA MONTERO denominaran LAS PARTES. HAN pactado lo siguiente:
@@ -476,7 +613,7 @@ ARTICULO DECIMO: PERDIDA DEL MUEBLE. En caso de que los muebles vendidos se perd
 ARTICULO DECIMO PIMERO: PROCEDIMIENTO DE EJECUCION. Para la ejecución de la venta condicional contenida en el presente contrato, dicha ejecución se llevará a cabo de acuerdo con las reglas y disposiciones establecidas por el articulo diez (10) y siguiente d ley venta condicionales de Muebles No. 483, promulgada en 9 de noviembre de 1964 y publicada en la Gaceta Oficial No. 8904 del 14 noviembre de 1964.
 PARRAFO I: Se establece que cuando EL COMPRADOR registrará atrasos por más de cuarenta y cinco (45) días para el pago de las cuotas de las establecidas en el presente contrato, así como cualquiera de las prohibiciones, producirá de pleno derecho la pérdida del beneficio del plazo que le ha sido acordado para realizar el pago de los valores a que se refiere este contrato. En consecuencia, dichos valores se harán inmediatamente exigibles, de pleno derecho y sin necesidad de notificación alguna y ejecutable el vehículo que se contare en el presente contrato. Queda entendido que el retraso del VENDEDOR o LA COMPAÑIA en el ejercicio de este derecho, no implica en modo alguna renuncia o caducidad del mismo.
 PARRAFO II: En caso de retraso en más de cuarenta y cinco (45) días, EL VENDEDOR o LA COMPAÑIA notificara vía acto de alguacil al COMPRADOR en un acto de intimación de pago con secuestro del mueble, otorgándole un plazo de diez (10) días francos para pagar la suma adeudada requerida por EL VENDEDOR o LA COMPAÑIA, pudiendo este último sin intervención judicial ni procedimientos alguno revindicar el mueble vendido en cualesquiera manos que se encuentre. Por consiguiente, EL COMPRADOR podrá requerir, cuando así le convenga, que el alguacil actuante coloque el mueble bajo custodia de un guardián desde el momento en que se le notifique a la intimación a que el presente párrafo.
-PARRAFO III: En el caso de que hubiere lugar a la resolución de la venta en conformidad con las cláusulas anteriores y una vez que EL COMPRADOR haya entregado el mueble al VENDEDOR o COMPAÑIA la totalidad de los pagos hechos por EL COMPRADOR en ejecución del contrato, incluyendo pago inicial y el valor del mueble usado recibido a cuenta del precio, si fuere el caso, quedara a veneficio de EL VENDEDOR o LA COMPAÑIA sin ninguna clase de compensación para el COMPRADOR, como reparación convenida entre las partes por presente clausula, de los daños y perjuicios sufridos por EL VENDEDOR o LA COMPAÑIA como consecuencia de la inejecución del contrato y su resolución por incumplimiento de las obligaciones de EL COMPRADOR , sin perjuicio del derecho que tiene EL VENDEDOR o LA COMPAÑIA de perseguir el cobro de las obligaciones suscritas por EL COMPRADOR en virtud del contrato y vencidas hasta el momento de su resolución . Las partes reconocen en consecuencia, que EL COMPRADOR renuncia a todo ajuste de cuentas en ejercicio de la facultad discrecional que le otorga el artículo 13 de ley de Venta Condicionales de Muebles, dejando constancia que esa su voluntad expresa. Sin embargo, EL COMPRADOR admite y reconoce que EL VENDEDOR o LA COMPAÑIA tendrá potestad de pleno derecho para ejercer unilateralmente dicho ajuste de cuentas, en caso de que el vehículo sea recuperado con evidentes señales de depreciación y deterioro, si considera que con ello contribuye a obtener la recuperación de su crédito.
+PARRAFO III: En el caso de que hubiere lugar a la resolución de la venta en conformidad con las cláusulas anteriores y una vez que EL COMPRADOR haya entregado el mueble al VENDEDOR o COMPAÑIA la totalidad de los pagos hechos por EL COMPRADOR en ejecución del contrato, incluyendo pago inicial y el valor del mueble usado recibido a cuenta del precio, si fuere el caso, quedara a veneficio de EL VENDEDOR o LA COMPAÑIA sin ninguna class de compensación para el COMPRADOR, como reparación convenida entre las partes por presente clausula, de los daños y perjuicios sufridos por EL VENDEDOR o LA COMPAÑIA como consecuencia de la inejecución del contrato y su resolución por incumplimiento de las obligaciones de EL COMPRADOR , sin perjuicio del derecho que tiene EL VENDEDOR o LA COMPAÑIA de perseguir el cobro de las obligaciones suscritas por EL COMPRADOR en virtud del contrato y vencidas hasta el momento de su resolución . Las partes reconocen en consecuencia, que EL COMPRADOR renuncia a todo ajuste de cuentas en ejercicio de la facultad discrecional que le otorga el artículo 13 de ley de Venta Condicionales de Muebles, dejando constancia que esa su voluntad expresa. Sin embargo, EL COMPRADOR admite y reconoce que EL VENDEDOR o LA COMPAÑIA tendrá potestad de pleno derecho para ejercer unilateralmente dicho ajuste de cuentas, en caso de que el vehículo sea recuperado con evidentes señales de depreciación y deterioro, si considera que con ello contribuye a obtener la recuperación de su crédito.
 PARRAFO IV: En caso de apoderamiento judicial de Abogado para el cobro de la suma adeudada EL COMPRADOR deberá pagar a aquel los horarios profesionales, establecidos en un treinta por ciento (30%) de la suma reclamada, sin perjuicio de los gastos legales e impuestos incurridos en esas gestiones, teniendo a tales fines este acto carácter y fuerza de un pacto de cuota litis.
 ARTICULO DECIMO SEGUNDO INDIVISIBILIDAD En caso de que EL COMPRADOR falleciere antes de haber pagado la totalidad del precio de la venta, la porción debida de hará inmediatamente exigible y EL VENDEDOR o LA COMPAÑIA podrá pedir el pago integro de dicha porción. Además, las parte contratantes convienen en darle carácter de individualidad a todas las obligaciones asumidas por EL COMPRADOR en este contrato. Por lo tanto, EL VENDEDOR o LA COMPAÑIA en caso de muerte del COMPRADOR antes de haber pagado el precio integro de la venta, podrá perseguir a uno o cuales quiera de EL COMPRADOR por toda la porción del precio no pagada y podrá EL VENDEDOR igualmente, en caso de que uno cualquiera de los herederos de COMPRADOR no pague esa porción, precederá la incautación de los muebles vendidos, dirigiendo el procedimiento de incautación contra el demás integrante sucesión.
 
@@ -507,8 +644,8 @@ Abogado Notario`;
   const contratoFinal = document.getElementById("contratoFinal");
   
   // Variables para control de bloques
-  let currentBlock = 1;
-  const totalBlocks = 4;
+  let currentBlock = 0;
+  const totalBlocks = 5;
   
   // Función para cambiar entre bloques
   function changeBlock(nextBlock) {
@@ -517,7 +654,9 @@ Abogado Notario`;
     
     // Actualizar indicador de progreso
     document.querySelector(`.progress-step[data-step="${currentBlock}"]`).classList.remove('active');
-    document.querySelector(`.progress-step[data-step="${currentBlock}"]`).classList.add('completed');
+    if (currentBlock > 0) {
+      document.querySelector(`.progress-step[data-step="${currentBlock}"]`).classList.add('completed');
+    }
     
     // Mostrar nuevo bloque
     document.getElementById(`block-${nextBlock}`).classList.add('active');
@@ -527,13 +666,20 @@ Abogado Notario`;
   }
   
   // Eventos para botones de navegación
+  document.getElementById("btn-next-0").addEventListener("click", function() {
+    changeBlock(1);
+  });
+  
   document.getElementById("btn-next-1").addEventListener("click", function() {
     // Validar campos obligatorios del bloque 1
     const nombre = document.querySelector('input[name="nombre_cliente"]').value;
+    const ocupacion = document.querySelector('input[name="ocupacion"]').value;
     const tipoDoc = document.querySelector('select[name="tipo_documento"]').value;
     const numDoc = document.querySelector('input[name="numero_documento"]').value;
+    const telefono = document.querySelector('input[name="telefono"]').value;
+    const direccion = document.querySelector('textarea[name="direccion"]').value;
     
-    if (!nombre || !tipoDoc || !numDoc) {
+    if (!nombre || !ocupacion || !tipoDoc || !numDoc || !telefono || !direccion) {
       Swal.fire({
         icon: 'error',
         title: 'Campos obligatorios',
@@ -545,11 +691,33 @@ Abogado Notario`;
     changeBlock(2);
   });
   
+  document.getElementById("btn-prev-1").addEventListener("click", function() {
+    changeBlock(0);
+  });
+  
   document.getElementById("btn-prev-2").addEventListener("click", function() {
     changeBlock(1);
   });
   
   document.getElementById("btn-next-2").addEventListener("click", function() {
+    // Validar campos obligatorios del bloque 2
+    const tipoVehiculo = document.querySelector('select[name="tipo_vehiculo"]').value;
+    const marca = document.querySelector('input[name="marca"]').value;
+    const modelo = document.querySelector('input[name="modelo"]').value;
+    const anio = document.querySelector('input[name="anio"]').value;
+    const placa = document.querySelector('input[name="placa"]').value;
+    const color = document.querySelector('input[name="color"]').value;
+    const chasis = document.querySelector('input[name="chasis"]').value;
+    
+    if (!tipoVehiculo || !marca || !modelo || !anio || !placa || !color || !chasis) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Campos obligatorios',
+        text: 'Por favor, complete todos los campos obligatorios del bloque de Vehículo.'
+      });
+      return;
+    }
+    
     changeBlock(3);
   });
   
@@ -561,7 +729,7 @@ Abogado Notario`;
     // Validar campos obligatorios del bloque 3
     const precio = document.querySelector('input[name="precio_total"]').value;
     const montoFin = document.querySelector('input[name="monto_financiado"]').value;
-    const cuotas = document.querySelector('input[name="cantidad_cuotas"]').value;
+    const cuotas = document.querySelector('select[name="cantidad_cuotas"]').value;
     const montoCuota = document.querySelector('input[name="monto_cuota"]').value;
     const fechaInicio = document.querySelector('input[name="fecha_primera_cuota"]').value;
     const fechaFin = document.querySelector('input[name="fecha_ultima_cuota"]').value;
@@ -594,32 +762,19 @@ Abogado Notario`;
     return `${dia} de ${mes} del año ${anio}`;
   }
 
-  // Evento del formulario
-  document.getElementById("formContrato").addEventListener("submit", function(e) {
-    e.preventDefault();
-    const data = Object.fromEntries(new FormData(this).entries());
-
-    // Validar campos obligatorios
-    if (!data.nombre_cliente || !data.numero_documento || !data.precio_total || !data.monto_financiado || !data.cantidad_cuotas || !data.monto_cuota || !data.fecha_primera_cuota || !data.fecha_ultima_cuota) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Campos obligatorios',
-        text: 'Por favor, complete todos los campos obligatorios.'
-      });
-      return;
+  // Auto-completar desde préstamo seleccionado
+  document.querySelector('select[name="prestamo_id"]').addEventListener('change', function() {
+    const selectedOption = this.options[this.selectedIndex];
+    if (selectedOption.value) {
+      const monto = selectedOption.getAttribute('data-monto');
+      const cliente = selectedOption.getAttribute('data-cliente');
+      
+      if (monto) {
+        document.querySelector('input[name="monto_financiado"]').value = monto;
+        document.querySelector('input[name="precio_total"]').value = Math.round(monto * 1.2); // Precio total estimado
+        document.querySelector('input[name="monto_cuota"]').value = Math.round(monto / 24); // Cuota estimada para 24 meses
+      }
     }
-
-    // Formatear fechas para el contrato
-    data.fecha_primera_cuota = formatearFecha(data.fecha_primera_cuota);
-    data.fecha_ultima_cuota = formatearFecha(data.fecha_ultima_cuota);
-
-    let contrato = template;
-    // Reemplazar todos los placeholders con los datos del formulario
-    for (const key in data) {
-      contrato = contrato.replaceAll(`{{${key}}}`, data[key] || 'N/A');
-    }
-    contratoFinal.textContent = contrato;
-    modal.style.display = "block";
   });
 
   // Cerrar modal
@@ -660,6 +815,16 @@ Abogado Notario`;
   btnImprimir.onclick = function() {
     window.print();
   };
+
+  // Establecer fechas por defecto
+  const today = new Date();
+  const firstPayment = new Date(today);
+  firstPayment.setMonth(today.getMonth() + 1);
+  const lastPayment = new Date(firstPayment);
+  lastPayment.setMonth(firstPayment.getMonth() + 23); // 24 meses por defecto
+
+  document.querySelector('input[name="fecha_primera_cuota"]').value = firstPayment.toISOString().split('T')[0];
+  document.querySelector('input[name="fecha_ultima_cuota"]').value = lastPayment.toISOString().split('T')[0];
 </script>
 
 <%- include('../partials/footer') %>
