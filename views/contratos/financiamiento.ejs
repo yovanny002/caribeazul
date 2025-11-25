@@ -1,588 +1,585 @@
-<%- include('../partials/header', { title: 'Generador de Contrato de Financiamiento' }) %>
-
-<!-- SweetAlert2 CSS -->
-<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
-
-<style>
-  :root {
-    --primary-color: #0b76ff;
-    --secondary-color: #f4f7fb;
-    --text-color: #333;
-    --white: #fff;
-    --shadow: 0 5px 18px rgba(0, 0, 0, 0.1);
-    --border-radius: 10px;
-  }
-
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: var(--secondary-color);
-    color: var(--text-color);
-    line-height: 1.6;
-    padding: 20px;
-  }
-
-  .container {
-    max-width: 1000px;
-    margin: 0 auto;
-  }
-
-  .card {
-    background: var(--white);
-    padding: 30px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow);
-    margin-bottom: 20px;
-  }
-
-  h1, h2, h3 {
-    color: var(--primary-color);
-    margin-bottom: 15px;
-  }
-
-  h1 {
-    text-align: center;
-    margin-bottom: 30px;
-    font-weight: 600;
-  }
-
-  .form-group {
-    margin-bottom: 20px;
-  }
-
-  .form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
-  }
-
-  .form-group input,
-  .form-group select,
-  .form-group textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #cfd8e2;
-    border-radius: 5px;
-    font-size: 14px;
-  }
-
-  button {
-    background: var(--primary-color);
-    color: var(--white);
-    border: none;
-    padding: 12px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 500;
-    transition: background 0.3s;
-  }
-
-  .button-color{
-    background-color: red;
-  }
-
-  button:hover {
-    background: #005fcc;
-  }
-
-  button:disabled {
-    background: #cccccc;
-    cursor: not-allowed;
-  }
-
-  .btn-group {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-    justify-content: space-between;
-  }
-
-  /* Estilos para bloques del formulario */
-  .form-block {
-    display: none;
-  }
-
-  .form-block.active {
-    display: block;
-  }
-
-  .progress-indicator {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
-  }
-
-  .progress-step {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background-color: #e0e0e0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 10px;
-    font-weight: bold;
-    color: #666;
-  }
-
-  .progress-step.active {
-    background-color: var(--primary-color);
-    color: white;
-  }
-
-  .progress-step.completed {
-    background-color: #4CAF50;
-    color: white;
-  }
-
-  /* Modal */
-  .modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    overflow: auto;
-  }
-
-  .modal-content {
-    background-color: var(--white);
-    margin: 2% auto;
-    padding: 30px;
-    border-radius: var(--border-radius);
-    width: 90%;
-    max-width: 800px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: var(--shadow);
-    position: relative;
-  }
-
-  .close {
-    position: absolute;
-    right: 20px;
-    top: 10px;
-    color: #aaa;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-
-  .close:hover {
-    color: var(--text-color);
-  }
-
-  #contratoFinal {
-    white-space: pre-wrap;
-    line-height: 1.7;
-    font-size: 14px;
-    text-align: justify;
-    margin-top: 20px;
-  }
-
-  .modal-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 20px;
-  }
-
-  /* Header */
-  .header {
-    text-align: center;
-    margin-bottom: 30px;
-  }
-
-  .header img {
-    max-width: 150px;
-    margin-bottom: 10px;
-  }
-
-  /* Responsive */
-  @media (max-width: 768px) {
-    .card {
-      padding: 20px;
-    }
-
-    .modal-content {
-      padding: 20px;
-    }
+<%- include('../partials/header', { title: 'Editar Préstamo' }) %>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Contrato de Financiamiento - Financiera Caribe Azul</title>
     
-    .btn-group {
-      flex-direction: column;
-    }
-    
-    .modal-buttons {
-      flex-direction: column;
-    }
-  }
-  
-  /* Estilos para impresión */
-  @media print {
-    body * {
-      visibility: hidden;
-    }
-    .modal, .modal * {
-      visibility: visible;
-    }
-    .modal {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: auto;
-      background: white;
-      overflow: visible;
-    }
-    .modal-content {
-      margin: 0;
-      padding: 20px;
-      box-shadow: none;
-      width: 100%;
-      max-width: 100%;
-      height: auto;
-    }
-    .close, .modal-buttons {
-      display: none;
-    }
-  }
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
 
-  .form-row {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 15px;
-  }
+    <style>
+        :root {
+            --primary-color: #0b76ff;
+            --secondary-color: #f4f7fb;
+            --text-color: #333;
+            --white: #fff;
+            --shadow: 0 5px 18px rgba(0, 0, 0, 0.1);
+            --border-radius: 10px;
+        }
 
-  .form-row .form-group {
-    flex: 1;
-    margin-bottom: 0;
-  }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  .info-box {
-    background: #f8f9fa;
-    border-left: 4px solid var(--primary-color);
-    padding: 15px;
-    margin-bottom: 20px;
-    border-radius: 5px;
-  }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--secondary-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
 
-  .info-box h4 {
-    margin-bottom: 10px;
-    color: var(--primary-color);
-  }
-</style>
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
 
-<div class="container-fluid px-4 mt-4">
-  <div class="card border-0 shadow">
-    <div class="card-header bg-primary text-white py-3">
-      <div class="d-flex justify-content-between align-items-center">
-        <h2 class="mb-0">
-          <i class="fas fa-file-contract me-2"></i>Generador de Contrato de Financiamiento
-        </h2>
-        <a href="/contratos" class="btn btn-light btn-sm">
-          <i class="fas fa-arrow-left me-1"></i> Volver a Contratos
-        </a>
-      </div>
-    </div>
+        .card {
+            background: var(--white);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
 
-    <div class="card-body">
-      <div class="header">
-        <h1>Agencia Caribe Azul <br>Contrato de Financiamiento</h1>
-      </div>
+        h1, h2, h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
 
-      <% if (messages.success) { %>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-          <%= messages.success %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cfd8e2;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        button {
+            background: var(--primary-color);
+            color: var(--white);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+
+        .button-color{
+            background-color: red;
+        }
+
+        button:hover {
+            background: #005fcc;
+        }
+
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: space-between;
+        }
+
+        /* Estilos para bloques del formulario */
+        .form-block {
+            display: none;
+        }
+
+        .form-block.active {
+            display: block;
+        }
+
+        .progress-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .progress-step {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            font-weight: bold;
+            color: #666;
+        }
+
+        .progress-step.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .progress-step.completed {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            overflow: auto;
+        }
+
+        .modal-content {
+            background-color: var(--white);
+            margin: 2% auto;
+            padding: 30px;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 10px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: var(--text-color);
+        }
+
+        #contratoFinal {
+            white-space: pre-wrap;
+            line-height: 1.7;
+            font-size: 14px;
+            text-align: justify;
+            margin-top: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header img {
+            max-width: 150px;
+            margin-bottom: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .card {
+                padding: 20px;
+            }
+
+            .modal-content {
+                padding: 20px;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .modal-buttons {
+                flex-direction: column;
+            }
+        }
+        
+        /* Estilos para impresión */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .modal, .modal * {
+                visibility: visible;
+            }
+            .modal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: auto;
+                background: white;
+                overflow: visible;
+            }
+            .modal-content {
+                margin: 0;
+                padding: 20px;
+                box-shadow: none;
+                width: 100%;
+                max-width: 100%;
+                height: auto;
+            }
+            .close, .modal-buttons {
+                display: none;
+            }
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .info-box h4 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid px-4 mt-4">
+        <div class="card border-0 shadow">
+            <div class="card-header bg-primary text-white py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">
+                        <i class="fas fa-file-contract me-2"></i>Generador de Contrato de Financiamiento
+                    </h2>
+                    <a href="/contratos" class="btn btn-light btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i> Volver a Contratos
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="header">
+                    <h1>Financiera Caribe Azul <br>Contrato de Financiamiento</h1>
+                </div>
+
+                <div class="alert alert-success alert-dismissible fade show d-none" id="successAlert" role="alert">
+                    <span id="successMessage"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                <div class="alert alert-danger alert-dismissible fade show d-none" id="errorAlert" role="alert">
+                    <span id="errorMessage"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <div class="info-box">
+                    <h4><i class="fas fa-info-circle me-2"></i>Información Importante</h4>
+                    <p class="mb-0">Complete todos los campos obligatorios (*) para generar el contrato. Puede asociar el contrato a un cliente y préstamo existente si lo desea.</p>
+                </div>
+
+                <div class="card">
+                    <form id="formContrato">
+                        <!-- Indicador de progreso -->
+                        <div class="progress-indicator">
+                            <div class="progress-step active" data-step="0">1</div>
+                            <div class="progress-step" data-step="1">2</div>
+                            <div class="progress-step" data-step="2">3</div>
+                            <div class="progress-step" data-step="3">4</div>
+                            <div class="progress-step" data-step="4">5</div>
+                        </div>
+                        
+                        <!-- Bloque 0: Asociaciones -->
+                        <div class="form-block active" id="block-0">
+                            <h2><i class="fas fa-link me-2"></i>Asociaciones (Opcional)</h2>
+                            
+                            <div class="form-group">
+                                <label>Cliente existente</label>
+                                <select name="cliente_id" class="form-control" id="clienteSelect">
+                                    <option value="">Seleccionar cliente existente...</option>
+                                    <!-- Los clientes se cargarán dinámicamente -->
+                                </select>
+                                <small class="text-muted">Si selecciona un cliente, algunos campos se completarán automáticamente</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Préstamo asociado</label>
+                                <select name="prestamo_id" class="form-control" id="prestamoSelect">
+                                    <option value="">Seleccionar préstamo existente...</option>
+                                    <!-- Los préstamos se cargarán dinámicamente -->
+                                </select>
+                                <small class="text-muted">Si selecciona un préstamo, los datos de financiamiento se completarán automáticamente</small>
+                            </div>
+                            
+                            <div class="btn-group">
+                                <button type="button" id="btn-next-0">Siguiente</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Bloque 1: Datos del Cliente -->
+                        <div class="form-block" id="block-1">
+                            <h2><i class="fas fa-user me-2"></i>Datos del Cliente</h2>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Nombre completo*</label>
+                                    <input type="text" placeholder="Ej: Juan Pérez" name="nombre_cliente" id="nombre_cliente" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Nacionalidad</label>
+                                    <input type="text" placeholder="Ej: Dominicana" name="nacionalidad" id="nacionalidad" value="Dominicana">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Ocupación*</label>
+                                    <input type="text" placeholder="Ej: Ingeniero" name="ocupacion" id="ocupacion" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Tipo de documento*</label>
+                                    <select name="tipo_documento" id="tipo_documento" required>
+                                        <option value="cédula">Cédula</option>
+                                        <option value="pasaporte">Pasaporte</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Número de documento*</label>
+                                    <input type="text" placeholder="Ej: 001-1234567-8" name="numero_documento" id="numero_documento" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Teléfono*</label>
+                                    <input type="tel" placeholder="Ej: 809-123-4567" name="telefono" id="telefono" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Dirección completa*</label>
+                                <textarea name="direccion" id="direccion" placeholder="Ej: Calle Principal #123, Sector Los Jardines, Santo Domingo Este" rows="2" required></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" placeholder="Ej: juan.perez@email.com" name="email" id="email">
+                            </div>
+                            
+                            <div class="btn-group">
+                                <button type="button" id="btn-prev-1">Anterior</button>
+                                <button type="button" id="btn-next-1">Siguiente</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Bloque 2: Vehículo -->
+                        <div class="form-block" id="block-2">
+                            <h2><i class="fas fa-car me-2"></i>Vehículo</h2>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Tipo de vehículo*</label>
+                                    <select name="tipo_vehiculo" id="tipo_vehiculo" required>
+                                        <option value="">Seleccionar tipo...</option>
+                                        <option value="Automóvil">Automóvil</option>
+                                        <option value="Camioneta">Camioneta</option>
+                                        <option value="Motocicleta">Motocicleta</option>
+                                        <option value="Camión">Camión</option>
+                                        <option value="Jeep">Jeep</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Marca*</label>
+                                    <input type="text" placeholder="Ej: Toyota" name="marca" id="marca" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Modelo*</label>
+                                    <input type="text" placeholder="Ej: Corolla" name="modelo" id="modelo" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Año*</label>
+                                    <input type="text" placeholder="Ej: 2023" name="anio" id="anio" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Placa*</label>
+                                    <input type="text" placeholder="Ej: ABC123" name="placa" id="placa" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Color*</label>
+                                    <input type="text" placeholder="Ej: Rojo" name="color" id="color" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Número de chasis*</label>
+                                <input type="text" placeholder="Ej: 1HGCM82633A123456" name="chasis" id="chasis" required>
+                            </div>
+                            
+                            <div class="btn-group">
+                                <button type="button" id="btn-prev-2">Anterior</button>
+                                <button type="button" id="btn-next-2">Siguiente</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Bloque 3: Financiamiento -->
+                        <div class="form-block" id="block-3">
+                            <h2><i class="fas fa-money-bill-wave me-2"></i>Financiamiento</h2>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Precio total del vehículo*</label>
+                                    <input type="number" placeholder="Ej: 500000" name="precio_total" id="precio_total" step="0.01" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Monto financiado*</label>
+                                    <input type="number" placeholder="Ej: 400000" name="monto_financiado" id="monto_financiado" step="0.01" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Cantidad de cuotas*</label>
+                                    <select name="cantidad_cuotas" id="cantidad_cuotas" required>
+                                        <option value="12">12 cuotas</option>
+                                        <option value="24" selected>24 cuotas</option>
+                                        <option value="36">36 cuotas</option>
+                                        <option value="48">48 cuotas</option>
+                                        <option value="60">60 cuotas</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Monto por cuota*</label>
+                                    <input type="number" placeholder="Ej: 18000" name="monto_cuota" id="monto_cuota" step="0.01" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Fecha primera cuota*</label>
+                                    <input type="date" name="fecha_primera_cuota" id="fecha_primera_cuota" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Fecha última cuota*</label>
+                                    <input type="date" name="fecha_ultima_cuota" id="fecha_ultima_cuota" required>
+                                </div>
+                            </div>
+                            
+                            <div class="btn-group">
+                                <button type="button" id="btn-prev-3">Anterior</button>
+                                <button type="button" id="btn-next-3">Siguiente</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Bloque 4: Seguro -->
+                        <div class="form-block" id="block-4">
+                            <h2><i class="fas fa-shield-alt me-2"></i>Seguro</h2>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Tipo de seguro*</label>
+                                    <select name="tipo_seguro" id="tipo_seguro" required>
+                                        <option value="full">Full</option>
+                                        <option value="deuda">Deuda</option>
+                                        <option value="terceros">Terceros</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Monto seguro*</label>
+                                    <input type="number" placeholder="Ej: 5000" name="monto_seguro" id="monto_seguro" step="0.01" required>
+                                </div>
+                            </div>
+
+                            <div class="info-box">
+                                <h4><i class="fas fa-exclamation-triangle me-2"></i>Nota Importante</h4>
+                                <p class="mb-0">Al generar el contrato, este será guardado en el sistema y podrá ser consultado, descargado e impreso en cualquier momento desde la lista de contratos.</p>
+                            </div>
+                            
+                            <div class="btn-group">
+                                <button type="button" id="btn-prev-4">Anterior</button>
+                                <button type="submit">Generar Contrato</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-      <% } %>
-      
-      <% if (messages.error) { %>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-          <%= messages.error %>
-          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Modal para mostrar el contrato -->
+    <div id="modalContrato" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Contrato Generado</h2>
+            <div id="contratoFinal"></div>
+            <div class="modal-buttons">
+                <button id="btnCopiar">Copiar Contrato</button>
+                <button id="btnImprimir">Imprimir Contrato</button>
+                <button id="btnCerrar" class="button-color">Cerrar</button>
+            </div>
         </div>
-      <% } %>
-
-      <div class="info-box">
-        <h4><i class="fas fa-info-circle me-2"></i>Información Importante</h4>
-        <p class="mb-0">Complete todos los campos obligatorios (*) para generar el contrato. Puede asociar el contrato a un cliente y préstamo existente si lo desea.</p>
-      </div>
-
-      <div class="card">
-        <form id="formContrato" action="/contratos/create" method="POST">
-          <!-- Indicador de progreso -->
-          <div class="progress-indicator">
-            <div class="progress-step active" data-step="1">1</div>
-            <div class="progress-step" data-step="2">2</div>
-            <div class="progress-step" data-step="3">3</div>
-            <div class="progress-step" data-step="4">4</div>
-            <div class="progress-step" data-step="5">5</div>
-          </div>
-          
-          <!-- Bloque 0: Asociaciones -->
-          <div class="form-block active" id="block-0">
-            <h2><i class="fas fa-link me-2"></i>Asociaciones (Opcional)</h2>
-            
-            <div class="form-group">
-              <label>Cliente existente</label>
-              <select name="cliente_id" class="form-control">
-                <option value="">Seleccionar cliente existente...</option>
-                <% if (typeof clientes !== 'undefined' && clientes.length > 0) { %>
-                  <% clientes.forEach(cliente => { %>
-                    <option value="<%= cliente.id %>">
-                      <%= cliente.nombre %> <%= cliente.apellidos %> - <%= cliente.cedula %>
-                    </option>
-                  <% }) %>
-                <% } %>
-              </select>
-              <small class="text-muted">Si selecciona un cliente, algunos campos se completarán automáticamente</small>
-            </div>
-
-            <div class="form-group">
-              <label>Préstamo asociado</label>
-              <select name="prestamo_id" class="form-control">
-                <option value="">Seleccionar préstamo existente...</option>
-                <% if (typeof prestamos !== 'undefined' && prestamos.length > 0) { %>
-                  <% prestamos.forEach(prestamo => { %>
-                    <option value="<%= prestamo.id %>" data-monto="<%= prestamo.monto_aprobado %>" data-cliente="<%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %>">
-                      <%= prestamo.cliente_nombre %> <%= prestamo.cliente_apellidos %> - RD$ <%= Number(prestamo.monto_aprobado).toLocaleString() %>
-                    </option>
-                  <% }) %>
-                <% } %>
-              </select>
-              <small class="text-muted">Si selecciona un préstamo, los datos de financiamiento se completarán automáticamente</small>
-            </div>
-            
-            <div class="btn-group">
-              <button type="button" id="btn-next-0">Siguiente</button>
-            </div>
-          </div>
-          
-          <!-- Bloque 1: Datos del Cliente -->
-          <div class="form-block" id="block-1">
-            <h2><i class="fas fa-user me-2"></i>Datos del Cliente</h2>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label>Nombre completo*</label>
-                <input type="text" placeholder="Ej: Juan Pérez" name="nombre_cliente" required>
-              </div>
-              <div class="form-group">
-                <label>Nacionalidad</label>
-                <input type="text" placeholder="Ej: Dominicana" name="nacionalidad" value="Dominicana">
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>Ocupación*</label>
-                <input type="text" placeholder="Ej: Ingeniero" name="ocupacion" required>
-              </div>
-              <div class="form-group">
-                <label>Tipo de documento*</label>
-                <select name="tipo_documento" required>
-                  <option value="cédula">Cédula</option>
-                  <option value="pasaporte">Pasaporte</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>Número de documento*</label>
-                <input type="text" placeholder="Ej: 001-1234567-8" name="numero_documento" required>
-              </div>
-              <div class="form-group">
-                <label>Teléfono*</label>
-                <input type="tel" placeholder="Ej: 809-123-4567" name="telefono" required>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Dirección completa*</label>
-              <textarea name="direccion" placeholder="Ej: Calle Principal #123, Sector Los Jardines, Santo Domingo Este" rows="2" required></textarea>
-            </div>
-
-            <div class="form-group">
-              <label>Email</label>
-              <input type="email" placeholder="Ej: juan.perez@email.com" name="email">
-            </div>
-            
-            <div class="btn-group">
-              <button type="button" id="btn-prev-1">Anterior</button>
-              <button type="button" id="btn-next-1">Siguiente</button>
-            </div>
-          </div>
-          
-          <!-- Bloque 2: Vehículo -->
-          <div class="form-block" id="block-2">
-            <h2><i class="fas fa-car me-2"></i>Vehículo</h2>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label>Tipo de vehículo*</label>
-                <select name="tipo_vehiculo" required>
-                  <option value="">Seleccionar tipo...</option>
-                  <option value="Automóvil">Automóvil</option>
-                  <option value="Camioneta">Camioneta</option>
-                  <option value="Motocicleta">Motocicleta</option>
-                  <option value="Camión">Camión</option>
-                  <option value="Jeep">Jeep</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Marca*</label>
-                <input type="text" placeholder="Ej: Toyota" name="marca" required>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>Modelo*</label>
-                <input type="text" placeholder="Ej: Corolla" name="modelo" required>
-              </div>
-              <div class="form-group">
-                <label>Año*</label>
-                <input type="text" placeholder="Ej: 2023" name="anio" required>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>Placa*</label>
-                <input type="text" placeholder="Ej: ABC123" name="placa" required>
-              </div>
-              <div class="form-group">
-                <label>Color*</label>
-                <input type="text" placeholder="Ej: Rojo" name="color" required>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Número de chasis*</label>
-              <input type="text" placeholder="Ej: 1HGCM82633A123456" name="chasis" required>
-            </div>
-            
-            <div class="btn-group">
-              <button type="button" id="btn-prev-2">Anterior</button>
-              <button type="button" id="btn-next-2">Siguiente</button>
-            </div>
-          </div>
-          
-          <!-- Bloque 3: Financiamiento -->
-          <div class="form-block" id="block-3">
-            <h2><i class="fas fa-money-bill-wave me-2"></i>Financiamiento</h2>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label>Precio total del vehículo*</label>
-                <input type="number" placeholder="Ej: 500000" name="precio_total" step="0.01" required>
-              </div>
-              <div class="form-group">
-                <label>Monto financiado*</label>
-                <input type="number" placeholder="Ej: 400000" name="monto_financiado" step="0.01" required>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>Cantidad de cuotas*</label>
-                <select name="cantidad_cuotas" required>
-                  <option value="12">12 cuotas</option>
-                  <option value="24" selected>24 cuotas</option>
-                  <option value="36">36 cuotas</option>
-                  <option value="48">48 cuotas</option>
-                  <option value="60">60 cuotas</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Monto por cuota*</label>
-                <input type="number" placeholder="Ej: 18000" name="monto_cuota" step="0.01" required>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label>Fecha primera cuota*</label>
-                <input type="date" name="fecha_primera_cuota" required>
-              </div>
-              <div class="form-group">
-                <label>Fecha última cuota*</label>
-                <input type="date" name="fecha_ultima_cuota" required>
-              </div>
-            </div>
-            
-            <div class="btn-group">
-              <button type="button" id="btn-prev-3">Anterior</button>
-              <button type="button" id="btn-next-3">Siguiente</button>
-            </div>
-          </div>
-          
-          <!-- Bloque 4: Seguro -->
-          <div class="form-block" id="block-4">
-            <h2><i class="fas fa-shield-alt me-2"></i>Seguro</h2>
-            
-            <div class="form-row">
-              <div class="form-group">
-                <label>Tipo de seguro*</label>
-                <select name="tipo_seguro" required>
-                  <option value="full">Full</option>
-                  <option value="deuda">Deuda</option>
-                  <option value="terceros">Terceros</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label>Monto seguro*</label>
-                <input type="number" placeholder="Ej: 5000" name="monto_seguro" step="0.01" required>
-              </div>
-            </div>
-
-            <div class="info-box">
-              <h4><i class="fas fa-exclamation-triangle me-2"></i>Nota Importante</h4>
-              <p class="mb-0">Al generar el contrato, este será guardado en el sistema y podrá ser consultado, descargado e impreso en cualquier momento desde la lista de contratos.</p>
-            </div>
-            
-            <div class="btn-group">
-              <button type="button" id="btn-prev-4">Anterior</button>
-              <button type="submit">Generar Contrato</button>
-            </div>
-          </div>
-        </form>
-      </div>
     </div>
-  </div>
-</div>
 
-<!-- Modal para mostrar el contrato -->
-<div id="modalContrato" class="modal">
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    <h2>Contrato Generado</h2>
-    <div id="contratoFinal"></div>
-    <div class="modal-buttons">
-      <button id="btnCopiar">Copiar Contrato</button>
-      <button id="btnImprimir">Imprimir Contrato</button>
-      <button id="btnCerrar" class="button-color">Cerrar</button>
-    </div>
-  </div>
-</div>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<!-- SweetAlert2 JS -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<script>
-  // Template del contrato (mismo que tenías)
-  const template = `CONTRATO DE FINANCIAMIENTO DE VEHÍCULO DE MOTOR AL AMPARO DE LA Ley No. 483 SOBRE VENTA CONDICIONAL DE MUEBLES
+    <script>
+        // Template del contrato
+        const template = `CONTRATO DE FINANCIAMIENTO DE VEHÍCULO DE MOTOR AL AMPARO DE LA Ley No. 483 SOBRE VENTA CONDICIONAL DE MUEBLES
 De una parte, CARIBE AZUL, S.R.L, entidad bancaria organizada y existente conforme a las leyes de la República Dominicana, r.n.c. num. 133-37493-5 con su asiento social y oficina principal ubicada en la calle H, Numero 15, Andres, Boca Chica, Provincia de Santo Domingo Restauración No.127, esquina calle Jácuba, de la ciudad de Santiago de los Caballeros, República Dominicana, representada por el (la) señor (a) CRISTIAN VARGAS, de nacionalidad Dominicana, Profesión u ocupación Comerciante, portador (a) de la Cédula de Identidad y Electoral No. 001-1497135-1, domiciliado (a) y residente en en esta ciudad de Andres, Boca Chica, Provincia de Santo Domingo, en su calidad de Encargado de Sucursal, y quien en lo adelante se denominará EL ACREEDOR;
 De otra parte: (1) {{nombre_cliente}}, de nacionalidad {{nacionalidad}}, de profesión u ocupación {{ocupacion}}, portador del {{tipo_documento}} Num. {{numero_documento}}, domiciliado (a) y residente en {{direccion}} quien (es) en lo adelante y para lo fines y consecuencias del presente acuerdo, ya sea de manera conjunta o individual, se denominará (n) como EL DEUDOR (A)/ LOS DEUDORES; Se hace constar que, en lo adelante del presente acuerdo, cuando se nombre de manera conjunta a la empresa PINALES HERMANOS SRL, el señor (a) JULIO CESAR DE LA ROSA MONTERO denominaran LAS PARTES. HAN pactado lo siguiente:
                                                                 PREAMBULO:
@@ -635,196 +632,301 @@ YO, LIC. YVELISSE VIZCAINO CASTRO, Abogado Notario Público de los del Número S
 LIC. YVELISSE VIZCAINO CASTRO
 Abogado Notario`;
 
-  // Elementos del DOM
-  const modal = document.getElementById("modalContrato");
-  const closeBtn = document.querySelector(".close");
-  const btnCerrar = document.getElementById("btnCerrar");
-  const btnCopiar = document.getElementById("btnCopiar");
-  const btnImprimir = document.getElementById("btnImprimir");
-  const contratoFinal = document.getElementById("contratoFinal");
-  
-  // Variables para control de bloques
-  let currentBlock = 0;
-  const totalBlocks = 5;
-  
-  // Función para cambiar entre bloques
-  function changeBlock(nextBlock) {
-    // Ocultar bloque actual
-    document.getElementById(`block-${currentBlock}`).classList.remove('active');
-    
-    // Actualizar indicador de progreso
-    document.querySelector(`.progress-step[data-step="${currentBlock}"]`).classList.remove('active');
-    if (currentBlock > 0) {
-      document.querySelector(`.progress-step[data-step="${currentBlock}"]`).classList.add('completed');
-    }
-    
-    // Mostrar nuevo bloque
-    document.getElementById(`block-${nextBlock}`).classList.add('active');
-    document.querySelector(`.progress-step[data-step="${nextBlock}"]`).classList.add('active');
-    
-    currentBlock = nextBlock;
-  }
-  
-  // Eventos para botones de navegación
-  document.getElementById("btn-next-0").addEventListener("click", function() {
-    changeBlock(1);
-  });
-  
-  document.getElementById("btn-next-1").addEventListener("click", function() {
-    // Validar campos obligatorios del bloque 1
-    const nombre = document.querySelector('input[name="nombre_cliente"]').value;
-    const ocupacion = document.querySelector('input[name="ocupacion"]').value;
-    const tipoDoc = document.querySelector('select[name="tipo_documento"]').value;
-    const numDoc = document.querySelector('input[name="numero_documento"]').value;
-    const telefono = document.querySelector('input[name="telefono"]').value;
-    const direccion = document.querySelector('textarea[name="direccion"]').value;
-    
-    if (!nombre || !ocupacion || !tipoDoc || !numDoc || !telefono || !direccion) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Campos obligatorios',
-        text: 'Por favor, complete todos los campos obligatorios del bloque de Datos del Cliente.'
-      });
-      return;
-    }
-    
-    changeBlock(2);
-  });
-  
-  document.getElementById("btn-prev-1").addEventListener("click", function() {
-    changeBlock(0);
-  });
-  
-  document.getElementById("btn-prev-2").addEventListener("click", function() {
-    changeBlock(1);
-  });
-  
-  document.getElementById("btn-next-2").addEventListener("click", function() {
-    // Validar campos obligatorios del bloque 2
-    const tipoVehiculo = document.querySelector('select[name="tipo_vehiculo"]').value;
-    const marca = document.querySelector('input[name="marca"]').value;
-    const modelo = document.querySelector('input[name="modelo"]').value;
-    const anio = document.querySelector('input[name="anio"]').value;
-    const placa = document.querySelector('input[name="placa"]').value;
-    const color = document.querySelector('input[name="color"]').value;
-    const chasis = document.querySelector('input[name="chasis"]').value;
-    
-    if (!tipoVehiculo || !marca || !modelo || !anio || !placa || !color || !chasis) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Campos obligatorios',
-        text: 'Por favor, complete todos los campos obligatorios del bloque de Vehículo.'
-      });
-      return;
-    }
-    
-    changeBlock(3);
-  });
-  
-  document.getElementById("btn-prev-3").addEventListener("click", function() {
-    changeBlock(2);
-  });
-  
-  document.getElementById("btn-next-3").addEventListener("click", function() {
-    // Validar campos obligatorios del bloque 3
-    const precio = document.querySelector('input[name="precio_total"]').value;
-    const montoFin = document.querySelector('input[name="monto_financiado"]').value;
-    const cuotas = document.querySelector('select[name="cantidad_cuotas"]').value;
-    const montoCuota = document.querySelector('input[name="monto_cuota"]').value;
-    const fechaInicio = document.querySelector('input[name="fecha_primera_cuota"]').value;
-    const fechaFin = document.querySelector('input[name="fecha_ultima_cuota"]').value;
-    
-    if (!precio || !montoFin || !cuotas || !montoCuota || !fechaInicio || !fechaFin) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Campos obligatorios',
-        text: 'Por favor, complete todos los campos obligatorios del bloque de Financiamiento.'
-      });
-      return;
-    }
-    
-    changeBlock(4);
-  });
-  
-  document.getElementById("btn-prev-4").addEventListener("click", function() {
-    changeBlock(3);
-  });
+        // Elementos del DOM
+        const modal = document.getElementById("modalContrato");
+        const closeBtn = document.querySelector(".close");
+        const btnCerrar = document.getElementById("btnCerrar");
+        const btnCopiar = document.getElementById("btnCopiar");
+        const btnImprimir = document.getElementById("btnImprimir");
+        const contratoFinal = document.getElementById("contratoFinal");
+        const formContrato = document.getElementById("formContrato");
+        
+        // Variables para control de bloques
+        let currentBlock = 0;
+        const totalBlocks = 5;
+        
+        // Función para cambiar entre bloques
+        function changeBlock(nextBlock) {
+            // Ocultar bloque actual
+            document.getElementById(`block-${currentBlock}`).classList.remove('active');
+            
+            // Actualizar indicador de progreso
+            document.querySelector(`.progress-step[data-step="${currentBlock}"]`).classList.remove('active');
+            if (currentBlock > 0) {
+                document.querySelector(`.progress-step[data-step="${currentBlock}"]`).classList.add('completed');
+            }
+            
+            // Mostrar nuevo bloque
+            document.getElementById(`block-${nextBlock}`).classList.add('active');
+            document.querySelector(`.progress-step[data-step="${nextBlock}"]`).classList.add('active');
+            
+            currentBlock = nextBlock;
+        }
+        
+        // Eventos para botones de navegación
+        document.getElementById("btn-next-0").addEventListener("click", function() {
+            changeBlock(1);
+        });
+        
+        document.getElementById("btn-next-1").addEventListener("click", function() {
+            // Validar campos obligatorios del bloque 1
+            const nombre = document.getElementById('nombre_cliente').value;
+            const ocupacion = document.getElementById('ocupacion').value;
+            const tipoDoc = document.getElementById('tipo_documento').value;
+            const numDoc = document.getElementById('numero_documento').value;
+            const telefono = document.getElementById('telefono').value;
+            const direccion = document.getElementById('direccion').value;
+            
+            if (!nombre || !ocupacion || !tipoDoc || !numDoc || !telefono || !direccion) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Campos obligatorios',
+                    text: 'Por favor, complete todos los campos obligatorios del bloque de Datos del Cliente.'
+                });
+                return;
+            }
+            
+            changeBlock(2);
+        });
+        
+        document.getElementById("btn-prev-1").addEventListener("click", function() {
+            changeBlock(0);
+        });
+        
+        document.getElementById("btn-prev-2").addEventListener("click", function() {
+            changeBlock(1);
+        });
+        
+        document.getElementById("btn-next-2").addEventListener("click", function() {
+            // Validar campos obligatorios del bloque 2
+            const tipoVehiculo = document.getElementById('tipo_vehiculo').value;
+            const marca = document.getElementById('marca').value;
+            const modelo = document.getElementById('modelo').value;
+            const anio = document.getElementById('anio').value;
+            const placa = document.getElementById('placa').value;
+            const color = document.getElementById('color').value;
+            const chasis = document.getElementById('chasis').value;
+            
+            if (!tipoVehiculo || !marca || !modelo || !anio || !placa || !color || !chasis) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Campos obligatorios',
+                    text: 'Por favor, complete todos los campos obligatorios del bloque de Vehículo.'
+                });
+                return;
+            }
+            
+            changeBlock(3);
+        });
+        
+        document.getElementById("btn-prev-3").addEventListener("click", function() {
+            changeBlock(2);
+        });
+        
+        document.getElementById("btn-next-3").addEventListener("click", function() {
+            // Validar campos obligatorios del bloque 3
+            const precio = document.getElementById('precio_total').value;
+            const montoFin = document.getElementById('monto_financiado').value;
+            const cuotas = document.getElementById('cantidad_cuotas').value;
+            const montoCuota = document.getElementById('monto_cuota').value;
+            const fechaInicio = document.getElementById('fecha_primera_cuota').value;
+            const fechaFin = document.getElementById('fecha_ultima_cuota').value;
+            
+            if (!precio || !montoFin || !cuotas || !montoCuota || !fechaInicio || !fechaFin) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Campos obligatorios',
+                    text: 'Por favor, complete todos los campos obligatorios del bloque de Financiamiento.'
+                });
+                return;
+            }
+            
+            changeBlock(4);
+        });
+        
+        document.getElementById("btn-prev-4").addEventListener("click", function() {
+            changeBlock(3);
+        });
 
-  // Función para formatear fechas
-  function formatearFecha(fechaStr) {
-    if (!fechaStr) return '';
-    const fecha = new Date(fechaStr);
-    const dia = fecha.getDate();
-    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-                  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    const mes = meses[fecha.getMonth()];
-    const anio = fecha.getFullYear();
-    return `${dia} de ${mes} del año ${anio}`;
-  }
+        // Función para formatear fechas
+        function formatearFecha(fechaStr) {
+            if (!fechaStr) return '';
+            const fecha = new Date(fechaStr);
+            const dia = fecha.getDate();
+            const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                          'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            const mes = meses[fecha.getMonth()];
+            const anio = fecha.getFullYear();
+            return `${dia} de ${mes} del año ${anio}`;
+        }
 
-  // Auto-completar desde préstamo seleccionado
-  document.querySelector('select[name="prestamo_id"]').addEventListener('change', function() {
-    const selectedOption = this.options[this.selectedIndex];
-    if (selectedOption.value) {
-      const monto = selectedOption.getAttribute('data-monto');
-      const cliente = selectedOption.getAttribute('data-cliente');
-      
-      if (monto) {
-        document.querySelector('input[name="monto_financiado"]').value = monto;
-        document.querySelector('input[name="precio_total"]').value = Math.round(monto * 1.2); // Precio total estimado
-        document.querySelector('input[name="monto_cuota"]').value = Math.round(monto / 24); // Cuota estimada para 24 meses
-      }
-    }
-  });
+        // Auto-completar desde préstamo seleccionado
+        document.getElementById('prestamoSelect').addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            if (selectedOption.value) {
+                const monto = selectedOption.getAttribute('data-monto');
+                const cliente = selectedOption.getAttribute('data-cliente');
+                
+                if (monto) {
+                    document.getElementById('monto_financiado').value = monto;
+                    document.getElementById('precio_total').value = Math.round(monto * 1.2); // Precio total estimado
+                    document.getElementById('monto_cuota').value = Math.round(monto / 24); // Cuota estimada para 24 meses
+                }
+            }
+        });
 
-  // Cerrar modal
-  closeBtn.onclick = function() {
-    modal.style.display = "none";
-  }
+        // Cargar datos de ejemplo (en un caso real, estos vendrían de una API)
+        function cargarDatosEjemplo() {
+            // Clientes de ejemplo
+            const clientes = [
+                { id: 1, nombre: 'Juan', apellidos: 'Pérez García', cedula: '001-1234567-8' },
+                { id: 2, nombre: 'María', apellidos: 'Rodríguez López', cedula: '002-2345678-9' },
+                { id: 3, nombre: 'Carlos', apellidos: 'Martínez Sánchez', cedula: '003-3456789-0' }
+            ];
+            
+            // Préstamos de ejemplo
+            const prestamos = [
+                { id: 1, monto_aprobado: 400000, cliente_nombre: 'Juan', cliente_apellidos: 'Pérez García' },
+                { id: 2, monto_aprobado: 250000, cliente_nombre: 'María', cliente_apellidos: 'Rodríguez López' },
+                { id: 3, monto_aprobado: 600000, cliente_nombre: 'Carlos', cliente_apellidos: 'Martínez Sánchez' }
+            ];
+            
+            // Llenar select de clientes
+            const clienteSelect = document.getElementById('clienteSelect');
+            clientes.forEach(cliente => {
+                const option = document.createElement('option');
+                option.value = cliente.id;
+                option.textContent = `${cliente.nombre} ${cliente.apellidos} - ${cliente.cedula}`;
+                clienteSelect.appendChild(option);
+            });
+            
+            // Llenar select de préstamos
+            const prestamoSelect = document.getElementById('prestamoSelect');
+            prestamos.forEach(prestamo => {
+                const option = document.createElement('option');
+                option.value = prestamo.id;
+                option.textContent = `${prestamo.cliente_nombre} ${prestamo.cliente_apellidos} - RD$ ${Number(prestamo.monto_aprobado).toLocaleString()}`;
+                option.setAttribute('data-monto', prestamo.monto_aprobado);
+                option.setAttribute('data-cliente', `${prestamo.cliente_nombre} ${prestamo.cliente_apellidos}`);
+                prestamoSelect.appendChild(option);
+            });
+        }
 
-  btnCerrar.onclick = function() {
-    modal.style.display = "none";
-  }
+        // Manejar envío del formulario
+        formContrato.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validar campos del bloque 4
+            const tipoSeguro = document.getElementById('tipo_seguro').value;
+            const montoSeguro = document.getElementById('monto_seguro').value;
+            
+            if (!tipoSeguro || !montoSeguro) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Campos obligatorios',
+                    text: 'Por favor, complete todos los campos obligatorios del bloque de Seguro.'
+                });
+                return;
+            }
+            
+            // Obtener todos los valores del formulario
+            const formData = new FormData(formContrato);
+            const data = {};
+            for (let [key, value] of formData.entries()) {
+                data[key] = value;
+            }
+            
+            // Generar contrato
+            let contratoGenerado = template;
+            
+            // Reemplazar variables en el template
+            contratoGenerado = contratoGenerado.replace(/{{nombre_cliente}}/g, data.nombre_cliente || '');
+            contratoGenerado = contratoGenerado.replace(/{{nacionalidad}}/g, data.nacionalidad || '');
+            contratoGenerado = contratoGenerado.replace(/{{ocupacion}}/g, data.ocupacion || '');
+            contratoGenerado = contratoGenerado.replace(/{{tipo_documento}}/g, data.tipo_documento || '');
+            contratoGenerado = contratoGenerado.replace(/{{numero_documento}}/g, data.numero_documento || '');
+            contratoGenerado = contratoGenerado.replace(/{{direccion}}/g, data.direccion || '');
+            contratoGenerado = contratoGenerado.replace(/{{tipo_vehiculo}}/g, data.tipo_vehiculo || '');
+            contratoGenerado = contratoGenerado.replace(/{{marca}}/g, data.marca || '');
+            contratoGenerado = contratoGenerado.replace(/{{modelo}}/g, data.modelo || '');
+            contratoGenerado = contratoGenerado.replace(/{{anio}}/g, data.anio || '');
+            contratoGenerado = contratoGenerado.replace(/{{placa}}/g, data.placa || '');
+            contratoGenerado = contratoGenerado.replace(/{{chasis}}/g, data.chasis || '');
+            contratoGenerado = contratoGenerado.replace(/{{color}}/g, data.color || '');
+            contratoGenerado = contratoGenerado.replace(/{{precio_total}}/g, data.precio_total ? Number(data.precio_total).toLocaleString() : '');
+            contratoGenerado = contratoGenerado.replace(/{{monto_financiado}}/g, data.monto_financiado ? Number(data.monto_financiado).toLocaleString() : '');
+            contratoGenerado = contratoGenerado.replace(/{{cantidad_cuotas}}/g, data.cantidad_cuotas || '');
+            contratoGenerado = contratoGenerado.replace(/{{monto_cuota}}/g, data.monto_cuota ? Number(data.monto_cuota).toLocaleString() : '');
+            contratoGenerado = contratoGenerado.replace(/{{fecha_primera_cuota}}/g, formatearFecha(data.fecha_primera_cuota));
+            contratoGenerado = contratoGenerado.replace(/{{fecha_ultima_cuota}}/g, formatearFecha(data.fecha_ultima_cuota));
+            contratoGenerado = contratoGenerado.replace(/{{monto_seguro}}/g, data.monto_seguro ? Number(data.monto_seguro).toLocaleString() : '');
+            
+            // Mostrar contrato en el modal
+            contratoFinal.textContent = contratoGenerado;
+            modal.style.display = "block";
+            
+            // Mostrar mensaje de éxito
+            Swal.fire({
+                icon: 'success',
+                title: 'Contrato Generado',
+                text: 'El contrato ha sido generado exitosamente.'
+            });
+        });
 
-  // Cerrar modal al hacer clic fuera
-  window.onclick = function(event) {
-    if (event.target == modal) {
-      modal.style.display = "none";
-    }
-  }
+        // Cerrar modal
+        closeBtn.onclick = function() {
+            modal.style.display = "none";
+        }
 
-  // Copiar contrato al portapapeles
-  btnCopiar.onclick = async function() {
-    try {
-      await navigator.clipboard.writeText(contratoFinal.textContent);
-      Swal.fire({
-        icon: 'success',
-        title: 'Éxito',
-        text: 'Contrato copiado al portapapeles'
-      });
-    } catch (err) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Error al copiar el contrato: ' + err
-      });
-    }
-  };
+        btnCerrar.onclick = function() {
+            modal.style.display = "none";
+        }
 
-  // Imprimir contrato
-  btnImprimir.onclick = function() {
-    window.print();
-  };
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
 
-  // Establecer fechas por defecto
-  const today = new Date();
-  const firstPayment = new Date(today);
-  firstPayment.setMonth(today.getMonth() + 1);
-  const lastPayment = new Date(firstPayment);
-  lastPayment.setMonth(firstPayment.getMonth() + 23); // 24 meses por defecto
+        // Copiar contrato al portapapeles
+        btnCopiar.onclick = async function() {
+            try {
+                await navigator.clipboard.writeText(contratoFinal.textContent);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Éxito',
+                    text: 'Contrato copiado al portapapeles'
+                });
+            } catch (err) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al copiar el contrato: ' + err
+                });
+            }
+        };
 
-  document.querySelector('input[name="fecha_primera_cuota"]').value = firstPayment.toISOString().split('T')[0];
-  document.querySelector('input[name="fecha_ultima_cuota"]').value = lastPayment.toISOString().split('T')[0];
-</script>
+        // Imprimir contrato
+        btnImprimir.onclick = function() {
+            window.print();
+        };
 
+        // Establecer fechas por defecto
+        const today = new Date();
+        const firstPayment = new Date(today);
+        firstPayment.setMonth(today.getMonth() + 1);
+        const lastPayment = new Date(firstPayment);
+        lastPayment.setMonth(firstPayment.getMonth() + 23); // 24 meses por defecto
+
+        document.getElementById('fecha_primera_cuota').value = firstPayment.toISOString().split('T')[0];
+        document.getElementById('fecha_ultima_cuota').value = lastPayment.toISOString().split('T')[0];
+
+        // Cargar datos de ejemplo al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            cargarDatosEjemplo();
+        });
+    </script>
+</body>
+</html>
 <%- include('../partials/footer') %>
