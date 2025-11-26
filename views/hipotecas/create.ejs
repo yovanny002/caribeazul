@@ -271,14 +271,14 @@
                             <i class="fas fa-exclamation-triangle text-warning me-3 mt-1"></i>
                             <div>
                                 <h5 class="alert-heading mb-1">Propiedades en Garantía</h5>
-                                <p class="mb-0">Ingrese los datos de las propiedades que servirán como garantía hipotecaria.</p>
+                                <p class="mb-0">Ingrese los datos de las propiedades que servirán como garantía hipotecaria. La segunda propiedad es opcional.</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="property-section mb-4">
                         <h4 class="text-primary mb-3">
-                            <i class="fas fa-building me-2"></i>Primera Propiedad
+                            <i class="fas fa-building me-2"></i>Primera Propiedad <span class="text-danger">*</span>
                         </h4>
                         <div class="row g-3">
                             <div class="col-md-6">
@@ -320,43 +320,54 @@
                     </div>
 
                     <div class="property-section">
-                        <h4 class="text-primary mb-3">
-                            <i class="fas fa-building me-2"></i>Segunda Propiedad
-                        </h4>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label fw-semibold">Área <span class="text-danger">*</span></label>
-                                    <div class="input-group input-group-lg">
-                                        <input type="text" class="form-control" placeholder="Ej: 544" name="area_propiedad2" id="area_propiedad2" required>
-                                        <span class="input-group-text bg-light">m²</span>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="text-primary mb-0">
+                                <i class="fas fa-building me-2"></i>Segunda Propiedad (Opcional)
+                            </h4>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="toggleSegundaPropiedad" checked>
+                                <label class="form-check-label" for="toggleSegundaPropiedad">
+                                    Incluir segunda propiedad
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="segundaPropiedadFields">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label fw-semibold">Área</label>
+                                        <div class="input-group input-group-lg">
+                                            <input type="text" class="form-control" placeholder="Ej: 544" name="area_propiedad2" id="area_propiedad2" step="0.01">
+                                            <span class="input-group-text bg-light">m²</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label fw-semibold">Tipo de mejora</label>
+                                        <input type="text" class="form-control form-control-lg" placeholder="Ej: Mejora" name="mejora_propiedad2" id="mejora_propiedad2">
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label fw-semibold">Tipo de mejora <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control form-control-lg" placeholder="Ej: Mejora" name="mejora_propiedad2" id="mejora_propiedad2" required>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="form-group mt-1">
-                            <label class="form-label fw-semibold">Dirección completa <span class="text-danger">*</span></label>
-                            <textarea class="form-control form-control-lg" name="direccion_propiedad2" id="direccion_propiedad2" placeholder="Ej: Calle Proyecto num. 10, Sector la 22, La Caleta Boca Chica" rows="2" required></textarea>
-                        </div>
-
-                        <div class="row g-3 mt-1">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label fw-semibold">Parcela <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control form-control-lg" placeholder="Ej: 479" name="parcela_propiedad2" id="parcela_propiedad2" required>
-                                </div>
+                            <div class="form-group mt-1">
+                                <label class="form-label fw-semibold">Dirección completa</label>
+                                <textarea class="form-control form-control-lg" name="direccion_propiedad2" id="direccion_propiedad2" placeholder="Ej: Calle Proyecto num. 10, Sector la 22, La Caleta Boca Chica" rows="2"></textarea>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label class="form-label fw-semibold">Distrito Catastral <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control form-control-lg" placeholder="Ej: 32" name="distrito_propiedad2" id="distrito_propiedad2" required>
+
+                            <div class="row g-3 mt-1">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label fw-semibold">Parcela</label>
+                                        <input type="text" class="form-control form-control-lg" placeholder="Ej: 479" name="parcela_propiedad2" id="parcela_propiedad2">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label fw-semibold">Distrito Catastral</label>
+                                        <input type="text" class="form-control form-control-lg" placeholder="Ej: 32" name="distrito_propiedad2" id="distrito_propiedad2">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -459,7 +470,7 @@
                                 <div class="card-body">
                                     <div class="summary-item mb-3">
                                         <span class="summary-label">Propiedades en garantía:</span>
-                                        <span class="summary-value">2 propiedades</span>
+                                        <span class="summary-value" id="resumen_propiedades"></span>
                                     </div>
                                     <div class="summary-item">
                                         <span class="summary-label">Ubicación:</span>
@@ -744,6 +755,32 @@
         font-family: 'Times New Roman', serif;
         font-size: 14px;
         line-height: 1.6;
+        text-align: justify;
+    }
+    
+    /* Estilos para impresión en tamaño 8.5 x 13 */
+    @media print {
+        body {
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+        }
+        
+        .contrato-content {
+            font-family: 'Times New Roman', serif;
+            font-size: 12px;
+            line-height: 1.4;
+            text-align: justify;
+            white-space: pre-wrap;
+            margin: 0;
+            padding: 0.5in;
+            width: 8.5in;
+            height: 13in;
+        }
+        
+        .page-break {
+            page-break-before: always;
+        }
     }
     
     /* Responsive adjustments */
@@ -777,7 +814,7 @@
 </style>
 
 <script>
-    // Template del contrato (sin cambios)
+    // Template del contrato actualizado para impresión 8.5x13 y segunda propiedad opcional
     const templateHipotecario = `CONTRATO DE PRÉSTAMO CON GARANTIA HIPOTECARIA
 
 De una parte, CARIBE AZUL, S.R.L, entidad bancaria organizada y
@@ -916,9 +953,7 @@ DEUDORES y EL (LA) FIADOR(A) SOLIDARIO (A) e INDIVISIBLE consiente (n)
 otorgar en favor de EL ACREEDOR una hipoteca en primer rango, por la
 suma de {{monto_prestamo_letras}} (RD${{monto_prestamo}}), sobre el inmueble que se describe a continuación:
 
-Una porción de terreno que mide {{area_propiedad1}} metros cuadrados y sus mejoras consistente en una {{mejora_propiedad1}}, ubicada en {{direccion_propiedad1}}, dentro de la Parcela No. {{parcela_propiedad1}}, Distrito Catastral No.{{distrito_propiedad1}}, del municipio de la Caleta Boca Chica.
-
-Una porción de terreno que mide {{area_propiedad2}} metros cuadrados y sus mejoras consistente en una {{mejora_propiedad2}}, ubicada en {{direccion_propiedad2}}, dentro de la Parcela No. {{parcela_propiedad2}}, Distrito Catastral No.{{distrito_propiedad2}}, del municipio de la Caleta Boca Chica.
+Una porción de terreno que mide {{area_propiedad1}} metros cuadrados y sus mejoras consistente en una {{mejora_propiedad1}}, ubicada en {{direccion_propiedad1}}, dentro de la Parcela No. {{parcela_propiedad1}}, Distrito Catastral No.{{distrito_propiedad1}}, del municipio de la Caleta Boca Chica.{{segunda_propiedad_texto}}
 
 PÁRRAFO I: El inmueble antes descrito se encuentra amparado por el
 Certificado de Título {{certificado_titulo}}, a favor de EL DEUDOR e INDIVISIBLE.
@@ -972,7 +1007,7 @@ ACREEDOR.
 ARTÍCULO OCTAVO: LITIGIOS: En virtud de este contrato, EL DEUDOR
 INDIVISIBLE declara (n), bajo la fe del juramento, que sobre el inmueble
 otorgado en garantía no existe deuda pendiente o, a su mejor
-conocimiento, no hay ninguna sentencia, action, litigio o procedimiento
+conocimiento, no hay ninguna sentencia, acción, litigio o procedimiento
 existente o potencial por ante ningún tribunal, autoridad gubernamental
 o regulatoria, agencia, comisión, junta de arbitraje, o cualquier otro
 organismo, sin importar su denominación, excepto únicamente la solicitud
@@ -1141,6 +1176,8 @@ NOTARIO PÚBLICO`;
     const contratoFinal = document.getElementById("contratoFinal");
     const formContrato = document.getElementById("formContratoHipotecario");
     const progressBar = document.querySelector('.progress-bar');
+    const toggleSegundaPropiedad = document.getElementById('toggleSegundaPropiedad');
+    const segundaPropiedadFields = document.getElementById('segundaPropiedadFields');
     
     // Variables para control de bloques
     let currentBlock = 0;
@@ -1189,7 +1226,27 @@ NOTARIO PÚBLICO`;
         document.getElementById('resumen_plazo').textContent = document.getElementById('plazo_meses').value;
         document.getElementById('resumen_cuota').textContent = Number(document.getElementById('monto_cuota').value).toLocaleString();
         document.getElementById('resumen_tasa').textContent = document.getElementById('tasa_interes').value;
+        
+        // Actualizar resumen de propiedades
+        const tieneSegundaPropiedad = document.getElementById('toggleSegundaPropiedad').checked && 
+                                     document.getElementById('area_propiedad2').value;
+        document.getElementById('resumen_propiedades').textContent = tieneSegundaPropiedad ? '2 propiedades' : '1 propiedad';
     }
+    
+    // Evento para toggle de segunda propiedad
+    toggleSegundaPropiedad.addEventListener('change', function() {
+        if (this.checked) {
+            segundaPropiedadFields.style.display = 'block';
+        } else {
+            segundaPropiedadFields.style.display = 'none';
+            // Limpiar campos de segunda propiedad
+            document.getElementById('area_propiedad2').value = '';
+            document.getElementById('mejora_propiedad2').value = '';
+            document.getElementById('direccion_propiedad2').value = '';
+            document.getElementById('parcela_propiedad2').value = '';
+            document.getElementById('distrito_propiedad2').value = '';
+        }
+    });
     
     // Eventos para botones de navegación
     document.getElementById("btn-next-0").addEventListener("click", function() {
@@ -1251,16 +1308,9 @@ NOTARIO PÚBLICO`;
         const parcela1 = document.getElementById('parcela_propiedad1').value;
         const distrito1 = document.getElementById('distrito_propiedad1').value;
         
-        const area2 = document.getElementById('area_propiedad2').value;
-        const mejora2 = document.getElementById('mejora_propiedad2').value;
-        const direccion2 = document.getElementById('direccion_propiedad2').value;
-        const parcela2 = document.getElementById('parcela_propiedad2').value;
-        const distrito2 = document.getElementById('distrito_propiedad2').value;
-        
         const certificado = document.getElementById('certificado_titulo').value;
         
-        if (!area1 || !mejora1 || !direccion1 || !parcela1 || !distrito1 || 
-            !area2 || !mejora2 || !direccion2 || !parcela2 || !distrito2 || !certificado) {
+        if (!area1 || !mejora1 || !direccion1 || !parcela1 || !distrito1 || !certificado) {
             Swal.fire({
                 icon: 'error',
                 title: 'Campos obligatorios',
@@ -1377,6 +1427,18 @@ NOTARIO PÚBLICO`;
         } else {
             data.cuota_extraordinaria_texto = '';
         }
+        
+        // Manejar segunda propiedad opcional
+        const tieneSegundaPropiedad = document.getElementById('toggleSegundaPropiedad').checked && 
+                                     data.area_propiedad2 && data.mejora_propiedad2 && 
+                                     data.direccion_propiedad2 && data.parcela_propiedad2 && 
+                                     data.distrito_propiedad2;
+        
+        if (tieneSegundaPropiedad) {
+            data.segunda_propiedad_texto = `\n\nUna porción de terreno que mide ${data.area_propiedad2} metros cuadrados y sus mejoras consistente en una ${data.mejora_propiedad2}, ubicada en ${data.direccion_propiedad2}, dentro de la Parcela No. ${data.parcela_propiedad2}, Distrito Catastral No.${data.distrito_propiedad2}, del municipio de la Caleta Boca Chica.`;
+        } else {
+            data.segunda_propiedad_texto = '';
+        }
 
         // Generar contrato reemplazando plantillas
         let contratoGenerado = templateHipotecario;
@@ -1397,7 +1459,8 @@ NOTARIO PÚBLICO`;
             },
             body: JSON.stringify({
                 ...data,
-                contrato_texto: contratoGenerado
+                contrato_texto: contratoGenerado,
+                tiene_segunda_propiedad: tieneSegundaPropiedad
             })
         })
         .then(res => res.json())
@@ -1462,7 +1525,7 @@ NOTARIO PÚBLICO`;
         }
     };
 
-    // Imprimir contrato
+    // Imprimir contrato con formato 8.5x13
     btnImprimir.onclick = function() {
         const ventanaImpresion = window.open('', '_blank');
         const contratoCompleto = contratoFinal.textContent;
@@ -1473,16 +1536,23 @@ NOTARIO PÚBLICO`;
             <head>
                 <title>Contrato de Préstamo Hipotecario - Financiera Caribe Azul</title>
                 <style>
+                    @page {
+                        size: 8.5in 13in;
+                        margin: 0.5in;
+                    }
                     body {
                         font-family: 'Times New Roman', serif;
                         font-size: 12px;
                         line-height: 1.4;
-                        margin: 20px;
+                        margin: 0;
+                        padding: 0;
                         color: #000;
                     }
                     .contrato {
                         white-space: pre-wrap;
                         text-align: justify;
+                        width: 100%;
+                        height: 100%;
                     }
                     .firma {
                         margin-top: 50px;
@@ -1500,8 +1570,13 @@ NOTARIO PÚBLICO`;
                         clear: both;
                     }
                     @media print {
-                        body { margin: 0; }
-                        .page-break { page-break-before: always; }
+                        body { 
+                            margin: 0; 
+                            padding: 0;
+                        }
+                        .page-break { 
+                            page-break-before: always; 
+                        }
                     }
                 </style>
             </head>
