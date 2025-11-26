@@ -21,10 +21,12 @@ const Contrato = {
         datos_vehiculo: typeof datos_vehiculo
       });
 
-      const [result] = await db.query(
-        `INSERT INTO contratos_financiamiento 
-        (cliente_id, prestamo_id, datos_cliente, datos_vehiculo, datos_financiamiento, datos_seguro, contrato_texto)
-        VALUES (:cliente_id, :prestamo_id, :datos_cliente, :datos_vehiculo, :datos_financiamiento, :datos_seguro, :contrato_texto)`,
+        const [result] = await db.query(
+          `INSERT INTO contratos_financiamiento 
+            (cliente_id, prestamo_id, datos_cliente, datos_vehiculo, datos_financiamiento, datos_seguro, contrato_texto)
+          VALUES 
+            (:cliente_id, :prestamo_id, :datos_cliente, :datos_vehiculo, :datos_financiamiento, :datos_seguro, :contrato_texto)
+          RETURNING id`,
         {
           replacements: {
             cliente_id: cliente_id || null,
@@ -38,8 +40,8 @@ const Contrato = {
         }
       );
 
-      console.log('✅ Contrato creado con ID:', result.insertId);
-      return result.insertId;
+    console.log('✅ Contrato creado con ID:', result.insertId);
+    return result.insertId;
 
     } catch (error) {
       console.error('❌ Error creando contrato:', error);
@@ -101,19 +103,19 @@ const Contrato = {
   findAll: async () => {
     try {
       const [rows] = await db.query(
-        `SELECT
-          c.*, 
-          cli.nombre as cliente_nombre,
-          cli.apellidos as cliente_apellidos,
-          cli.cedula as cliente_cedula,
-          sp.monto_aprobado,
-          sp.estado as prestamo_estado
+        `SELECT c.*, 
+                cli.nombre AS cliente_nombre,
+                cli.apellidos AS cliente_apellidos,
+                cli.cedula AS cliente_cedula,
+                sp.monto_aprobado,
+                sp.estado AS prestamo_estado
         FROM contratos_financiamiento c
         LEFT JOIN clientes cli ON c.cliente_id = cli.id
         LEFT JOIN solicitudes_prestamos sp ON c.prestamo_id = sp.id
         WHERE c.estado != 'eliminado'
         ORDER BY c.created_at DESC`
       );
+
 
       console.log(`📋 Encontrados ${rows.length} contratos`);
 

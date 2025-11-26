@@ -136,11 +136,10 @@ exports.createForm = async (req, res) => {
  * Procesa la creación del contrato
  */
 exports.create = async (req, res) => {
-  let transaction;
   try {
     console.log('🚀 Iniciando creación de contrato...');
     console.log('📦 Datos recibidos:', req.body);
-    
+
     const {
       cliente_id, prestamo_id, nombre_cliente, nacionalidad, ocupacion,
       tipo_documento, numero_documento, direccion, telefono, email,
@@ -149,31 +148,20 @@ exports.create = async (req, res) => {
       fecha_primera_cuota, fecha_ultima_cuota, tipo_seguro, monto_seguro
     } = req.body;
 
-    // Validaciones básicas
     if (!nombre_cliente || !numero_documento) {
-      throw new Error('Nombre del cliente y número de documento son obligatorios');
+      return res.status(400).json({
+        success: false,
+        error: 'Nombre del cliente y número de documento son obligatorios'
+      });
     }
 
-    // Organización de datos
     const datosCliente = { 
-      nombre_cliente, 
-      nacionalidad, 
-      ocupacion, 
-      tipo_documento, 
-      numero_documento, 
-      direccion, 
-      telefono, 
-      email 
+      nombre_cliente, nacionalidad, ocupacion, tipo_documento, 
+      numero_documento, direccion, telefono, email 
     };
     
     const datosVehiculo = { 
-      tipo_vehiculo, 
-      marca, 
-      modelo, 
-      anio, 
-      placa, 
-      chasis, 
-      color 
+      tipo_vehiculo, marca, modelo, anio, placa, chasis, color 
     };
     
     const datosFinanciamiento = { 
@@ -190,36 +178,22 @@ exports.create = async (req, res) => {
       monto_seguro: parseFloat(monto_seguro) || 0 
     };
 
-    console.log('📊 Datos organizados:', {
-      datosCliente,
-      datosVehiculo,
-      datosFinanciamiento,
-      datosSeguro
-    });
-
-    // Generar texto del contrato
-    let contratoTexto = CONTRATO_TEMPLATE;
     const allData = { 
       ...datosCliente, 
       ...datosVehiculo, 
       ...datosFinanciamiento, 
       ...datosSeguro 
     };
-    
-    // Formatear fechas para el contrato
+
     allData.fecha_primera_cuota = formatearFecha(fecha_primera_cuota);
     allData.fecha_ultima_cuota = formatearFecha(fecha_ultima_cuota);
 
-    // Reemplazar placeholders
+    let contratoTexto = CONTRATO_TEMPLATE;
     for (const key in allData) {
-      const value = allData[key] || 'N/A';
       const placeholder = new RegExp(`{{${key}}}`, 'g');
-      contratoTexto = contratoTexto.replace(placeholder, value);
+      contratoTexto = contratoTexto.replace(placeholder, allData[key] || 'N/A');
     }
 
-    console.log('📄 Contrato generado, longitud:', contratoTexto.length);
-
-    // Guardar en base de datos
     const contratoId = await Contrato.create({
       cliente_id: cliente_id || null,
       prestamo_id: prestamo_id || null,
@@ -231,19 +205,20 @@ exports.create = async (req, res) => {
     });
 
     console.log('✅ Contrato creado exitosamente ID:', contratoId);
-    
-    req.flash('success', `Contrato #${contratoId} generado exitosamente`);
-    res.redirect(`/contratos/${contratoId}`);
+
+    return res.json({
+      success: true,
+      id: contratoId,
+      message: `Contrato #${contratoId} generado exitosamente`
+    });
 
   } catch (error) {
     console.error('❌ Error en create:', error);
-    
-    if (transaction) {
-      await transaction.rollback();
-    }
-    
-    req.flash('error', 'Error al generar contrato: ' + error.message);
-    res.redirect('/contratos/create');
+
+    return res.status(500).json({
+      success: false,
+      error: 'Error al generar contrato: ' + error.message
+    });
   }
 };
 

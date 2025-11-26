@@ -349,7 +349,7 @@
                 </div>
 
                 <div class="card">
-                    <form id="formContrato">
+                    <form id="formContrato" method="POST" action="/contratos">
                         <!-- Indicador de progreso -->
                         <div class="progress-indicator">
                             <div class="progress-step active" data-step="0">1</div>
@@ -836,33 +836,32 @@ Abogado Notario`;
         }
 
         // Manejar envío del formulario
-        formContrato.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Validar campos del bloque 4
-            const tipoSeguro = document.getElementById('tipo_seguro').value;
-            const montoSeguro = document.getElementById('monto_seguro').value;
-            
-            if (!tipoSeguro || !montoSeguro) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Campos obligatorios',
-                    text: 'Por favor, complete todos los campos obligatorios del bloque de Seguro.'
-                });
-                return;
-            }
-            
-            // Obtener todos los valores del formulario
-            const formData = new FormData(formContrato);
-            const data = {};
-            for (let [key, value] of formData.entries()) {
-                data[key] = value;
-            }
-            
-            // Generar contrato
-            let contratoGenerado = template;
-            
-            // Reemplazar variables en el template
+   formContrato.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    // Validar campos del bloque 4
+    const tipoSeguro = document.getElementById('tipo_seguro').value;
+    const montoSeguro = document.getElementById('monto_seguro').value;
+
+    if (!tipoSeguro || !montoSeguro) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Campos obligatorios',
+            text: 'Por favor, complete todos los campos obligatorios del bloque de Seguro.'
+        });
+        return;
+    }
+
+    // Obtener todos los valores del formulario
+    const formData = new FormData(formContrato);
+    const data = {};
+    for (let [key, value] of formData.entries()) {
+        data[key] = value;
+    }
+
+    // Generar contrato reemplazando plantillas
+    let contratoGenerado = template;
+   // Reemplazar variables en el template
             contratoGenerado = contratoGenerado.replace(/{{nombre_cliente}}/g, data.nombre_cliente || '');
             contratoGenerado = contratoGenerado.replace(/{{nacionalidad}}/g, data.nacionalidad || '');
             contratoGenerado = contratoGenerado.replace(/{{ocupacion}}/g, data.ocupacion || '');
@@ -883,18 +882,56 @@ Abogado Notario`;
             contratoGenerado = contratoGenerado.replace(/{{fecha_primera_cuota}}/g, formatearFecha(data.fecha_primera_cuota));
             contratoGenerado = contratoGenerado.replace(/{{fecha_ultima_cuota}}/g, formatearFecha(data.fecha_ultima_cuota));
             contratoGenerado = contratoGenerado.replace(/{{monto_seguro}}/g, data.monto_seguro ? Number(data.monto_seguro).toLocaleString() : '');
-            
-            // Mostrar contrato en el modal
-            contratoFinal.textContent = contratoGenerado;
-            modal.style.display = "block";
-            
-            // Mostrar mensaje de éxito
+            contratoGenerado = contratoGenerado.replace(/{{monto_seguro}}/g, data.monto_seguro ? Number(data.monto_seguro).toLocaleString() : '');
+
+    // Mostrar contrato en modal
+    contratoFinal.textContent = contratoGenerado;
+    modal.style.display = "block";
+
+    Swal.fire({
+        icon: 'success',
+        title: 'Contrato Generado',
+        text: 'El contrato ha sido generado exitosamente.'
+    });
+
+    // 🔥 Enviar datos al backend
+    fetch('/contratos/create', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            ...data,
+            contrato_texto: contratoGenerado
+        })
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.success) {
             Swal.fire({
                 icon: 'success',
-                title: 'Contrato Generado',
-                text: 'El contrato ha sido generado exitosamente.'
+                title: 'Contrato guardado',
+                text: 'El contrato ha sido guardado exitosamente.'
+            }).then(() => {
+                window.location.href = `/contratos/${res.id}`;
             });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error al guardar',
+                text: res.error || 'No se pudo guardar el contrato.'
+            });
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de red',
+            text: 'No se pudo conectar al servidor.'
         });
+    });
+});
 
         // Cerrar modal
         closeBtn.onclick = function() {
