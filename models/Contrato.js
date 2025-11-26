@@ -51,7 +51,7 @@ const Contrato = {
   findById: async (id) => {
     try {
       const [rows] = await db.query(
-        `SELECT 
+        `SELECT
           c.*, 
           cli.nombre as cliente_nombre,
           cli.apellidos as cliente_apellidos,
@@ -101,7 +101,7 @@ const Contrato = {
   findAll: async () => {
     try {
       const [rows] = await db.query(
-        `SELECT 
+        `SELECT
           c.*, 
           cli.nombre as cliente_nombre,
           cli.apellidos as cliente_apellidos,
