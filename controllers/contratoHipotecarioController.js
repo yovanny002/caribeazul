@@ -8,7 +8,7 @@ exports.index = async (req, res) => {
     try {
         const hipotecas = await ContratoHipotecario.findAll();
 
-        res.render('contratos_hipotecarios/index', {
+        res.render('hipotecas/index', {
             hipotecas,
             moment,
             messages: req.flash(),
@@ -26,7 +26,7 @@ exports.index = async (req, res) => {
  */
 exports.createForm = async (req, res) => {
     try {
-        res.render('contratos_hipotecarios/create', {
+        res.render('hipotecas/create', {
             title: 'Nuevo Contrato Hipotecario',
             messages: req.flash()
         });
@@ -115,7 +115,7 @@ exports.show = async (req, res) => {
             return res.redirect('/contratos-hipotecarios');
         }
 
-        res.render('contratos_hipotecarios/show', {
+        res.render('hipotecas/show', {
             contrato,
             title: `Contrato Hipotecario #${contrato.id}`
         });
@@ -139,7 +139,7 @@ exports.print = async (req, res) => {
             return res.redirect('/contratos-hipotecarios');
         }
 
-        res.render('contratos_hipotecarios/print', {
+        res.render('hipotecas/print', {
             contrato,
             layout: false
         });
