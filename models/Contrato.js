@@ -2,7 +2,7 @@ const db = require('./db');
 const { QueryTypes } = require('sequelize');
 
 const Contrato = {
-  // Crear tabla si no existe
+  // Crear tabla si no existe (No usa replacements, está bien)
   createTable: async () => {
     try {
       await db.query(`
@@ -27,7 +27,7 @@ const Contrato = {
     }
   },
 
-  // Crear nuevo contrato
+  // Crear nuevo contrato (CORREGIDO: usa $N)
   create: async (contratoData) => {
     try {
       const {
@@ -40,16 +40,6 @@ const Contrato = {
         contrato_texto
       } = contratoData;
 
-      console.log('Creando contrato con datos:', {
-        cliente_id,
-        prestamo_id,
-        datos_cliente: typeof datos_cliente,
-        datos_vehiculo: typeof datos_vehiculo,
-        datos_financiamiento: typeof datos_financiamiento,
-        datos_seguro: typeof datos_seguro
-      });
-
-      // ⭐ CORRECCIÓN CLAVE: Usar $1, $2, $3, etc. como placeholders
       const [result] = await db.query(`
         INSERT INTO contratos_financiamiento 
         (cliente_id, prestamo_id, datos_cliente, datos_vehiculo, datos_financiamiento, datos_seguro, contrato_texto)
@@ -68,12 +58,9 @@ const Contrato = {
         type: QueryTypes.INSERT
       });
       
-      // Ajuste para obtener el ID de la inserción de forma más robusta con Sequelize + PostgreSQL
       let insertedId = null;
-      if (Array.isArray(result) && result.length > 0 && result[0].id) {
-          insertedId = result[0].id;
-      } else if (Array.isArray(result) && result.length > 0 && result[0][0] && result[0][0].id) {
-          insertedId = result[0][0].id; // Fallback para algunos drivers
+      if (Array.isArray(result) && result.length > 0) {
+          insertedId = result[0].id || (result[0][0] ? result[0][0].id : null);
       }
 
       console.log('Contrato creado con ID:', insertedId);
@@ -84,7 +71,7 @@ const Contrato = {
     }
   },
 
-  // Buscar por ID
+  // Buscar por ID (CORREGIDO: usa $1)
   findById: async (id) => {
     try {
       const rows = await db.query(`
@@ -108,7 +95,7 @@ const Contrato = {
 
       const contrato = rows[0];
       
-      // Parsear JSON fields de manera segura
+      // Parsear JSON fields
       try {
         contrato.datos_cliente = typeof contrato.datos_cliente === 'string' ? 
           JSON.parse(contrato.datos_cliente) : contrato.datos_cliente;
@@ -120,7 +107,6 @@ const Contrato = {
           JSON.parse(contrato.datos_seguro) : contrato.datos_seguro;
       } catch (parseError) {
         console.error('Error parseando JSON del contrato:', parseError);
-        // Si hay error en el parseo, mantener los datos como están
       }
 
       return contrato;
@@ -130,7 +116,7 @@ const Contrato = {
     }
   },
 
-  // Buscar todos los contratos
+  // Buscar todos los contratos (Estaba bien, no tiene placeholders)
   findAll: async () => {
     try {
       const rows = await db.query(`
@@ -165,7 +151,7 @@ const Contrato = {
           };
         } catch (parseError) {
           console.error('Error parseando JSON del contrato ID:', row.id, parseError);
-          return row; // Retornar row sin parsear en caso de error
+          return row;
         }
       });
     } catch (error) {
@@ -174,7 +160,7 @@ const Contrato = {
     }
   },
 
-  // Buscar por cliente
+  // Buscar por cliente (CORREGIDO: usa $1)
   findByClienteId: async (clienteId) => {
     try {
       const rows = await db.query(`
@@ -186,6 +172,7 @@ const Contrato = {
         type: QueryTypes.SELECT
       });
 
+      // Lógica de mapeo y parseo es correcta
       return rows.map(row => {
         try {
           return {
@@ -210,7 +197,7 @@ const Contrato = {
     }
   },
 
-  // Actualizar contrato
+  // Actualizar contrato (CORREGIDO: usa $N)
   update: async (id, contratoData) => {
     try {
       const {
@@ -252,7 +239,7 @@ const Contrato = {
     }
   },
 
-  // Eliminar contrato (soft delete)
+  // Eliminar contrato (soft delete) (CORREGIDO: usa $1)
   delete: async (id) => {
     try {
       await db.query(`
@@ -273,7 +260,7 @@ const Contrato = {
     }
   },
 
-  // Verificar si la tabla existe y tiene datos
+  // checkTable y count no usan replacements, están bien.
   checkTable: async () => {
     try {
       const result = await db.query(`
@@ -283,7 +270,6 @@ const Contrato = {
           AND table_name = 'contratos_financiamiento'
         )
       `, { type: QueryTypes.SELECT });
-
       return result[0].exists;
     } catch (error) {
       console.error('Error verificando tabla:', error);
@@ -291,13 +277,11 @@ const Contrato = {
     }
   },
 
-  // Contar contratos
   count: async () => {
     try {
       const result = await db.query(`
         SELECT COUNT(*) as total FROM contratos_financiamiento WHERE estado != 'eliminado'
       `, { type: QueryTypes.SELECT });
-
       return parseInt(result[0].total);
     } catch (error) {
       console.error('Error contando contratos:', error);
