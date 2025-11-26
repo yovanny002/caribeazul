@@ -81,6 +81,7 @@ const reportesRoutes = require('./routes/reportes');
 const documentosRoutes = require('./routes/documentos');
 const prestamosInteresRoutes = require('./routes/prestamosInteres');
 const contratoRoutes = require('./routes/contratos');
+const hipotecaRoutes = require('./routes/contratosHipotecarios');
 
 
 app.use('/auth', authRoutes);
@@ -95,6 +96,7 @@ app.use('/rutas', authMiddleware.ensureAuthenticated, rutasRoutes);
 app.use('/documentos', authMiddleware.ensureAuthenticated, documentosRoutes);
 app.use('/contratos',authMiddleware.ensureAuthenticated, contratoRoutes);
 app.use('/financiamiento',authMiddleware.ensureAuthenticated, contratoRoutes);
+app.use('/contratos-hipotecarios',authMiddleware.ensureAuthenticated, hipotecaRoutes);
 
 
 

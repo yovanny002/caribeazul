@@ -1,0 +1,1094 @@
+<%- include('../partials/header', { title: 'Generar Contrato de Préstamo Hipotecario' }) %>
+
+<div class="container-fluid px-4 mt-4">
+    <div class="card border-0 shadow">
+        <div class="card-header bg-primary text-white py-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">
+                    <i class="fas fa-file-contract me-2"></i>Generador de Contrato de Préstamo Hipotecario
+                </h2>
+                <a href="/contratos" class="btn btn-light btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Volver a Contratos
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body">
+            <div class="header text-center mb-4">
+                <h1>Financiera Caribe Azul</h1>
+                <h3>Contrato de Préstamo con Garantía Hipotecaria</h3>
+            </div>
+
+            <div class="alert alert-success alert-dismissible fade show d-none" id="successAlert" role="alert">
+                <span id="successMessage"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <div class="alert alert-danger alert-dismissible fade show d-none" id="errorAlert" role="alert">
+                <span id="errorMessage"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <div class="info-box alert alert-info">
+                <h4><i class="fas fa-info-circle me-2"></i>Información Importante</h4>
+                <p class="mb-0">Complete todos los campos obligatorios (*) para generar el contrato de préstamo con garantía hipotecaria.</p>
+            </div>
+
+            <div class="card">
+                <form id="formContratoHipotecario" method="POST" action="/contratos-hipotecarios">
+                    <!-- Indicador de progreso -->
+                    <div class="progress-indicator mb-4">
+                        <div class="progress-step active" data-step="0">1</div>
+                        <div class="progress-step" data-step="1">2</div>
+                        <div class="progress-step" data-step="2">3</div>
+                        <div class="progress-step" data-step="3">4</div>
+                    </div>
+                    
+                    <!-- Bloque 0: Datos del Deudor -->
+                    <div class="form-block active" id="block-0">
+                        <h2><i class="fas fa-user me-2"></i>Datos del Deudor</h2>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Nombre completo*</label>
+                                    <input type="text" class="form-control" placeholder="Ej: Massimiliano Pardini" name="nombre_deudor" id="nombre_deudor" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Nacionalidad*</label>
+                                    <input type="text" class="form-control" placeholder="Ej: Italiana" name="nacionalidad" id="nacionalidad" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Ocupación*</label>
+                                    <input type="text" class="form-control" placeholder="Ej: Comerciante" name="ocupacion" id="ocupacion" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Tipo de documento*</label>
+                                    <select class="form-select" name="tipo_documento" id="tipo_documento" required>
+                                        <option value="pasaporte">Pasaporte</option>
+                                        <option value="cédula">Cédula</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Número de documento*</label>
+                                    <input type="text" class="form-control" placeholder="Ej: YC4912855" name="numero_documento" id="numero_documento" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Teléfono*</label>
+                                    <input type="tel" class="form-control" placeholder="Ej: 809-123-4567" name="telefono" id="telefono" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Dirección completa*</label>
+                            <textarea class="form-control" name="direccion" id="direccion" placeholder="Ej: Calle Ramon Mella num. 15, La Caleta, Boca Chica" rows="2" required></textarea>
+                        </div>
+                        
+                        <div class="btn-group d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-secondary" id="btn-prev-0" disabled>Anterior</button>
+                            <button type="button" class="btn btn-primary" id="btn-next-0">Siguiente</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Bloque 1: Términos del Préstamo -->
+                    <div class="form-block" id="block-1">
+                        <h2><i class="fas fa-money-bill-wave me-2"></i>Términos del Préstamo</h2>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Monto del préstamo* (RD$)</label>
+                                    <input type="number" class="form-control" placeholder="Ej: 800000" name="monto_prestamo" id="monto_prestamo" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Plazo (meses)*</label>
+                                    <select class="form-select" name="plazo_meses" id="plazo_meses" required>
+                                        <option value="24" selected>24 meses</option>
+                                        <option value="12">12 meses</option>
+                                        <option value="36">36 meses</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Valor de cuota mensual* (RD$)</label>
+                                    <input type="number" class="form-control" placeholder="Ej: 40000" name="monto_cuota" id="monto_cuota" step="0.01" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Tasa de interés mensual* (%)</label>
+                                    <input type="number" class="form-control" placeholder="Ej: 5" name="tasa_interes" id="tasa_interes" step="0.01" value="5" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Fecha primera cuota*</label>
+                                    <input type="date" class="form-control" name="fecha_primera_cuota" id="fecha_primera_cuota" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Fecha última cuota*</label>
+                                    <input type="date" class="form-control" name="fecha_ultima_cuota" id="fecha_ultima_cuota" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Cuota extraordinaria (RD$)</label>
+                                    <input type="number" class="form-control" placeholder="Ej: 800000" name="cuota_extraordinaria" id="cuota_extraordinaria" step="0.01">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Fecha cuota extraordinaria</label>
+                                    <input type="date" class="form-control" name="fecha_cuota_extraordinaria" id="fecha_cuota_extraordinaria">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="btn-group d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-secondary" id="btn-prev-1">Anterior</button>
+                            <button type="button" class="btn btn-primary" id="btn-next-1">Siguiente</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Bloque 2: Garantía Hipotecaria -->
+                    <div class="form-block" id="block-2">
+                        <h2><i class="fas fa-home me-2"></i>Garantía Hipotecaria</h2>
+                        
+                        <div class="info-box alert alert-warning mb-4">
+                            <h4><i class="fas fa-exclamation-triangle me-2"></i>Propiedades en Garantía</h4>
+                            <p class="mb-0">Ingrese los datos de las propiedades que servirán como garantía hipotecaria.</p>
+                        </div>
+
+                        <h4>Primera Propiedad</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Área (m²)*</label>
+                                    <input type="text" class="form-control" placeholder="Ej: 340.36" name="area_propiedad1" id="area_propiedad1" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Tipo de mejora*</label>
+                                    <input type="text" class="form-control" placeholder="Ej: Mejora" name="mejora_propiedad1" id="mejora_propiedad1" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Dirección completa*</label>
+                            <textarea class="form-control" name="direccion_propiedad1" id="direccion_propiedad1" placeholder="Ej: Calle Las Flores Esquina Calle Proyecto, Sector los Unidos, La Caleta Boca Chica" rows="2" required></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Parcela*</label>
+                                    <input type="text" class="form-control" placeholder="Ej: 486B" name="parcela_propiedad1" id="parcela_propiedad1" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Distrito Catastral*</label>
+                                    <input type="text" class="form-control" placeholder="Ej: 32" name="distrito_propiedad1" id="distrito_propiedad1" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <h4>Segunda Propiedad</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Área (m²)*</label>
+                                    <input type="text" class="form-control" placeholder="Ej: 544" name="area_propiedad2" id="area_propiedad2" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Tipo de mejora*</label>
+                                    <input type="text" class="form-control" placeholder="Ej: Mejora" name="mejora_propiedad2" id="mejora_propiedad2" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Dirección completa*</label>
+                            <textarea class="form-control" name="direccion_propiedad2" id="direccion_propiedad2" placeholder="Ej: Calle Proyecto num. 10, Sector la 22, La Caleta Boca Chica" rows="2" required></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Parcela*</label>
+                                    <input type="text" class="form-control" placeholder="Ej: 479" name="parcela_propiedad2" id="parcela_propiedad2" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label class="form-label">Distrito Catastral*</label>
+                                    <input type="text" class="form-control" placeholder="Ej: 32" name="distrito_propiedad2" id="distrito_propiedad2" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label class="form-label">Certificado de Título*</label>
+                            <input type="text" class="form-control" placeholder="Ej: En proceso por ante Registrador de Títulos del Departamento de Santo Domingo" name="certificado_titulo" id="certificado_titulo" required>
+                        </div>
+                        
+                        <div class="btn-group d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-secondary" id="btn-prev-2">Anterior</button>
+                            <button type="button" class="btn btn-primary" id="btn-next-2">Siguiente</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Bloque 3: Confirmación -->
+                    <div class="form-block" id="block-3">
+                        <h2><i class="fas fa-check-circle me-2"></i>Confirmación</h2>
+                        
+                        <div class="info-box alert alert-success">
+                            <h4><i class="fas fa-info-circle me-2"></i>Resumen del Contrato</h4>
+                            <p class="mb-0">Revise la información antes de generar el contrato. Al confirmar, el contrato será guardado en el sistema.</p>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Datos del Deudor</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Nombre:</strong> <span id="resumen_nombre"></span></p>
+                                <p><strong>Documento:</strong> <span id="resumen_documento"></span></p>
+                                <p><strong>Dirección:</strong> <span id="resumen_direccion"></span></p>
+                            </div>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Términos del Préstamo</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Monto:</strong> RD$ <span id="resumen_monto"></span></p>
+                                <p><strong>Plazo:</strong> <span id="resumen_plazo"></span> meses</p>
+                                <p><strong>Cuota mensual:</strong> RD$ <span id="resumen_cuota"></span></p>
+                                <p><strong>Tasa de interés:</strong> <span id="resumen_tasa"></span>% mensual</p>
+                            </div>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5 class="mb-0">Garantía Hipotecaria</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Propiedades en garantía:</strong> 2 propiedades</p>
+                                <p><strong>Ubicación:</strong> La Caleta, Boca Chica</p>
+                            </div>
+                        </div>
+                        
+                        <div class="btn-group d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-secondary" id="btn-prev-3">Anterior</button>
+                            <button type="submit" class="btn btn-success">Generar Contrato</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para mostrar el contrato -->
+<div id="modalContrato" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Contrato de Préstamo Hipotecario Generado</h2>
+        <div id="contratoFinal"></div>
+        <div class="modal-buttons d-flex justify-content-center gap-2 mt-4">
+            <button class="btn btn-primary" id="btnCopiar">Copiar Contrato</button>
+            <button class="btn btn-secondary" id="btnImprimir">Imprimir Contrato</button>
+            <button class="btn btn-danger" id="btnCerrar">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Template del contrato basado en el documento proporcionado
+    const templateHipotecario = `CONTRATO DE PRÉSTAMO CON GARANTIA HIPOTECARIA
+
+De una parte, CARIBE AZUL, S.R.L, entidad bancaria organizada y
+existente conforme a las leyes de la República Dominicana, R.N.C. NUM.
+133-37493-5, con su asiento social y oficina principal ubicada en la
+calle H, Numero 15, Andres, Bica Chica, Provincia de Santo Domingo
+Restauración No.127, esquina calle Jácuba, de la ciudad de Santiago de
+los Caballeros, República Dominicana, representada por el (la) señor (a)
+CRISTIAN VARGAS, de nacionalidad Dominicana, Profesión u ocupación
+Comerciante, portador (a) de la Cédula de Identidad y Electoral No.
+001-1497135-1, domiciliado (a) y residente en en esta ciudad de Andres,
+Boca Chica, Provincia de Santo Domingo, en su calidad de Encargado de
+Sucursal, y quien en lo adelante se denominará EL ACREEDOR;
+
+De otra parte: (1) {{nombre_deudor}}, de nacionalidad {{nacionalidad}}, de
+profesión u ocupación {{ocupacion}}, portador del {{tipo_documento}} Num.
+{{numero_documento}}, domiciliado (a) y residente en {{direccion}} quien (es) en lo adelante y para lo fines y
+consecuencias del presente acuerdo, ya sea de manera conjunta o
+individual, se denominará (n) como EL DEUDOR (A)/ LOS DEUDORES; y,
+
+PREÁMBULO
+
+POR CUANTO: EL DEUDOR (A)/ LOS DEUDORES ha (n) solicitado a EL ACREEDOR
+la concesión de un préstamo por la suma de {{monto_prestamo_letras}} (RD${{monto_prestamo}}), moneda de curso legal de la
+República Dominicana.
+
+POR CUANTO: EL ACREEDOR está en condiciones de otorgar dicho préstamo
+bajo las condiciones y especificaciones que se expondrán más adelante,
+siempre y cuando se otorgue a su favor un bien inmueble en garantía.
+
+POR TANTO, y en el entendido de que este preámbulo es parte integral del
+presente contrato, LAS PARTES;
+
+HAN CONVENIDO Y PACTADO LO SIGUIENTE:
+
+ARTÍCULO PRIMERO: OBJETO: Por medio del presente acto EL ACREEDOR otorga
+a favor de EL DEUDOR (A)/ LOS DEUDORES, quien (es) acepta (n), un
+préstamo por la suma de {{monto_prestamo_letras}} (RD${{monto_prestamo}}), moneda de curso legal de la República Dominicana.
+
+PÁRRAFO: Es acordado entre LAS PARTES contratantes que EL ACREEDOR podrá
+ceder el crédito otorgado en el presente contrato a cualquier tercero,
+siempre a su conveniencia y discreción.
+
+ARTÍCULO SEGUNDO: VIGENCIA Y PAGO: El préstamo otorgado mediante este
+contrato tendrá una vigencia de {{plazo_anios}} años, y será pagado por EL
+DEUDOR (A) en manos de EL ACREEDOR, mediante {{plazo_meses}} cuotas
+mensuales y consecutivas de {{monto_cuota_letras}} (RD$ {{monto_cuota}}) cada una, debiendo tener lugar el pago de la primera
+cuota el día {{fecha_primera_cuota}} y, así sucesivamente todos los días {{dia_pago}} de cada mes, hasta
+cancelar la totalidad del préstamo con el pago de la última cuota, que
+deberá efectuarse el día {{fecha_ultima_cuota}}{{cuota_extraordinaria_texto}}
+
+PÁRRAFO I: En caso de que el pago de una cuota o el cumplimiento de
+cualquier obligación prevista en este acto coincida con un día feriado,
+LAS PARTES convienen que EL DEUDOR (A)/ LOS DEUDORES podrá (n) cumplir
+con dicha obligación contractual el próximo día hábil, sin que ello
+genere ningún tipo de recargo o penalidad en su contra.
+
+PÁRRAFO II: LAS PARTES convienen que los pagos efectuados por EL DEUDOR
+(A)/ LOS DEUDORES mediante el uso de cheques se considerarán realizados,
+y por tanto con efecto liberatorio, en la fecha en que el banco girado
+acepte el cheque y efectúe el crédito del mismo en la cuenta de EL
+ACREEDOR.
+
+PÁRRAFO III: EL ACREEDOR se compromete a entregar a EL DEUDOR (A)/ LOS
+DEUDORES, un recibo de pago que detalle la forma en que son aplicados
+los pagos de las obligaciones de capital pendientes, cada vez que éste
+(os) efectúe (n) en su fecha de vencimiento el pago de las cuotas
+establecidas en el Artículo Segundo de este acto.
+
+PÁRRAFO IV: No obstante a lo establecido en la parte capital de este
+artículo, LAS PARTES convienen que EL DEUDOR (A)/LOS DEUDORES podrá (n)
+cancelar de manera anticipada la totalidad de la deuda contraída, si
+éste (éstos) así lo decide (n), sin que ello genere ningún tipo de
+penalidad en su perjuicio.
+
+PÁRRAFO V: La interposición de un reclamo, queja o denuncia frente a EL
+ACREEDOR, o ante la Superintendencia de Bancos, no exime a EL DEUDOR
+(A)/ LOS DEUDORES de cumplir con sus obligaciones de pagar por concepto
+del servicio o producto contratado, los intereses y moras generados con
+anterioridad o posterioridad al reclamo, ni cualquier otro cargo que
+haya pactado expresamente con EL ACREEDOR mediante este acto.
+
+PÁRRAFO VI: EL DEUDOR (A)/ LOS DEUDORES podrá (n) efectuar el pago de
+las cuotas precedentemente establecidas, en cualquiera de las sucursales
+que tiene EL ACREEDOR en todo el territorio nacional.
+
+PÁRRAFO VII: EL DEUDOR (A)/ LOS DEUDORES declaran que recibieron, a la
+firma del presente contrato, la tabla de amortización correspondiente a
+este préstamo con garantía hipotecaria.
+
+ARTÍCULO TERCERO: TASA DE INTERES: EL DEUDOR (A)/ LOS DEUDORES pagará
+(n) a EL ACREEDOR un {{tasa_interes}} por ciento ({{tasa_interes}}%) por concepto de interés
+mensual, sobre saldo insoluto, y se calculará sobre la base de un año de
+trescientos sesenta (360) días.
+
+PÁRRAFO I: EL DEUDOR (A)/ LOS DEUDORES autoriza (n) a EL ACREEDOR a
+revisar en cualquier momento, a partir de la suscripción del presente
+contrato, la tasa de interés fijada en la parte capital de este
+artículo, con el fin de ajustarla al nivel de la tasa prevaleciente en
+el mercado financiero y/o a sus políticas internas de tasas de interés.
+Cualquier modificación efectuada en la misma será comunicada o informada
+por escrito, a través de canales directos, a EL DEUDOR (A)/ LOS DEUDORES
+con treinta (30) días de antelación. EL DEUDOR (A)/ LOS DEUDORES contará
+(n) con el plazo indicado, a partir de la fecha de la notificación
+recibida, para presentar objeción a dicho cambio mediante la cancelación
+de lo adeudado. Una vez transcurrido dicho plazo sin haber recibido
+respuesta alguna de parte del deudor, se reputará aceptada la
+modificación y será aplicada la nueva tasa de interés sobre el saldo
+insoluto del préstamo, debiendo EL ACREEDOR entregar en favor del DEUDOR
+la nueva tabla de amortización.
+
+PÁRRAFO II: LAS PARTES convienen, además, que la revisión de la tasa de
+interés también se aplicará en caso de que una ley, resolución o
+disposición emitida por la Administración Monetaria y Financiera,
+posterior a la fecha de firma de este contrato, modifique el valor de la
+misma.
+
+ARTÍCULO CUARTO: APLICACIÓN DE LOS PAGOS: Todo pago se realizará en la
+fecha convenida y se aplicará primero a las moras generadas e intereses
+vencidos, si los hubiere; posteriormente a los gastos contractualmente
+pactados, si aplica; y, luego al capital. EL ACREEDOR tendrá la facultad
+de aceptar el pago de las cuotas con posterioridad a su vencimiento,
+quedando expresamente acordado por LAS PARTES, que después de la fecha
+convenida, EL DEUDOR (A)/ LOS DEUDORES pagará (n) por cada mes o
+fracción de mes de retraso, un cinco por ciento (5%) adicional,
+calculado sobre el capital de la cuota, constituyendo este pago una
+penalidad por el retraso ocurrido.
+
+ARTÍCULO QUINTO: GARANTÍA SOLIDARIA: Para seguridad y garantía del fiel
+cumplimiento de las obligaciones puestas a su cargo por el presente
+contrato.
+
+ARTÍCULO SEXTO: GARANTÍA HIPOTECARIA: Para seguridad y garantía del pago
+de la suma prestada en virtud de este contrato, EL DEUDOR (A)/ LOS
+DEUDORES y EL (LA) FIADOR(A) SOLIDARIO (A) e INDIVISIBLE consiente (n)
+otorgar en favor de EL ACREEDOR una hipoteca en primer rango, por la
+suma de {{monto_prestamo_letras}} (RD${{monto_prestamo}}), sobre el inmueble que se describe a continuación:
+
+Una porción de terreno que mide {{area_propiedad1}} metros cuadrados y sus mejoras consistente en una {{mejora_propiedad1}}, ubicada en {{direccion_propiedad1}}, dentro de la Parcela No. {{parcela_propiedad1}}, Distrito Catastral No.{{distrito_propiedad1}}, del municipio de la Caleta Boca Chica.
+
+Una porción de terreno que mide {{area_propiedad2}} metros cuadrados y sus mejoras consistente en una {{mejora_propiedad2}}, ubicada en {{direccion_propiedad2}}, dentro de la Parcela No. {{parcela_propiedad2}}, Distrito Catastral No.{{distrito_propiedad2}}, del municipio de la Caleta Boca Chica.
+
+PÁRRAFO I: El inmueble antes descrito se encuentra amparado por el
+Certificado de Título {{certificado_titulo}}, a favor de EL DEUDOR e INDIVISIBLE.
+
+PÁRRAFO II: EL DEUDOR e INDIVISIBLE, declara bajo la fe del juramento,
+que la descripción que antecede es cierta y correcta, y que el inmueble
+otorgado en garantía hipotecaria a través de este contrato es de su
+propiedad exclusiva e individual, y se encuentran bajo su guarda, y que
+sobre el mismo no pesa ningún gravamen legal, convencional o judicial
+que no sea la presente hipoteca.
+
+PÁRRAFO III: Por medio del presente documento, EL DEUDOR e INDIVISIBLE
+autoriza (n) al Registrador de Títulos del Departamento de Santo
+Domingo, a inscribir UNA HIPOTECA EN PRIMER RANGO en provecho de EL
+ACREEDOR, sobre el bien inmueble anteriormente descrito, por el monto,
+término y condiciones mas arriba señaladas. De igual modo, por medio de
+este documento EL DEUDOR (e INDIVISIBLE autoriza (n) a EL ACREEDOR, y/o
+sus representantes, para que de manera exclusiva retiren del Registro de
+Títulos del Departamento de Santo Domingo, los Certificados de Títulos
+pertenecientes a EL DEUDOR e INDIVISIBLE, con la finalidad de que una
+vez tenga (n) dicho (s) certificado (s) de títulos pueda ser retirado
+por su (s) propietario (s) en las instalaciones de EL ACREEDOR.
+
+PÁRRAFO IV: EL ACREEDOR podrá ejecutar la hipoteca otorgada en garantía
+en caso de que se produzca cualquier incumplimiento en los términos
+contenidos en el presente contrato.
+
+PÁRRAFO V: Como garantía adicional, EL DEUDOR e INDIVISIBLE se obligan a
+suscribir en esta misma fecha, un Pagaré Notarial que contendrá los
+mismos términos y condiciones que el presente contrato y el cual podrá
+ser ejecutado alternativamente por EL ACREEDOR, en caso de que EL DEUDOR
+(A)/ LOS DEUDORES y EL (LA) FIADOR(A) SOLIDARIO (A) e INDIVISIBLE
+incumplan las obligaciones asumidas en este contrato, y de manera
+particular, aquellas que imponen el pago de una suma de dinero.
+
+PÁRRAFO VI: La falta de pago de una de las cuotas a que se obliga EL
+DEUDOR e INDIVISIBLE conforme a este acto hará que sea ejecutable la
+garantía hipotecaria otorgada al efecto.
+
+ARTÍCULO SÉPTIMO: PROHIBICIÓN DE ENAJENAR EL INMUEBLE DADO EN GARANTÍA:
+LAS PARTES convienen de manera expresa que mientras no haya sido
+cancelada la inscripción que se tomará de la presente hipoteca, EL
+DEUDOR e INDIVISIBLE deberá (n) realizar todos sus esfuerzos para la
+conservación del valor intrínseco que tiene el inmueble y sus mejoras
+entregado en garantía al momento de la suscripción del presente
+contrato; no pudiendo EL e INDIVISIBLE enajenar, arrendar, hipotecar,
+dar en usufructo, enfiteusis, ni en parte o en su totalidad, el bien
+dado en garantía, sin la autorización previa y por escrito de EL
+ACREEDOR.
+
+ARTÍCULO OCTAVO: LITIGIOS: En virtud de este contrato, EL DEUDOR
+INDIVISIBLE declara (n), bajo la fe del juramento, que sobre el inmueble
+otorgado en garantía no existe deuda pendiente o, a su mejor
+conocimiento, no hay ninguna sentencia, acción, litigio o procedimiento
+existente o potencial por ante ningún tribunal, autoridad gubernamental
+o regulatoria, agencia, comisión, junta de arbitraje, o cualquier otro
+organismo, sin importar su denominación, excepto únicamente la solicitud
+de inscripción y registro en favor de EL ACREEDOR, por ante el
+Registrador de Títulos del Departamento de Santo Domingo.
+
+ARTÍCULO NOVENO: VIGENCIA DE LA HIPOTECA: Queda convenido entre LAS
+PARTES que la hipoteca mencionada anteriormente estará vigente con toda
+su fuerza y alcance hasta el día en que se produzca el pago total y
+definitivo del préstamo otorgado en virtud de este contrato. EL ACREEDOR
+se reserva la facultad de renovar a su discreción el presente contrato
+y/o cualquier documento que se haya firmado con relación al mismo, en
+cuyo caso la hipoteca anteriormente mencionada continuará en vigor sin
+restricción de ninguna especie.
+
+ARTÍCULO DÉCIMO: EJECUCIÓN DE LA GARANTIA: Queda expresamente convenido
+por LAS PARTES, que en caso de ser necesaria la ejecución de la garantía
+hipotecaria otorgada en este contrato, EL ACREEDOR hará uso del
+procedimiento de ejecución previsto por la legislación dominicana.
+
+PÁRRAFO: LAS PARTES convienen que, en caso de que una ley fuere puesta
+en vigor por las autoridades con posterioridad a la fecha de este
+contrato, que permita una ejecución más expedita de la garantía prevista
+en el mismo, EL ACREEDOR estará facultado a utilizar esas nuevas vías de
+ejecución, sin que ello implique en modo alguno restricción en su contra
+para que pueda utilizar, a su discreción, las vías de ejecución
+actualmente vigentes o las que en el futuro fueren dispuestas.
+
+ARTÍCULO DÉCIMO PRIMERO: PROCEDIMIENTO EN CASO DE EXPROPIACIÓN O VENTA
+AL ESTADO DE LA GARANTÍA REAL: LAS PARTES convienen formal y
+expresamente, que en caso de que una parte o la totalidad del inmueble
+dado en garantía en el presente contrato sea expropiada por el Estado
+Dominicano, o cualquier organismo competente, o el mismo le sea vendido
+de grado a grado, el precio que resulte de la operación concertada será
+pagado en su totalidad por el adquiriente o expropiante, directamente en
+manos de EL ACREEDOR, para lo que bastará la notificación de una copia
+del presente contrato al interesado o ejecutante para tal fin. Una vez
+recibida la cantidad objeto de la transacción, EL ACREEDOR la aplicará
+según las disposiciones del Artículo Cuarto del presente contrato.
+
+PÁRRAFO: En el supuesto de que exista un excedente sobre el precio de la
+venta o expropiación, EL ACREEDOR se compromete a entregar en manos de
+EL DEUDOR e INDIVISIBLE las sumas que en su favor se generaron, una vez
+se hayan cobrado los montos y gastos, contractualmente pactados,
+correspondientes a este préstamo.
+
+ARTÍCULO DÉCIMO SEGUNDO: OBLIGACIONES ADICIONALES: EL DEUDOR e
+INDIVISIBLE se compromete (n) además a: Dar aviso inmediato por correo
+certificado a EL ACREEDOR de cualquier daño material que por fuego u
+otro accidente sufra el inmueble dado en garantía hipotecaria; Cuidar
+dicho inmueble como lo haría un buen padre de familia, y a no permitir
+que se lleve a cabo ningún acto de deterioro en el mismo; No constituir
+ningún otro gravamen sobre el mismo sin el consentimiento previo y por
+escrito de EL ACREEDOR; No vender, donar, arrendar, ni de ninguna otra
+forma ceder o traspasar el inmueble dado en garantía a persona alguna
+sin haber obtenido el consentimiento previo y por escrito de EL
+ACREEDOR.
+
+ARTÍCULO DÉCIMO TERCERO: PROHIBICIONES: Queda convenido entre LAS
+PARTES, que mientras EL DEUDOR e INDIVISIBLE tenga (n) pendiente frente
+a EL ACREEDOR alguna de las obligaciones principales y accesorias
+originadas en virtud de este contrato, éste (a/éstos) no podrá (n), sin
+permiso expreso y por escrito de EL ACREEDOR: Transferir o ceder parcial
+o totalmente los derechos y obligaciones contenidas en el presente
+contrato; Contraer más obligaciones financieras que pudieran comprometer
+o debilitar sus posibilidades de pago; Incurrir, asumir, garantizar, o
+permitir que exista cualquier otra obligación definitiva o contingente
+que no tenga su origen en las operaciones normales y legítimas del
+comercio.
+
+ARTÍCULO DÉCIMO CUARTO: GASTOS Y HONORARIOS LEGALES: Queda convenido
+entre LAS PARTES, que todos los gastos legales y otros gastos que
+hubiere que pagar para la redacción, formalización, registro y ejecución
+de este contrato, correrán por cuenta de EL DEUDOR E INDIVISIBLE; así
+como los gastos y honorarios que puedan originarse con motivo de las
+diligencias, demandas y cualquier otra actuación, judicial y
+extrajudicial, que fueren necesarias ejecutar para exigir y obtener el
+cumplimiento de las obligaciones principales y accesorias resultantes de
+este contrato. Asimismo, EL E INDIVISIBLE pagará (n) y reembolsará (n) a
+EL ACREEDOR todos los gastos razonables, de cualquier naturaleza,
+necesarios para la preservación o protección de las garantías reales y/o
+personales convenidas para la seguridad del préstamo otorgado mediante
+este contrato.
+
+PÁRRAFO I: Por medio de este contrato EL DEUDOR E INDIVISIBLE autorizan
+a EL ACREEDOR para que, al efectuar el desembolso de la suma prestada,
+descuente el valor de los gastos y honorarios correspondientes a la
+redacción, legalización, impuestos por inscripción y/o registro, y
+cualesquiera otros gastos originados con motivo del presente contrato y
+que sean exigible a la fecha de la suscripción del mismo.
+
+PÁRRAFO II: EL DEUDOR e INDIVISIBLE declara (n) estar informados sobre
+los costos establecidos en el tarifario de servicios expedido a la
+fecha, el cual se anexa a este acto. En dicho tarifario se hace constar
+los costos correspondientes a este artículo, a excepción de los
+relativos a los procesos judiciales o extrajudiciales derivados del
+cobro de la deuda. EL ACREEDOR presentará a EL DEUDOR e INDIVISIBLE, si
+éste (a/os) así lo requiere (n), los documentos que justifiquen las
+diligencias o acciones que generaron los gastos a los que se hace
+referencia en este artículo.
+
+ARTÍCULO DÉCIMO QUINTO: AUTORIZACIÓN DE INFORMACIÓN CREDITICIA: Por
+medio de este contrato, EL DEUDOR E INDIVISIBLE autoriza(n) formalmente
+a EL ACREEDOR a acceder e investigar, durante la vigencia de este
+contrato, su información crediticia a través de las Sociedades de
+Información Crediticia (SIC), con el objetivo de analizar e investigar
+su situación crediticia. Así mismo, EL DEUDOR (A)/ LOS DEUDORES autoriza
+(n) a suministrar a los mismos la información patrimonial y
+extrapatrimonial necesaria a los fines de evaluación de su crédito por
+parte de otras instituciones suscriptoras de dichas sociedades de
+información, de conformidad con la Ley No.172-13, de fecha 15 de
+diciembre de 2013, que tiene por objeto la protección integral de los
+datos personales asentados en archivos, registros públicos, bancos de
+datos, u otros medios técnicos de tratamiento de datos destinados a dar
+informes, sean estos públicos o privados; reconociendo y garantizando
+que la revelación de dichas informaciones por parte de EL ACREEDOR y/o
+por las Sociedades de Información Crediticia (SIC), y/o por sus
+respectivos empleados, funcionarios y accionistas, no conllevará
+violación del secreto profesional establecido en el artículo 377 del
+Código Penal, ni de ningún otro texto legal; ni generará responsabilidad
+alguna bajo los artículos 1382 y siguientes del Código Civil.
+
+ARTÍCULO DÉCIMO SEXTO: ELECCIÓN DE DOMICILIO. Para los fines y ejecución
+del presente contrato, LAS PARTES hacen elección de domicilio en las
+direcciones indicadas, respecto a cada uno de ellos, al inicio del
+presente contrato.
+
+Hecho y firmado en tres (3) originales de un mismo tenor y efecto, uno
+para cada una de LAS PARTES, y otro para los fines legales
+correspondientes, en la ciudad de Boca Chica, municipio y provincia de
+Santo Domingo , República Dominicana, a los TRES (03) días, del mes de
+MARZO,del año VEINTICINCO (2025).
+
+POR EL ACREEDOR:
+
+_________________________
+CRISTIAN VARGAS
+CARIBE AZUL
+
+POR EL DEUDOR:
+
+_________________________
+{{nombre_deudor}}
+
+Yo, YVELISSE VIZCAINO CASTRO, Notario Público de los del número para el
+municipio de Santo Domingo Este, con matrícula del Colegio de Notarios
+de la República Dominicana, número 7247, con estudio profesional abierto
+en la de esta ciudad de Santo Domingo Este; CERTIFICO Y DOY FE: Que por
+ante mí comparecieron los señores CRISTIAN VARGAS Y {{nombre_deudor}}, cuyas generales y calidades constan, y en mi presencia firmaron el presente documento, declarándome que lo hacían libre y
+voluntariamente, y que esas son las firmas que acostumbran usar en todos
+sus actos, por lo que debe dársele entera fe y crédito. En la ciudad de
+Boca Chica, municipio y provincia de Santo Domingo Este, República
+Dominicana, a los Tres (3) días del mes de Marzo del año dos mil
+Veinticinco (2025).
+
+_________________________
+LIC. YVELISSE VIZCAINO CASTRO
+NOTARIO PÚBLICO`;
+
+    // Elementos del DOM
+    const modal = document.getElementById("modalContrato");
+    const closeBtn = document.querySelector(".close");
+    const btnCerrar = document.getElementById("btnCerrar");
+    const btnCopiar = document.getElementById("btnCopiar");
+    const btnImprimir = document.getElementById("btnImprimir");
+    const contratoFinal = document.getElementById("contratoFinal");
+    const formContrato = document.getElementById("formContratoHipotecario");
+    
+    // Variables para control de bloques
+    let currentBlock = 0;
+    const totalBlocks = 4;
+    
+    // Función para cambiar entre bloques
+    function changeBlock(nextBlock) {
+        // Ocultar bloque actual
+        document.getElementById(`block-${currentBlock}`).classList.remove('active');
+        
+        // Actualizar indicador de progreso
+        document.querySelector(`.progress-step[data-step="${currentBlock}"]`).classList.remove('active');
+        if (currentBlock > 0) {
+            document.querySelector(`.progress-step[data-step="${currentBlock}"]`).classList.add('completed');
+        }
+        
+        // Mostrar nuevo bloque
+        document.getElementById(`block-${nextBlock}`).classList.add('active');
+        document.querySelector(`.progress-step[data-step="${nextBlock}"]`).classList.add('active');
+        
+        currentBlock = nextBlock;
+        
+        // Actualizar resumen si estamos en el bloque 3
+        if (nextBlock === 3) {
+            actualizarResumen();
+        }
+    }
+    
+    // Función para actualizar el resumen
+    function actualizarResumen() {
+        document.getElementById('resumen_nombre').textContent = document.getElementById('nombre_deudor').value;
+        document.getElementById('resumen_documento').textContent = document.getElementById('tipo_documento').value + ' ' + document.getElementById('numero_documento').value;
+        document.getElementById('resumen_direccion').textContent = document.getElementById('direccion').value;
+        document.getElementById('resumen_monto').textContent = Number(document.getElementById('monto_prestamo').value).toLocaleString();
+        document.getElementById('resumen_plazo').textContent = document.getElementById('plazo_meses').value;
+        document.getElementById('resumen_cuota').textContent = Number(document.getElementById('monto_cuota').value).toLocaleString();
+        document.getElementById('resumen_tasa').textContent = document.getElementById('tasa_interes').value;
+    }
+    
+    // Eventos para botones de navegación
+    document.getElementById("btn-next-0").addEventListener("click", function() {
+        // Validar campos obligatorios del bloque 0
+        const nombre = document.getElementById('nombre_deudor').value;
+        const nacionalidad = document.getElementById('nacionalidad').value;
+        const ocupacion = document.getElementById('ocupacion').value;
+        const tipoDoc = document.getElementById('tipo_documento').value;
+        const numDoc = document.getElementById('numero_documento').value;
+        const telefono = document.getElementById('telefono').value;
+        const direccion = document.getElementById('direccion').value;
+        
+        if (!nombre || !nacionalidad || !ocupacion || !tipoDoc || !numDoc || !telefono || !direccion) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Campos obligatorios',
+                text: 'Por favor, complete todos los campos obligatorios del bloque de Datos del Deudor.'
+            });
+            return;
+        }
+        
+        changeBlock(1);
+    });
+    
+    document.getElementById("btn-prev-1").addEventListener("click", function() {
+        changeBlock(0);
+    });
+    
+    document.getElementById("btn-next-1").addEventListener("click", function() {
+        // Validar campos obligatorios del bloque 1
+        const monto = document.getElementById('monto_prestamo').value;
+        const plazo = document.getElementById('plazo_meses').value;
+        const cuota = document.getElementById('monto_cuota').value;
+        const tasa = document.getElementById('tasa_interes').value;
+        const fechaInicio = document.getElementById('fecha_primera_cuota').value;
+        const fechaFin = document.getElementById('fecha_ultima_cuota').value;
+        
+        if (!monto || !plazo || !cuota || !tasa || !fechaInicio || !fechaFin) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Campos obligatorios',
+                text: 'Por favor, complete todos los campos obligatorios del bloque de Términos del Préstamo.'
+            });
+            return;
+        }
+        
+        changeBlock(2);
+    });
+    
+    document.getElementById("btn-prev-2").addEventListener("click", function() {
+        changeBlock(1);
+    });
+    
+    document.getElementById("btn-next-2").addEventListener("click", function() {
+        // Validar campos obligatorios del bloque 2
+        const area1 = document.getElementById('area_propiedad1').value;
+        const mejora1 = document.getElementById('mejora_propiedad1').value;
+        const direccion1 = document.getElementById('direccion_propiedad1').value;
+        const parcela1 = document.getElementById('parcela_propiedad1').value;
+        const distrito1 = document.getElementById('distrito_propiedad1').value;
+        
+        const area2 = document.getElementById('area_propiedad2').value;
+        const mejora2 = document.getElementById('mejora_propiedad2').value;
+        const direccion2 = document.getElementById('direccion_propiedad2').value;
+        const parcela2 = document.getElementById('parcela_propiedad2').value;
+        const distrito2 = document.getElementById('distrito_propiedad2').value;
+        
+        const certificado = document.getElementById('certificado_titulo').value;
+        
+        if (!area1 || !mejora1 || !direccion1 || !parcela1 || !distrito1 || 
+            !area2 || !mejora2 || !direccion2 || !parcela2 || !distrito2 || !certificado) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Campos obligatorios',
+                text: 'Por favor, complete todos los campos obligatorios del bloque de Garantía Hipotecaria.'
+            });
+            return;
+        }
+        
+        changeBlock(3);
+    });
+    
+    document.getElementById("btn-prev-3").addEventListener("click", function() {
+        changeBlock(2);
+    });
+
+    // Función para formatear fechas
+    function formatearFecha(fechaStr) {
+        if (!fechaStr) return '';
+        const fecha = new Date(fechaStr);
+        const dia = fecha.getDate();
+        const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+        const mes = meses[fecha.getMonth()];
+        const anio = fecha.getFullYear();
+        return `${dia} de ${mes} del año ${anio}`;
+    }
+
+    // Función para convertir números a letras
+    function numeroALetras(numero) {
+        // Esta es una función simplificada. En un caso real, necesitarías una librería más completa
+        const unidades = ['', 'UN', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE'];
+        const decenas = ['', 'DIEZ', 'VEINTE', 'TREINTA', 'CUARENTA', 'CINCUENTA', 'SESENTA', 'SETENTA', 'OCHENTA', 'NOVENTA'];
+        const especiales = ['DIEZ', 'ONCE', 'DOCE', 'TRECE', 'CATORCE', 'QUINCE', 'DIECISÉIS', 'DIECISIETE', 'DIECIOCHO', 'DIECINUEVE'];
+        
+        if (numero === 0) return 'CERO';
+        
+        let resultado = '';
+        
+        // Manejar millones
+        if (numero >= 1000000) {
+            const millones = Math.floor(numero / 1000000);
+            resultado += numeroALetras(millones) + ' MILLONES ';
+            numero %= 1000000;
+        }
+        
+        // Manejar miles
+        if (numero >= 1000) {
+            const miles = Math.floor(numero / 1000);
+            if (miles === 1) {
+                resultado += 'MIL ';
+            } else {
+                resultado += numeroALetras(miles) + ' MIL ';
+            }
+            numero %= 1000;
+        }
+        
+        // Manejar cientos
+        if (numero >= 100) {
+            const cientos = Math.floor(numero / 100);
+            if (cientos === 1) {
+                resultado += 'CIEN ';
+            } else {
+                resultado += unidades[cientos] + 'CIENTOS ';
+            }
+            numero %= 100;
+        }
+        
+        // Manejar decenas y unidades
+        if (numero >= 10 && numero < 20) {
+            resultado += especiales[numero - 10] + ' ';
+        } else if (numero >= 20) {
+            const decena = Math.floor(numero / 10);
+            resultado += decenas[decena];
+            const unidad = numero % 10;
+            if (unidad > 0) {
+                resultado += ' Y ' + unidades[unidad];
+            }
+            resultado += ' ';
+        } else if (numero > 0) {
+            resultado += unidades[numero] + ' ';
+        }
+        
+        return resultado.trim() + ' PESOS DOMINICANOS CON 00/100';
+    }
+
+    // Manejar envío del formulario
+    formContrato.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Obtener todos los valores del formulario
+        const formData = new FormData(formContrato);
+        const data = {};
+        for (let [key, value] of formData.entries()) {
+            data[key] = value;
+        }
+
+        // Calcular años del plazo
+        data.plazo_anios = Math.floor(data.plazo_meses / 12);
+        
+        // Convertir montos a letras
+        data.monto_prestamo_letras = numeroALetras(parseFloat(data.monto_prestamo));
+        data.monto_cuota_letras = numeroALetras(parseFloat(data.monto_cuota));
+        
+        // Formatear fechas
+        data.fecha_primera_cuota = formatearFecha(data.fecha_primera_cuota);
+        data.fecha_ultima_cuota = formatearFecha(data.fecha_ultima_cuota);
+        
+        // Determinar día de pago (asumiendo día 3 como en el ejemplo)
+        data.dia_pago = 'tres (3)';
+        
+        // Manejar cuota extraordinaria
+        if (data.cuota_extraordinaria && data.fecha_cuota_extraordinaria) {
+            data.cuota_extraordinaria_texto = ` y una cuota extraordinaria de ${numeroALetras(parseFloat(data.cuota_extraordinaria))} (RD$${parseFloat(data.cuota_extraordinaria).toLocaleString()}), en fecha ${formatearFecha(data.fecha_cuota_extraordinaria)}`;
+        } else {
+            data.cuota_extraordinaria_texto = '';
+        }
+
+        // Generar contrato reemplazando plantillas
+        let contratoGenerado = templateHipotecario;
+        for (const key in data) {
+            const placeholder = `{{${key}}}`;
+            contratoGenerado = contratoGenerado.replace(new RegExp(placeholder, 'g'), data[key] || '');
+        }
+
+        // Mostrar contrato en modal
+        contratoFinal.textContent = contratoGenerado;
+        modal.style.display = "block";
+
+        // Enviar datos al backend
+        fetch('/contratos-hipotecarios/create', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                ...data,
+                contrato_texto: contratoGenerado
+            })
+        })
+        .then(res => res.json())
+        .then(res => {
+            if (res.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Contrato guardado',
+                    text: 'El contrato ha sido guardado exitosamente.'
+                }).then(() => {
+                    window.location.href = `/contratos-hipotecarios/${res.id}`;
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al guardar',
+                    text: res.error || 'No se pudo guardar el contrato.'
+                });
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de red',
+                text: 'No se pudo conectar al servidor.'
+            });
+        });
+    });
+
+    // Cerrar modal
+    closeBtn.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    btnCerrar.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    // Cerrar modal al hacer clic fuera
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Copiar contrato al portapapeles
+    btnCopiar.onclick = async function() {
+        try {
+            await navigator.clipboard.writeText(contratoFinal.textContent);
+            Swal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: 'Contrato copiado al portapapeles'
+            });
+        } catch (err) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error al copiar el contrato: ' + err
+            });
+        }
+    };
+
+    // Imprimir contrato
+    btnImprimir.onclick = function() {
+        const ventanaImpresion = window.open('', '_blank');
+        const contratoCompleto = contratoFinal.textContent;
+        
+        ventanaImpresion.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Contrato de Préstamo Hipotecario - Financiera Caribe Azul</title>
+                <style>
+                    body {
+                        font-family: 'Times New Roman', serif;
+                        font-size: 12px;
+                        line-height: 1.4;
+                        margin: 20px;
+                        color: #000;
+                    }
+                    .contrato {
+                        white-space: pre-wrap;
+                        text-align: justify;
+                    }
+                    .firma {
+                        margin-top: 50px;
+                        border-top: 1px solid #000;
+                        padding-top: 10px;
+                        width: 300px;
+                    }
+                    .firma-izquierda {
+                        float: left;
+                    }
+                    .firma-derecha {
+                        float: right;
+                    }
+                    .clear {
+                        clear: both;
+                    }
+                    @media print {
+                        body { margin: 0; }
+                        .page-break { page-break-before: always; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="contrato">${contratoCompleto}</div>
+            </body>
+            </html>
+        `);
+        
+        ventanaImpresion.document.close();
+        
+        setTimeout(() => {
+            ventanaImpresion.print();
+            setTimeout(() => {
+                ventanaImpresion.close();
+            }, 100);
+        }, 500);
+    };
+
+    // Establecer fechas por defecto
+    const today = new Date();
+    const firstPayment = new Date(today);
+    firstPayment.setMonth(today.getMonth() + 1);
+    firstPayment.setDate(3); // Día 3 como en el contrato ejemplo
+    const lastPayment = new Date(firstPayment);
+    lastPayment.setMonth(firstPayment.getMonth() + 23); // 24 meses por defecto
+
+    document.getElementById('fecha_primera_cuota').value = firstPayment.toISOString().split('T')[0];
+    document.getElementById('fecha_ultima_cuota').value = lastPayment.toISOString().split('T')[0];
+
+    // Establecer monto de préstamo por defecto
+    document.getElementById('monto_prestamo').value = '800000';
+    document.getElementById('monto_cuota').value = '40000';
+</script>
+
+<%- include('../partials/footer') %>
