@@ -1,329 +1,485 @@
 <%- include('../partials/header', { title: 'Generar Contrato de Préstamo Hipotecario' }) %>
 
-<div class="container-fluid px-4 mt-4">
-    <div class="card border-0 shadow">
-        <div class="card-header bg-primary text-white py-3">
-            <div class="d-flex justify-content-between align-items-center">
-                <h2 class="mb-0">
-                    <i class="fas fa-file-contract me-2"></i>Generador de Contrato de Préstamo Hipotecario
-                </h2>
-                <a href="/contratos" class="btn btn-light btn-sm">
-                    <i class="fas fa-arrow-left me-1"></i> Volver a Contratos
-                </a>
+<div class="container-fluid px-4 py-4">
+    <!-- Header mejorado -->
+    <div class="page-header mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-1 text-primary">
+                    <i class="fas fa-file-contract me-2"></i>Generador de Contrato Hipotecario
+                </h1>
+                <p class="text-muted mb-0">Complete la información requerida para generar el contrato</p>
+            </div>
+            <a href="/contratos" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Volver a Contratos
+            </a>
+        </div>
+    </div>
+
+    <!-- Tarjeta principal -->
+    <div class="card border-0 shadow-lg">
+        <div class="card-header bg-gradient-primary text-white py-4">
+            <div class="text-center">
+                <h2 class="mb-1">Financiera Caribe Azul</h2>
+                <p class="mb-0 opacity-75">Contrato de Préstamo con Garantía Hipotecaria</p>
             </div>
         </div>
 
-        <div class="card-body">
-            <div class="header text-center mb-4">
-                <h1>Financiera Caribe Azul</h1>
-                <h3>Contrato de Préstamo con Garantía Hipotecaria</h3>
-            </div>
-
-            <div class="alert alert-success alert-dismissible fade show d-none" id="successAlert" role="alert">
-                <span id="successMessage"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            
-            <div class="alert alert-danger alert-dismissible fade show d-none" id="errorAlert" role="alert">
-                <span id="errorMessage"></span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-
-            <div class="info-box alert alert-info">
-                <h4><i class="fas fa-info-circle me-2"></i>Información Importante</h4>
-                <p class="mb-0">Complete todos los campos obligatorios (*) para generar el contrato de préstamo con garantía hipotecaria.</p>
-            </div>
-
-            <div class="card">
-                <form id="formContratoHipotecario" method="POST" action="/contratos-hipotecarios">
-                    <!-- Indicador de progreso -->
-                    <div class="progress-indicator mb-4">
-                        <div class="progress-step active" data-step="0">1</div>
-                        <div class="progress-step" data-step="1">2</div>
-                        <div class="progress-step" data-step="2">3</div>
-                        <div class="progress-step" data-step="3">4</div>
+        <div class="card-body p-0">
+            <!-- Alertas -->
+            <div class="alert-container p-4 pb-0">
+                <div class="alert alert-success alert-dismissible fade show d-none" id="successAlert" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span id="successMessage"></span>
                     </div>
-                    
-                    <!-- Bloque 0: Datos del Deudor -->
-                    <div class="form-block active" id="block-0">
-                        <h2><i class="fas fa-user me-2"></i>Datos del Deudor</h2>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Nombre completo*</label>
-                                    <input type="text" class="form-control" placeholder="Ej: Massimiliano Pardini" name="nombre_deudor" id="nombre_deudor" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Nacionalidad*</label>
-                                    <input type="text" class="form-control" placeholder="Ej: Italiana" name="nacionalidad" id="nacionalidad" required>
-                                </div>
-                            </div>
-                        </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                
+                <div class="alert alert-danger alert-dismissible fade show d-none" id="errorAlert" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="errorMessage"></span>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Ocupación*</label>
-                                    <input type="text" class="form-control" placeholder="Ej: Comerciante" name="ocupacion" id="ocupacion" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Tipo de documento*</label>
-                                    <select class="form-select" name="tipo_documento" id="tipo_documento" required>
-                                        <option value="pasaporte">Pasaporte</option>
-                                        <option value="cédula">Cédula</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Número de documento*</label>
-                                    <input type="text" class="form-control" placeholder="Ej: YC4912855" name="numero_documento" id="numero_documento" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Teléfono*</label>
-                                    <input type="tel" class="form-control" placeholder="Ej: 809-123-4567" name="telefono" id="telefono" required>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label class="form-label">Dirección completa*</label>
-                            <textarea class="form-control" name="direccion" id="direccion" placeholder="Ej: Calle Ramon Mella num. 15, La Caleta, Boca Chica" rows="2" required></textarea>
-                        </div>
-                        
-                        <div class="btn-group d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-secondary" id="btn-prev-0" disabled>Anterior</button>
-                            <button type="button" class="btn btn-primary" id="btn-next-0">Siguiente</button>
+                <div class="alert alert-info border-0 bg-light-info">
+                    <div class="d-flex">
+                        <i class="fas fa-info-circle text-info me-3 mt-1"></i>
+                        <div>
+                            <h5 class="alert-heading mb-1">Información Importante</h5>
+                            <p class="mb-0">Complete todos los campos obligatorios (<span class="text-danger">*</span>) para generar el contrato de préstamo con garantía hipotecaria.</p>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Indicador de progreso mejorado -->
+            <div class="progress-container px-4 pt-2">
+                <div class="progress-steps d-flex justify-content-between position-relative">
+                    <div class="progress-step active" data-step="0">
+                        <div class="step-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <span class="step-label">Datos del Deudor</span>
+                    </div>
+                    <div class="progress-step" data-step="1">
+                        <div class="step-icon">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                        <span class="step-label">Términos</span>
+                    </div>
+                    <div class="progress-step" data-step="2">
+                        <div class="step-icon">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <span class="step-label">Garantía</span>
+                    </div>
+                    <div class="progress-step" data-step="3">
+                        <div class="step-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <span class="step-label">Confirmación</span>
+                    </div>
+                    <div class="progress-bar-bg position-absolute"></div>
+                    <div class="progress-bar position-absolute"></div>
+                </div>
+            </div>
+
+            <!-- Formulario -->
+            <form id="formContratoHipotecario" method="POST" action="/contratos-hipotecarios" class="p-4">
+                <!-- Bloque 0: Datos del Deudor -->
+                <div class="form-block active" id="block-0">
+                    <div class="block-header mb-4">
+                        <h3 class="text-primary mb-2">
+                            <i class="fas fa-user me-2"></i>Datos del Deudor
+                        </h3>
+                        <p class="text-muted mb-0">Información personal del solicitante del préstamo</p>
+                    </div>
                     
-                    <!-- Bloque 1: Términos del Préstamo -->
-                    <div class="form-block" id="block-1">
-                        <h2><i class="fas fa-money-bill-wave me-2"></i>Términos del Préstamo</h2>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Monto del préstamo* (RD$)</label>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label fw-semibold">Nombre completo <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-lg" placeholder="Ej: Massimiliano Pardini" name="nombre_deudor" id="nombre_deudor" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label fw-semibold">Nacionalidad <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-lg" placeholder="Ej: Italiana" name="nacionalidad" id="nacionalidad" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label fw-semibold">Ocupación <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-lg" placeholder="Ej: Comerciante" name="ocupacion" id="ocupacion" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label fw-semibold">Tipo de documento <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-lg" name="tipo_documento" id="tipo_documento" required>
+                                    <option value="">Seleccione un tipo</option>
+                                    <option value="pasaporte">Pasaporte</option>
+                                    <option value="cédula">Cédula</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label fw-semibold">Número de documento <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-lg" placeholder="Ej: YC4912855" name="numero_documento" id="numero_documento" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label fw-semibold">Teléfono <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control form-control-lg" placeholder="Ej: 809-123-4567" name="telefono" id="telefono" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mt-1">
+                        <label class="form-label fw-semibold">Dirección completa <span class="text-danger">*</span></label>
+                        <textarea class="form-control form-control-lg" name="direccion" id="direccion" placeholder="Ej: Calle Ramon Mella num. 15, La Caleta, Boca Chica" rows="2" required></textarea>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-5 pt-2">
+                        <button type="button" class="btn btn-outline-secondary px-4" id="btn-prev-0" disabled>
+                            <i class="fas fa-arrow-left me-2"></i>Anterior
+                        </button>
+                        <button type="button" class="btn btn-primary px-4" id="btn-next-0">
+                            Siguiente <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Bloque 1: Términos del Préstamo -->
+                <div class="form-block" id="block-1">
+                    <div class="block-header mb-4">
+                        <h3 class="text-primary mb-2">
+                            <i class="fas fa-money-bill-wave me-2"></i>Términos del Préstamo
+                        </h3>
+                        <p class="text-muted mb-0">Condiciones financieras del préstamo</p>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label fw-semibold">Monto del préstamo <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light">RD$</span>
                                     <input type="number" class="form-control" placeholder="Ej: 800000" name="monto_prestamo" id="monto_prestamo" step="0.01" required>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Plazo (meses)*</label>
-                                    <select class="form-select" name="plazo_meses" id="plazo_meses" required>
-                                        <option value="24" selected>24 meses</option>
-                                        <option value="12">12 meses</option>
-                                        <option value="36">36 meses</option>
-                                    </select>
-                                </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label fw-semibold">Plazo <span class="text-danger">*</span></label>
+                                <select class="form-select form-select-lg" name="plazo_meses" id="plazo_meses" required>
+                                    <option value="24" selected>24 meses</option>
+                                    <option value="12">12 meses</option>
+                                    <option value="36">36 meses</option>
+                                </select>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Valor de cuota mensual* (RD$)</label>
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label fw-semibold">Valor de cuota mensual <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light">RD$</span>
                                     <input type="number" class="form-control" placeholder="Ej: 40000" name="monto_cuota" id="monto_cuota" step="0.01" required>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Tasa de interés mensual* (%)</label>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label fw-semibold">Tasa de interés mensual <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-lg">
                                     <input type="number" class="form-control" placeholder="Ej: 5" name="tasa_interes" id="tasa_interes" step="0.01" value="5" required>
+                                    <span class="input-group-text bg-light">%</span>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Fecha primera cuota*</label>
-                                    <input type="date" class="form-control" name="fecha_primera_cuota" id="fecha_primera_cuota" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Fecha última cuota*</label>
-                                    <input type="date" class="form-control" name="fecha_ultima_cuota" id="fecha_ultima_cuota" required>
-                                </div>
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label fw-semibold">Fecha primera cuota <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control form-control-lg" name="fecha_primera_cuota" id="fecha_primera_cuota" required>
                             </div>
                         </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label fw-semibold">Fecha última cuota <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control form-control-lg" name="fecha_ultima_cuota" id="fecha_ultima_cuota" required>
+                            </div>
+                        </div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Cuota extraordinaria (RD$)</label>
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label fw-semibold">Cuota extraordinaria</label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light">RD$</span>
                                     <input type="number" class="form-control" placeholder="Ej: 800000" name="cuota_extraordinaria" id="cuota_extraordinaria" step="0.01">
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Fecha cuota extraordinaria</label>
-                                    <input type="date" class="form-control" name="fecha_cuota_extraordinaria" id="fecha_cuota_extraordinaria">
-                                </div>
-                            </div>
                         </div>
-                        
-                        <div class="btn-group d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-secondary" id="btn-prev-1">Anterior</button>
-                            <button type="button" class="btn btn-primary" id="btn-next-1">Siguiente</button>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="form-label fw-semibold">Fecha cuota extraordinaria</label>
+                                <input type="date" class="form-control form-control-lg" name="fecha_cuota_extraordinaria" id="fecha_cuota_extraordinaria">
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- Bloque 2: Garantía Hipotecaria -->
-                    <div class="form-block" id="block-2">
-                        <h2><i class="fas fa-home me-2"></i>Garantía Hipotecaria</h2>
+                    <div class="d-flex justify-content-between mt-5 pt-2">
+                        <button type="button" class="btn btn-outline-secondary px-4" id="btn-prev-1">
+                            <i class="fas fa-arrow-left me-2"></i>Anterior
+                        </button>
+                        <button type="button" class="btn btn-primary px-4" id="btn-next-1">
+                            Siguiente <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Bloque 2: Garantía Hipotecaria -->
+                <div class="form-block" id="block-2">
+                    <div class="block-header mb-4">
+                        <h3 class="text-primary mb-2">
+                            <i class="fas fa-home me-2"></i>Garantía Hipotecaria
+                        </h3>
+                        <p class="text-muted mb-0">Propiedades que servirán como garantía</p>
+                    </div>
+                    
+                    <div class="alert alert-warning border-0 bg-light-warning mb-4">
+                        <div class="d-flex">
+                            <i class="fas fa-exclamation-triangle text-warning me-3 mt-1"></i>
+                            <div>
+                                <h5 class="alert-heading mb-1">Propiedades en Garantía</h5>
+                                <p class="mb-0">Ingrese los datos de las propiedades que servirán como garantía hipotecaria.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="property-section mb-4">
+                        <h4 class="text-primary mb-3">
+                            <i class="fas fa-building me-2"></i>Primera Propiedad
+                        </h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">Área <span class="text-danger">*</span></label>
+                                    <div class="input-group input-group-lg">
+                                        <input type="text" class="form-control" placeholder="Ej: 340.36" name="area_propiedad1" id="area_propiedad1" required>
+                                        <span class="input-group-text bg-light">m²</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">Tipo de mejora <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-lg" placeholder="Ej: Mejora" name="mejora_propiedad1" id="mejora_propiedad1" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-1">
+                            <label class="form-label fw-semibold">Dirección completa <span class="text-danger">*</span></label>
+                            <textarea class="form-control form-control-lg" name="direccion_propiedad1" id="direccion_propiedad1" placeholder="Ej: Calle Las Flores Esquina Calle Proyecto, Sector los Unidos, La Caleta Boca Chica" rows="2" required></textarea>
+                        </div>
+
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">Parcela <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-lg" placeholder="Ej: 486B" name="parcela_propiedad1" id="parcela_propiedad1" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">Distrito Catastral <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-lg" placeholder="Ej: 32" name="distrito_propiedad1" id="distrito_propiedad1" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="property-section">
+                        <h4 class="text-primary mb-3">
+                            <i class="fas fa-building me-2"></i>Segunda Propiedad
+                        </h4>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">Área <span class="text-danger">*</span></label>
+                                    <div class="input-group input-group-lg">
+                                        <input type="text" class="form-control" placeholder="Ej: 544" name="area_propiedad2" id="area_propiedad2" required>
+                                        <span class="input-group-text bg-light">m²</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">Tipo de mejora <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-lg" placeholder="Ej: Mejora" name="mejora_propiedad2" id="mejora_propiedad2" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-1">
+                            <label class="form-label fw-semibold">Dirección completa <span class="text-danger">*</span></label>
+                            <textarea class="form-control form-control-lg" name="direccion_propiedad2" id="direccion_propiedad2" placeholder="Ej: Calle Proyecto num. 10, Sector la 22, La Caleta Boca Chica" rows="2" required></textarea>
+                        </div>
+
+                        <div class="row g-3 mt-1">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">Parcela <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-lg" placeholder="Ej: 479" name="parcela_propiedad2" id="parcela_propiedad2" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="form-label fw-semibold">Distrito Catastral <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-lg" placeholder="Ej: 32" name="distrito_propiedad2" id="distrito_propiedad2" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mt-4">
+                        <label class="form-label fw-semibold">Certificado de Título <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control form-control-lg" placeholder="Ej: En proceso por ante Registrador de Títulos del Departamento de Santo Domingo" name="certificado_titulo" id="certificado_titulo" required>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-5 pt-2">
+                        <button type="button" class="btn btn-outline-secondary px-4" id="btn-prev-2">
+                            <i class="fas fa-arrow-left me-2"></i>Anterior
+                        </button>
+                        <button type="button" class="btn btn-primary px-4" id="btn-next-2">
+                            Siguiente <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Bloque 3: Confirmación -->
+                <div class="form-block" id="block-3">
+                    <div class="block-header mb-4">
+                        <h3 class="text-primary mb-2">
+                            <i class="fas fa-check-circle me-2"></i>Confirmación
+                        </h3>
+                        <p class="text-muted mb-0">Revise la información antes de generar el contrato</p>
+                    </div>
+                    
+                    <div class="alert alert-success border-0 bg-light-success mb-4">
+                        <div class="d-flex">
+                            <i class="fas fa-info-circle text-success me-3 mt-1"></i>
+                            <div>
+                                <h5 class="alert-heading mb-1">Resumen del Contrato</h5>
+                                <p class="mb-0">Revise la información antes de generar el contrato. Al confirmar, el contrato será guardado en el sistema.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card summary-card h-100 border-0 shadow-sm">
+                                <div class="card-header bg-light py-3">
+                                    <h5 class="mb-0 text-primary">
+                                        <i class="fas fa-user me-2"></i>Datos del Deudor
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="summary-item mb-3">
+                                        <span class="summary-label">Nombre:</span>
+                                        <span class="summary-value" id="resumen_nombre"></span>
+                                    </div>
+                                    <div class="summary-item mb-3">
+                                        <span class="summary-label">Documento:</span>
+                                        <span class="summary-value" id="resumen_documento"></span>
+                                    </div>
+                                    <div class="summary-item">
+                                        <span class="summary-label">Dirección:</span>
+                                        <span class="summary-value" id="resumen_direccion"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         
-                        <div class="info-box alert alert-warning mb-4">
-                            <h4><i class="fas fa-exclamation-triangle me-2"></i>Propiedades en Garantía</h4>
-                            <p class="mb-0">Ingrese los datos de las propiedades que servirán como garantía hipotecaria.</p>
-                        </div>
-
-                        <h4>Primera Propiedad</h4>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Área (m²)*</label>
-                                    <input type="text" class="form-control" placeholder="Ej: 340.36" name="area_propiedad1" id="area_propiedad1" required>
+                        <div class="col-md-6">
+                            <div class="card summary-card h-100 border-0 shadow-sm">
+                                <div class="card-header bg-light py-3">
+                                    <h5 class="mb-0 text-primary">
+                                        <i class="fas fa-money-bill-wave me-2"></i>Términos del Préstamo
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="summary-item mb-3">
+                                        <span class="summary-label">Monto:</span>
+                                        <span class="summary-value">RD$ <span id="resumen_monto"></span></span>
+                                    </div>
+                                    <div class="summary-item mb-3">
+                                        <span class="summary-label">Plazo:</span>
+                                        <span class="summary-value"><span id="resumen_plazo"></span> meses</span>
+                                    </div>
+                                    <div class="summary-item mb-3">
+                                        <span class="summary-label">Cuota mensual:</span>
+                                        <span class="summary-value">RD$ <span id="resumen_cuota"></span></span>
+                                    </div>
+                                    <div class="summary-item">
+                                        <span class="summary-label">Tasa de interés:</span>
+                                        <span class="summary-value"><span id="resumen_tasa"></span>% mensual</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Tipo de mejora*</label>
-                                    <input type="text" class="form-control" placeholder="Ej: Mejora" name="mejora_propiedad1" id="mejora_propiedad1" required>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label class="form-label">Dirección completa*</label>
-                            <textarea class="form-control" name="direccion_propiedad1" id="direccion_propiedad1" placeholder="Ej: Calle Las Flores Esquina Calle Proyecto, Sector los Unidos, La Caleta Boca Chica" rows="2" required></textarea>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Parcela*</label>
-                                    <input type="text" class="form-control" placeholder="Ej: 486B" name="parcela_propiedad1" id="parcela_propiedad1" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Distrito Catastral*</label>
-                                    <input type="text" class="form-control" placeholder="Ej: 32" name="distrito_propiedad1" id="distrito_propiedad1" required>
-                                </div>
-                            </div>
-                        </div>
-
-                        <hr class="my-4">
-
-                        <h4>Segunda Propiedad</h4>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Área (m²)*</label>
-                                    <input type="text" class="form-control" placeholder="Ej: 544" name="area_propiedad2" id="area_propiedad2" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Tipo de mejora*</label>
-                                    <input type="text" class="form-control" placeholder="Ej: Mejora" name="mejora_propiedad2" id="mejora_propiedad2" required>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label class="form-label">Dirección completa*</label>
-                            <textarea class="form-control" name="direccion_propiedad2" id="direccion_propiedad2" placeholder="Ej: Calle Proyecto num. 10, Sector la 22, La Caleta Boca Chica" rows="2" required></textarea>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Parcela*</label>
-                                    <input type="text" class="form-control" placeholder="Ej: 479" name="parcela_propiedad2" id="parcela_propiedad2" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label class="form-label">Distrito Catastral*</label>
-                                    <input type="text" class="form-control" placeholder="Ej: 32" name="distrito_propiedad2" id="distrito_propiedad2" required>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group mb-3">
-                            <label class="form-label">Certificado de Título*</label>
-                            <input type="text" class="form-control" placeholder="Ej: En proceso por ante Registrador de Títulos del Departamento de Santo Domingo" name="certificado_titulo" id="certificado_titulo" required>
                         </div>
                         
-                        <div class="btn-group d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-secondary" id="btn-prev-2">Anterior</button>
-                            <button type="button" class="btn btn-primary" id="btn-next-2">Siguiente</button>
+                        <div class="col-12">
+                            <div class="card summary-card border-0 shadow-sm">
+                                <div class="card-header bg-light py-3">
+                                    <h5 class="mb-0 text-primary">
+                                        <i class="fas fa-home me-2"></i>Garantía Hipotecaria
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="summary-item mb-3">
+                                        <span class="summary-label">Propiedades en garantía:</span>
+                                        <span class="summary-value">2 propiedades</span>
+                                    </div>
+                                    <div class="summary-item">
+                                        <span class="summary-label">Ubicación:</span>
+                                        <span class="summary-value">La Caleta, Boca Chica</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- Bloque 3: Confirmación -->
-                    <div class="form-block" id="block-3">
-                        <h2><i class="fas fa-check-circle me-2"></i>Confirmación</h2>
-                        
-                        <div class="info-box alert alert-success">
-                            <h4><i class="fas fa-info-circle me-2"></i>Resumen del Contrato</h4>
-                            <p class="mb-0">Revise la información antes de generar el contrato. Al confirmar, el contrato será guardado en el sistema.</p>
-                        </div>
-
-                        <div class="card mb-4">
-                            <div class="card-header bg-light">
-                                <h5 class="mb-0">Datos del Deudor</h5>
-                            </div>
-                            <div class="card-body">
-                                <p><strong>Nombre:</strong> <span id="resumen_nombre"></span></p>
-                                <p><strong>Documento:</strong> <span id="resumen_documento"></span></p>
-                                <p><strong>Dirección:</strong> <span id="resumen_direccion"></span></p>
-                            </div>
-                        </div>
-
-                        <div class="card mb-4">
-                            <div class="card-header bg-light">
-                                <h5 class="mb-0">Términos del Préstamo</h5>
-                            </div>
-                            <div class="card-body">
-                                <p><strong>Monto:</strong> RD$ <span id="resumen_monto"></span></p>
-                                <p><strong>Plazo:</strong> <span id="resumen_plazo"></span> meses</p>
-                                <p><strong>Cuota mensual:</strong> RD$ <span id="resumen_cuota"></span></p>
-                                <p><strong>Tasa de interés:</strong> <span id="resumen_tasa"></span>% mensual</p>
-                            </div>
-                        </div>
-
-                        <div class="card mb-4">
-                            <div class="card-header bg-light">
-                                <h5 class="mb-0">Garantía Hipotecaria</h5>
-                            </div>
-                            <div class="card-body">
-                                <p><strong>Propiedades en garantía:</strong> 2 propiedades</p>
-                                <p><strong>Ubicación:</strong> La Caleta, Boca Chica</p>
-                            </div>
-                        </div>
-                        
-                        <div class="btn-group d-flex justify-content-between mt-4">
-                            <button type="button" class="btn btn-secondary" id="btn-prev-3">Anterior</button>
-                            <button type="submit" class="btn btn-success">Generar Contrato</button>
-                        </div>
+                    <div class="d-flex justify-content-between mt-5 pt-2">
+                        <button type="button" class="btn btn-outline-secondary px-4" id="btn-prev-3">
+                            <i class="fas fa-arrow-left me-2"></i>Anterior
+                        </button>
+                        <button type="submit" class="btn btn-success px-4">
+                            <i class="fas fa-file-contract me-2"></i>Generar Contrato
+                        </button>
                     </div>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -331,19 +487,297 @@
 <!-- Modal para mostrar el contrato -->
 <div id="modalContrato" class="modal">
     <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>Contrato de Préstamo Hipotecario Generado</h2>
-        <div id="contratoFinal"></div>
-        <div class="modal-buttons d-flex justify-content-center gap-2 mt-4">
-            <button class="btn btn-primary" id="btnCopiar">Copiar Contrato</button>
-            <button class="btn btn-secondary" id="btnImprimir">Imprimir Contrato</button>
-            <button class="btn btn-danger" id="btnCerrar">Cerrar</button>
+        <div class="modal-header">
+            <h2 class="modal-title">Contrato de Préstamo Hipotecario Generado</h2>
+            <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="contratoFinal" class="contrato-content"></div>
+        </div>
+        <div class="modal-footer d-flex justify-content-center gap-2">
+            <button class="btn btn-primary" id="btnCopiar">
+                <i class="fas fa-copy me-2"></i>Copiar Contrato
+            </button>
+            <button class="btn btn-outline-primary" id="btnImprimir">
+                <i class="fas fa-print me-2"></i>Imprimir Contrato
+            </button>
+            <button class="btn btn-secondary" id="btnCerrar">
+                <i class="fas fa-times me-2"></i>Cerrar
+            </button>
         </div>
     </div>
 </div>
 
+<style>
+    /* Estilos personalizados para el diseño mejorado */
+    .bg-gradient-primary {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    }
+    
+    .page-header {
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 1rem;
+    }
+    
+    .progress-container {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .progress-steps {
+        padding: 1.5rem 0;
+    }
+    
+    .progress-step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 2;
+        flex: 1;
+    }
+    
+    .step-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #e9ecef;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .step-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6c757d;
+        transition: all 0.3s ease;
+    }
+    
+    .progress-step.active .step-icon {
+        background-color: #0d6efd;
+        color: white;
+        box-shadow: 0 0 0 5px rgba(13, 110, 253, 0.2);
+    }
+    
+    .progress-step.active .step-label {
+        color: #0d6efd;
+        font-weight: 600;
+    }
+    
+    .progress-step.completed .step-icon {
+        background-color: #198754;
+        color: white;
+    }
+    
+    .progress-step.completed .step-label {
+        color: #198754;
+    }
+    
+    .progress-bar-bg {
+        top: 75px;
+        left: 10%;
+        right: 10%;
+        height: 4px;
+        background-color: #e9ecef;
+        z-index: 1;
+    }
+    
+    .progress-bar {
+        top: 75px;
+        left: 10%;
+        height: 4px;
+        background-color: #0d6efd;
+        z-index: 1;
+        transition: width 0.3s ease;
+        width: 0%;
+    }
+    
+    .form-block {
+        display: none;
+    }
+    
+    .form-block.active {
+        display: block;
+        animation: fadeIn 0.5s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .block-header {
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 1rem;
+    }
+    
+    .form-control-lg, .form-select-lg {
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    .input-group-lg > .form-control, 
+    .input-group-lg > .form-select, 
+    .input-group-lg > .input-group-text {
+        padding: 0.75rem 1rem;
+    }
+    
+    .property-section {
+        padding: 1.5rem;
+        border: 1px solid #e9ecef;
+        border-radius: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .summary-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .summary-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+    }
+    
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+    
+    .summary-label {
+        font-weight: 500;
+        color: #6c757d;
+        flex: 1;
+    }
+    
+    .summary-value {
+        font-weight: 600;
+        color: #212529;
+        flex: 2;
+        text-align: right;
+    }
+    
+    .bg-light-info {
+        background-color: rgba(13, 202, 240, 0.1) !important;
+    }
+    
+    .bg-light-warning {
+        background-color: rgba(255, 193, 7, 0.1) !important;
+    }
+    
+    .bg-light-success {
+        background-color: rgba(25, 135, 84, 0.1) !important;
+    }
+    
+    /* Estilos para el modal */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1050;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.5);
+    }
+    
+    .modal-content {
+        background-color: #fefefe;
+        margin: 2% auto;
+        padding: 0;
+        border: none;
+        border-radius: 0.5rem;
+        width: 90%;
+        max-width: 900px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        animation: modalFadeIn 0.3s;
+    }
+    
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-title {
+        margin: 0;
+        color: #0d6efd;
+    }
+    
+    .close {
+        color: #6c757d;
+        font-size: 1.5rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+    
+    .close:hover {
+        color: #0d6efd;
+    }
+    
+    .modal-body {
+        padding: 1.5rem;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+    
+    .modal-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .contrato-content {
+        white-space: pre-wrap;
+        font-family: 'Times New Roman', serif;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .progress-step .step-label {
+            font-size: 0.75rem;
+        }
+        
+        .step-icon {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .progress-bar-bg, .progress-bar {
+            top: 65px;
+        }
+        
+        .property-section {
+            padding: 1rem;
+        }
+        
+        .summary-item {
+            flex-direction: column;
+        }
+        
+        .summary-value {
+            text-align: left;
+            margin-top: 0.25rem;
+        }
+    }
+</style>
+
 <script>
-    // Template del contrato basado en el documento proporcionado
+    // Template del contrato (sin cambios)
     const templateHipotecario = `CONTRATO DE PRÉSTAMO CON GARANTIA HIPOTECARIA
 
 De una parte, CARIBE AZUL, S.R.L, entidad bancaria organizada y
@@ -538,7 +972,7 @@ ACREEDOR.
 ARTÍCULO OCTAVO: LITIGIOS: En virtud de este contrato, EL DEUDOR
 INDIVISIBLE declara (n), bajo la fe del juramento, que sobre el inmueble
 otorgado en garantía no existe deuda pendiente o, a su mejor
-conocimiento, no hay ninguna sentencia, acción, litigio o procedimiento
+conocimiento, no hay ninguna sentencia, action, litigio o procedimiento
 existente o potencial por ante ningún tribunal, autoridad gubernamental
 o regulatoria, agencia, comisión, junta de arbitraje, o cualquier otro
 organismo, sin importar su denominación, excepto únicamente la solicitud
@@ -563,7 +997,7 @@ PÁRRAFO: LAS PARTES convienen que, en caso de que una ley fuere puesta
 en vigor por las autoridades con posterioridad a la fecha de este
 contrato, que permita una ejecución más expedita de la garantía prevista
 en el mismo, EL ACREEDOR estará facultado a utilizar esas nuevas vías de
-ejecución, sin que ello implique en modo alguno restricción en su contra
+execución, sin que ello implique en modo alguno restricción en su contra
 para que pueda utilizar, a su discreción, las vías de ejecución
 actualmente vigentes o las que en el futuro fueren dispuestas.
 
@@ -706,10 +1140,17 @@ NOTARIO PÚBLICO`;
     const btnImprimir = document.getElementById("btnImprimir");
     const contratoFinal = document.getElementById("contratoFinal");
     const formContrato = document.getElementById("formContratoHipotecario");
+    const progressBar = document.querySelector('.progress-bar');
     
     // Variables para control de bloques
     let currentBlock = 0;
     const totalBlocks = 4;
+    
+    // Función para actualizar la barra de progreso
+    function updateProgressBar() {
+        const progressPercentage = (currentBlock / (totalBlocks - 1)) * 100;
+        progressBar.style.width = `${progressPercentage}%`;
+    }
     
     // Función para cambiar entre bloques
     function changeBlock(nextBlock) {
@@ -717,16 +1158,21 @@ NOTARIO PÚBLICO`;
         document.getElementById(`block-${currentBlock}`).classList.remove('active');
         
         // Actualizar indicador de progreso
-        document.querySelector(`.progress-step[data-step="${currentBlock}"]`).classList.remove('active');
-        if (currentBlock > 0) {
-            document.querySelector(`.progress-step[data-step="${currentBlock}"]`).classList.add('completed');
-        }
+        document.querySelectorAll('.progress-step').forEach((step, index) => {
+            step.classList.remove('active');
+            if (index < nextBlock) {
+                step.classList.add('completed');
+            }
+            if (index === nextBlock) {
+                step.classList.add('active');
+            }
+        });
         
         // Mostrar nuevo bloque
         document.getElementById(`block-${nextBlock}`).classList.add('active');
-        document.querySelector(`.progress-step[data-step="${nextBlock}"]`).classList.add('active');
         
         currentBlock = nextBlock;
+        updateProgressBar();
         
         // Actualizar resumen si estamos en el bloque 3
         if (nextBlock === 3) {
@@ -1089,6 +1535,9 @@ NOTARIO PÚBLICO`;
     // Establecer monto de préstamo por defecto
     document.getElementById('monto_prestamo').value = '800000';
     document.getElementById('monto_cuota').value = '40000';
+    
+    // Inicializar barra de progreso
+    updateProgressBar();
 </script>
 
 <%- include('../partials/footer') %>
