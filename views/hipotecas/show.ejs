@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Contrato Hipotecario #<%= contrato.id %></title>
+
+    <!-- Bootstrap (si ya está cargado en layout no es necesario) -->
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+    <style>
+        pre.contrato-texto {
+            white-space: pre-wrap;
+            font-size: 16px;
+            line-height: 1.5;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container py-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold">Contrato Hipotecario #<%= contrato.id %></h2>
+
+            <div>
+                <a href="/hipotecas/<%= contrato.id %>/download" class="btn btn-primary me-2">
+                    <i class="fas fa-download"></i> Descargar
+                </a>
+
+                <a href="/hipotecas/<%= contrato.id %>/print" target="_blank" class="btn btn-secondary">
+                    <i class="fas fa-print"></i> Imprimir
+                </a>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <pre class="contrato-texto"><%- contrato.contrato_texto %></pre>
+            </div>
+        </div>
+
+        <a href="/hipotecas" class="btn btn-dark mt-4">
+            <i class="fas fa-arrow-left"></i> Volver a la lista
+        </a>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+</body>
+</html>
