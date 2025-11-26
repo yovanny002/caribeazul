@@ -1,33 +1,6 @@
 const db = require('./db');
-const { QueryTypes } = require('sequelize'); // ✅ CORRECCIÓN
 
 const Contrato = {
-  // Crear tabla si no existe
-  createTable: async () => {
-    try {
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS contratos_financiamiento (
-          id SERIAL PRIMARY KEY,
-          cliente_id INTEGER REFERENCES clientes(id),
-          prestamo_id INTEGER REFERENCES solicitudes_prestamos(id),
-          datos_cliente JSONB NOT NULL,
-          datos_vehiculo JSONB NOT NULL,
-          datos_financiamiento JSONB NOT NULL,
-          datos_seguro JSONB NOT NULL,
-          contrato_texto TEXT NOT NULL,
-          estado VARCHAR(50) DEFAULT 'activo',
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      console.log('✅ Tabla de contratos verificada/creada correctamente');
-      return true;
-    } catch (error) {
-      console.error('❌ Error creando tabla de contratos:', error);
-      throw error;
-    }
-  },
-
   // Crear nuevo contrato
   create: async (contratoData) => {
     try {
@@ -45,51 +18,29 @@ const Contrato = {
         cliente_id,
         prestamo_id,
         datos_cliente: typeof datos_cliente,
-        datos_vehiculo: typeof datos_vehiculo,
-        datos_financiamiento: typeof datos_financiamiento,
-        datos_seguro: typeof datos_seguro
+        datos_vehiculo: typeof datos_vehiculo
       });
 
-      const result = await db.query(`
-        INSERT INTO contratos_financiamiento 
+      const [result] = await db.query(
+        `INSERT INTO contratos_financiamiento 
         (cliente_id, prestamo_id, datos_cliente, datos_vehiculo, datos_financiamiento, datos_seguro, contrato_texto)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-        RETURNING id
-      `, {
-        replacements: [
-          cliente_id || null,
-          prestamo_id || null,
-          JSON.stringify(datos_cliente),
-          JSON.stringify(datos_vehiculo),
-          JSON.stringify(datos_financiamiento),
-          JSON.stringify(datos_seguro),
-          contrato_texto
-        ],
-        type: QueryTypes.INSERT
-      });
+        VALUES (:cliente_id, :prestamo_id, :datos_cliente, :datos_vehiculo, :datos_financiamiento, :datos_seguro, :contrato_texto)`,
+        {
+          replacements: {
+            cliente_id: cliente_id || null,
+            prestamo_id: prestamo_id || null,
+            datos_cliente: JSON.stringify(datos_cliente),
+            datos_vehiculo: JSON.stringify(datos_vehiculo),
+            datos_financiamiento: JSON.stringify(datos_financiamiento),
+            datos_seguro: JSON.stringify(datos_seguro),
+            contrato_texto: contrato_texto
+          }
+        }
+      );
 
-      console.log('🔍 Resultado de inserción:', result);
+      console.log('✅ Contrato creado con ID:', result.insertId);
+      return result.insertId;
 
-      // Manejo robusto del resultado
-      let insertedId = null;
-      
-      if (result && result[0] && result[0].id) {
-        insertedId = result[0].id;
-      } else if (result && Array.isArray(result) && result[0] && result[0].id) {
-        insertedId = result[0].id;
-      } else if (result && result[0] && Array.isArray(result[0]) && result[0][0] && result[0][0].id) {
-        insertedId = result[0][0].id;
-      }
-
-      if (!insertedId) {
-        console.error('❌ No se pudo obtener el ID del contrato creado');
-        console.error('🔍 Estructura del resultado:', JSON.stringify(result, null, 2));
-        throw new Error('No se pudo obtener el ID del contrato creado');
-      }
-
-      console.log('✅ Contrato creado con ID:', insertedId);
-      return insertedId;
-      
     } catch (error) {
       console.error('❌ Error creando contrato:', error);
       throw error;
@@ -99,8 +50,8 @@ const Contrato = {
   // Buscar por ID
   findById: async (id) => {
     try {
-      const rows = await db.query(`
-        SELECT 
+      const [rows] = await db.query(
+        `SELECT 
           c.*, 
           cli.nombre as cliente_nombre,
           cli.apellidos as cliente_apellidos,
@@ -110,11 +61,11 @@ const Contrato = {
         FROM contratos_financiamiento c
         LEFT JOIN clientes cli ON c.cliente_id = cli.id
         LEFT JOIN solicitudes_prestamos sp ON c.prestamo_id = sp.id
-        WHERE c.id = $1 AND c.estado != 'eliminado'
-      `, {
-        replacements: [id],
-        type: QueryTypes.SELECT
-      });
+        WHERE c.id = :id AND c.estado != 'eliminado'`,
+        {
+          replacements: { id }
+        }
+      );
 
       if (rows.length === 0) {
         console.log('⚠️ Contrato no encontrado ID:', id);
@@ -139,17 +90,18 @@ const Contrato = {
 
       console.log('✅ Contrato encontrado ID:', id);
       return contrato;
+
     } catch (error) {
       console.error('❌ Error buscando contrato por ID:', error);
       throw error;
     }
   },
 
-  // Buscar todos los contratos - CORREGIDO
+  // Buscar todos los contratos
   findAll: async () => {
     try {
-      const rows = await db.query(`
-        SELECT 
+      const [rows] = await db.query(
+        `SELECT 
           c.*, 
           cli.nombre as cliente_nombre,
           cli.apellidos as cliente_apellidos,
@@ -160,13 +112,12 @@ const Contrato = {
         LEFT JOIN clientes cli ON c.cliente_id = cli.id
         LEFT JOIN solicitudes_prestamos sp ON c.prestamo_id = sp.id
         WHERE c.estado != 'eliminado'
-        ORDER BY c.created_at DESC
-      `, {
-        type: QueryTypes.SELECT // ✅ Ahora QueryTypes está definido
-      });
+        ORDER BY c.created_at DESC`
+      );
 
       console.log(`📋 Encontrados ${rows.length} contratos`);
 
+      // Parsear JSON fields para cada contrato
       const contratos = rows.map(row => {
         try {
           return {
@@ -187,6 +138,7 @@ const Contrato = {
       });
 
       return contratos;
+
     } catch (error) {
       console.error('❌ Error buscando todos los contratos:', error);
       throw error;
@@ -196,14 +148,14 @@ const Contrato = {
   // Buscar por cliente
   findByClienteId: async (clienteId) => {
     try {
-      const rows = await db.query(`
-        SELECT * FROM contratos_financiamiento 
-        WHERE cliente_id = $1 AND estado != 'eliminado'
-        ORDER BY created_at DESC
-      `, {
-        replacements: [clienteId],
-        type: QueryTypes.SELECT
-      });
+      const [rows] = await db.query(
+        `SELECT * FROM contratos_financiamiento 
+        WHERE cliente_id = :clienteId AND estado != 'eliminado'
+        ORDER BY created_at DESC`,
+        {
+          replacements: { clienteId }
+        }
+      );
 
       console.log(`📋 Encontrados ${rows.length} contratos para cliente ID: ${clienteId}`);
 
@@ -227,6 +179,7 @@ const Contrato = {
       });
 
       return contratos;
+
     } catch (error) {
       console.error('❌ Error buscando contratos por cliente:', error);
       throw error;
@@ -245,31 +198,32 @@ const Contrato = {
         estado
       } = contratoData;
 
-      await db.query(`
-        UPDATE contratos_financiamiento 
-        SET datos_cliente = $1,
-            datos_vehiculo = $2,
-            datos_financiamiento = $3,
-            datos_seguro = $4,
-            contrato_texto = $5,
-            estado = $6,
+      await db.query(
+        `UPDATE contratos_financiamiento 
+        SET datos_cliente = :datos_cliente,
+            datos_vehiculo = :datos_vehiculo,
+            datos_financiamiento = :datos_financiamiento,
+            datos_seguro = :datos_seguro,
+            contrato_texto = :contrato_texto,
+            estado = :estado,
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = $7
-      `, {
-        replacements: [
-          JSON.stringify(datos_cliente),
-          JSON.stringify(datos_vehiculo),
-          JSON.stringify(datos_financiamiento),
-          JSON.stringify(datos_seguro),
-          contrato_texto,
-          estado || 'activo',
-          id
-        ],
-        type: QueryTypes.UPDATE
-      });
+        WHERE id = :id`,
+        {
+          replacements: {
+            datos_cliente: JSON.stringify(datos_cliente),
+            datos_vehiculo: JSON.stringify(datos_vehiculo),
+            datos_financiamiento: JSON.stringify(datos_financiamiento),
+            datos_seguro: JSON.stringify(datos_seguro),
+            contrato_texto,
+            estado: estado || 'activo',
+            id
+          }
+        }
+      );
 
       console.log('✅ Contrato actualizado ID:', id);
       return true;
+
     } catch (error) {
       console.error('❌ Error actualizando contrato:', error);
       throw error;
@@ -279,18 +233,19 @@ const Contrato = {
   // Eliminar contrato (soft delete)
   delete: async (id) => {
     try {
-      await db.query(`
-        UPDATE contratos_financiamiento 
+      await db.query(
+        `UPDATE contratos_financiamiento 
         SET estado = 'eliminado',
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = $1
-      `, {
-        replacements: [id],
-        type: QueryTypes.UPDATE
-      });
+        WHERE id = :id`,
+        {
+          replacements: { id }
+        }
+      );
 
       console.log('✅ Contrato marcado como eliminado ID:', id);
       return true;
+
     } catch (error) {
       console.error('❌ Error eliminando contrato:', error);
       throw error;
@@ -300,17 +255,18 @@ const Contrato = {
   // Verificar si la tabla existe
   checkTable: async () => {
     try {
-      const result = await db.query(`
-        SELECT EXISTS (
+      const [rows] = await db.query(
+        `SELECT EXISTS (
           SELECT FROM information_schema.tables 
           WHERE table_schema = 'public' 
           AND table_name = 'contratos_financiamiento'
-        )
-      `, { type: QueryTypes.SELECT });
+        ) as table_exists`
+      );
 
-      const exists = result[0].exists;
+      const exists = rows[0].table_exists;
       console.log('📊 Tabla contratos_financiamiento existe:', exists);
       return exists;
+
     } catch (error) {
       console.error('❌ Error verificando tabla:', error);
       return false;
@@ -320,13 +276,14 @@ const Contrato = {
   // Contar contratos activos
   count: async () => {
     try {
-      const result = await db.query(`
-        SELECT COUNT(*) as total FROM contratos_financiamiento WHERE estado != 'eliminado'
-      `, { type: QueryTypes.SELECT });
+      const [rows] = await db.query(
+        `SELECT COUNT(*) as total FROM contratos_financiamiento WHERE estado != 'eliminado'`
+      );
 
-      const total = parseInt(result[0].total);
+      const total = parseInt(rows[0].total);
       console.log('📊 Total de contratos activos:', total);
       return total;
+
     } catch (error) {
       console.error('❌ Error contando contratos:', error);
       return 0;
