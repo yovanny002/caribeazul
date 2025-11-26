@@ -1,0 +1,40 @@
+<!-- views/contratos_hipotecarios/print.ejs -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Contrato Hipotecario #<%= contrato.id %></title>
+    <style>
+        body {
+            font-family: "Times New Roman", serif;
+            margin: 40px;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        pre {
+            white-space: pre-wrap;
+            font-family: inherit;
+        }
+
+        @media print {
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-print" style="margin-bottom:20px;">
+        <button onclick="window.print()" style="padding:10px 20px; background:black; color:white; border:none; cursor:pointer;">
+            Imprimir Contrato
+        </button>
+    </div>
+
+    <h1>Contrato Hipotecario #<%= contrato.id %></h1>
+
+    <pre><%= contrato.contrato_texto %></pre>
+
+</body>
+</html>

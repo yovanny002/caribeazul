@@ -1,125 +1,73 @@
 const db = require('./db');
+const { QueryTypes } = require('sequelize');
 
 const ContratoHipotecario = {
-  create: async (payload) => {
-    try {
-      const {
-        cliente_nombre,
-        cliente_nacionalidad,
-        cliente_ocupacion,
-        cliente_tipo_documento,
-        cliente_numero_documento,
-        cliente_telefono,
-        cliente_direccion,
-        datos_financiamiento,
-        propiedades,
-        contrato_texto
-      } = payload;
 
-      const result = await db.query(
-        `INSERT INTO contratos_hipotecarios
-          (cliente_nombre, cliente_nacionalidad, cliente_ocupacion, cliente_tipo_documento, cliente_numero_documento, cliente_telefono, cliente_direccion, datos_financiamiento, propiedades, contrato_texto)
-         VALUES
-          (:cliente_nombre, :cliente_nacionalidad, :cliente_ocupacion, :cliente_tipo_documento, :cliente_numero_documento, :cliente_telefono, :cliente_direccion, :datos_financiamiento::jsonb, :propiedades::jsonb, :contrato_texto)
-         RETURNING id`,
-        {
-          replacements: {
-            cliente_nombre,
-            cliente_nacionalidad,
-            cliente_ocupacion,
-            cliente_tipo_documento,
-            cliente_numero_documento,
-            cliente_telefono,
-            cliente_direccion,
-            datos_financiamiento: JSON.stringify(datos_financiamiento || {}),
-            propiedades: JSON.stringify(propiedades || []),
+    async findAll() {
+        const rows = await db.query(`
+            SELECT 
+                id,
+                datos_deudor->>'nombre_deudor' AS deudor,
+                datos_deudor->>'numero_documento' AS documento,
+                created_at
+            FROM contrato_hipotecario
+            ORDER BY id DESC
+        `, { type: QueryTypes.SELECT });
+
+        return rows;
+    },
+
+    async findById(id) {
+        const rows = await db.query(`
+            SELECT *
+            FROM contrato_hipotecario
+            WHERE id = $1
+            LIMIT 1
+        `, {
+            type: QueryTypes.SELECT,
+            bind: [id]
+        });
+
+        return rows[0];
+    },
+
+    async create(data) {
+        const {
+            datos_deudor,
+            datos_prestamo,
+            datos_propiedad1,
+            datos_propiedad2,
             contrato_texto
-          }
-        }
-      );
+        } = data;
 
-      return result.rows[0].id;
-    } catch (err) {
-      console.error('Error creando contrato hipotecario:', err);
-      throw err;
-    }
-  },
+        const row = await db.query(`
+            INSERT INTO contrato_hipotecario
+            (datos_deudor, datos_prestamo, datos_propiedad1, datos_propiedad2, contrato_texto)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING id
+        `, {
+            type: QueryTypes.INSERT,
+            bind: [
+                datos_deudor,
+                datos_prestamo,
+                datos_propiedad1,
+                datos_propiedad2,
+                contrato_texto
+            ]
+        });
 
-  findById: async (id) => {
-    try {
-      const result = await db.query(
-        `SELECT * FROM contratos_hipotecarios WHERE id = :id AND estado != 'eliminado'`,
-        { replacements: { id } }
-      );
-      if (result.rows.length === 0) return null;
-      const row = result.rows[0];
-      return {
-        ...row,
-        datos_financiamiento: row.datos_financiamiento || {},
-        propiedades: row.propiedades || []
-      };
-    } catch (err) {
-      console.error('Error findById hipoteca:', err);
-      throw err;
-    }
-  },
+        return row[0].id;
+    },
 
-  findAll: async () => {
-    try {
-      const result = await db.query(
-        `SELECT * FROM contratos_hipotecarios WHERE estado != 'eliminado' ORDER BY created_at DESC`
-      );
-      return result.rows.map(r => ({
-        ...r,
-        datos_financiamiento: r.datos_financiamiento || {},
-        propiedades: r.propiedades || []
-      }));
-    } catch (err) {
-      console.error('Error findAll hipoteca:', err);
-      throw err;
-    }
-  },
+    async delete(id) {
+        await db.query(`
+            DELETE FROM contrato_hipotecario WHERE id = $1
+        `, {
+            bind: [id]
+        });
 
-  update: async (id, payload) => {
-    try {
-      const { datos_financiamiento, propiedades, contrato_texto, estado } = payload;
-      await db.query(
-        `UPDATE contratos_hipotecarios
-         SET datos_financiamiento = :datos_financiamiento::jsonb,
-             propiedades = :propiedades::jsonb,
-             contrato_texto = :contrato_texto,
-             estado = :estado,
-             updated_at = NOW()
-         WHERE id = :id`,
-        {
-          replacements: {
-            datos_financiamiento: JSON.stringify(datos_financiamiento || {}),
-            propiedades: JSON.stringify(propiedades || []),
-            contrato_texto,
-            estado: estado || 'activo',
-            id
-          }
-        }
-      );
-      return true;
-    } catch (err) {
-      console.error('Error update hipoteca:', err);
-      throw err;
+        return true;
     }
-  },
-
-  delete: async (id) => {
-    try {
-      await db.query(
-        `UPDATE contratos_hipotecarios SET estado = 'eliminado', updated_at = NOW() WHERE id = :id`,
-        { replacements: { id } }
-      );
-      return true;
-    } catch (err) {
-      console.error('Error delete hipoteca:', err);
-      throw err;
-    }
-  }
 };
 
 module.exports = ContratoHipotecario;
