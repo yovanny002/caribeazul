@@ -18,10 +18,10 @@
         /* === Área que simula una hoja de tamaño Legal (8.5 x 13) === */
         .page-legal {
             background: white;
-            width: 816px;        /* 8.5 pulgadas × 96px */
-            min-height: 1248px;  /* 13 pulgadas × 96px */
+            width: 816px;
+            min-height: 1248px;
             margin: auto;
-            padding: 60px 70px;  /* Márgenes estilo hoja */
+            padding: 60px 70px;
             box-shadow: 0 0 25px rgba(0,0,0,0.15);
             border-radius: 3px;
         }
@@ -34,28 +34,27 @@
             color: #333;
         }
 
-        .contrato-content h1, .contrato-content h2, .contrato-content h3 {
-            text-align: center;
-            margin-bottom: 1.5rem;
-            font-weight: 700;
-        }
-
         .contrato-content h1 {
+            text-align: center;
             font-size: 22px;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
             border-bottom: 2px solid #333;
             padding-bottom: 10px;
-            margin-top: 0;
+            margin-bottom: 2rem;
+        }
+
+        .contrato-content h2 {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
         }
 
         .contrato-content p {
             margin-bottom: 1.2rem;
             text-indent: 1.5em;
-        }
-
-        .contrato-content .no-indent {
-            text-indent: 0;
         }
 
         .contrato-content .firma-section {
@@ -127,14 +126,18 @@
             <h1>CONTRATO HIPOTECARIO #<%= contrato.id %></h1>
             <h2>CONTRATO DE PRÉSTAMO CON GARANTÍA HIPOTECARIA</h2>
             
-            <p class="no-indent">De una parte, <strong>CARIBE AZUL, S.R.L</strong>, entidad bancaria organizada y existente conforme a las leyes de la República Dominicana, R.N.C. NUM. <strong>133-37493-5</strong>, con su asiento social y oficina principal ubicada en la calle H, Número 15, Andres, Boca Chica, Provincia de Santo Domingo Restauración No.127, esquina calle Jácuba, de la ciudad de Santiago de los Caballeros, República Dominicana, representada por el (la) señor (a) <strong>CRISTIAN VARGAS</strong>, de nacionalidad Dominicana, Profesión u ocupación Comerciante, portador (a) de la Cédula de Identidad y Electoral No. <strong>001-1497135-1</strong>, domiciliado (a) y residente en esta ciudad de Andres, Boca Chica, Provincia de Santo Domingo, en su calidad de Encargado de Sucursal, y quien en lo adelante se denominará <strong>EL ACREEDOR</strong>;</p>
-            
-            <!-- Aquí continuaría el resto del contrato -->
-            <!-- <%- contrato.contrato_texto %> -->
+            <div class="contrato-texto">
+                <%- contrato.contrato_texto %>
+            </div>
             
             <div class="firma-section">
                 <div class="firma-line"></div>
                 <div class="firma-label">Firma del Acreedor</div>
+            </div>
+            
+            <div class="firma-section">
+                <div class="firma-line"></div>
+                <div class="firma-label">Firma del Deudor</div>
             </div>
         </div>
     </div>
